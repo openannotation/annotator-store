@@ -15,6 +15,10 @@ def after_request(response):
     return response
 
 def run():
-    app.debug = True
     app.register_module(store, url_prefix=mountpoint)
+    app.debug = True
     app.run()
+
+def test_client():
+    app.register_module(store, url_prefix=mountpoint)
+    return app.test_client()

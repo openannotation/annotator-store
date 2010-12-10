@@ -13,6 +13,8 @@ class Annotation(Entity):
         if u'ranges' in data:
             ranges = data[u'ranges']
             del data[u'ranges']
+        else:
+            ranges = []
 
         super(Annotation, self).from_dict(data)
 
@@ -43,4 +45,4 @@ class Range(Entity):
     annotation  = ManyToOne('Annotation')
 
     def __repr__(self):
-        return '<Range %s@%s %s@%s>' % (self.id, self.start, self.startOffset, self.end, self.endOffset)
+        return '<Range %s %s@%s %s@%s>' % (self.id, self.start, self.startOffset, self.end, self.endOffset)
