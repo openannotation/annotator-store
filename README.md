@@ -10,6 +10,7 @@ The quickest way to get going assumes you have the `pip` and `virtualenv` tools 
 
     pip -E pyenv -r requirements
     source pyenv/bin/activate
+    cp annotator.cfg.example annotator.cfg
     python run.py
 
 You should see something like:
