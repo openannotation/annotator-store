@@ -49,7 +49,7 @@ def verify_request(request):
     rh = request.headers
 
     # False if not all the required headers have been provided
-    if not set(headers) <= set(rh):
+    if not set(headers) <= set([key.lower() for key in rh.keys()]):
         return False
 
     result = verify_token(

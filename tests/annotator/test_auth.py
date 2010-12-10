@@ -1,6 +1,8 @@
 import hashlib
 import datetime
 
+from werkzeug import Headers
+
 import annotator.auth as auth
 
 fixture = {
@@ -23,12 +25,12 @@ def make_token(consumerKey, userId, issueTime):
     return hashlib.sha256(c.secret + userId + issueTime).hexdigest()
 
 def make_request(consumerKey, userId, issueTime):
-    return MockRequest({
-        'x-annotator-consumer-key': consumerKey,
-        'x-annotator-auth-token': make_token(consumerKey, userId, issueTime),
-        'x-annotator-auth-token-issue-time': issueTime,
-        'x-annotator-user-id': userId
-    })
+    return MockRequest(Headers([
+        ('x-annotator-consumer-key', consumerKey),
+        ('x-annotator-auth-token', make_token(consumerKey, userId, issueTime)),
+        ('x-annotator-auth-token-issue-time', issueTime),
+        ('x-annotator-user-id', userId)
+    ]))
 
 def setup():
     auth.consumers = fixture
@@ -59,6 +61,12 @@ class TestAuth():
         request = make_request('testConsumer', 'alice', issueTime)
         del request.headers['x-annotator-consumer-key']
         assert not auth.verify_request(request), "request missing consumerKey should have been rejected"
+
+    def test_verify_request_mixedcase_headers(self):
+        issueTime = iso8601('now')
+        request = make_request('testConsumer', 'alice', issueTime)
+        request.headers['X-Annotator-Consumer-Key'] = request.headers['x-annotator-consumer-key']
+        assert auth.verify_request(request), "request with mixed-case headers should have been verified"
 
 class TestConsumer():
     def test_consumer_secret(self):
