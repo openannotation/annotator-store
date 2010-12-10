@@ -38,3 +38,16 @@ The "[]" at the end indicates the empty list for your annotations. There are no 
 [1]: http://python.org
 [2]: http://flask.pocoo.org
 [3]: http://elixir.ematia.de
+
+## Running tests
+
+Running `pip -E pyenv -r requirements` or similar, as described above, should have installed `nose` for you. In the virtualenv, you should be able to run the tests as follows:
+
+    $ nosetests
+    .....................
+    ----------------------------------------------------------------------
+    Ran 21 tests in 0.502s
+
+    OK
+
+Please [open an issue](issues) if you find that the tests don't all pass on your machine, making sure to include the output of `pip freeze`.
