@@ -50,4 +50,4 @@ Running `pip -E pyenv -r requirements` or similar, as described above, should ha
 
     OK
 
-Please [open an issue](issues) if you find that the tests don't all pass on your machine, making sure to include the output of `pip freeze`.
+Please [open an issue](annotator-store-flask/issues) if you find that the tests don't all pass on your machine, making sure to include the output of `pip freeze`.
