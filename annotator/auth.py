@@ -3,7 +3,7 @@ import hashlib
 
 import iso8601
 
-__all__ = ["consumers", "verify_token", "Consumer"]
+__all__ = ["consumers", "verify_token", "verify_request", "Consumer"]
 
 # Hard-code this for the moment. It can go into the database later.
 consumers = {
@@ -39,6 +39,27 @@ def verify_token(token, key, userId, issueTime):
         return False # Token expired: issueTime + ttl > now
 
     return True
+
+def verify_request(request):
+    pre = 'x-annotator-'
+
+    required = ['auth-token', 'auth-token-issue-time', 'consumer-key', 'user-id']
+    headers  = [pre + key for key in required]
+
+    rh = request.headers
+
+    # False if not all the required headers have been provided
+    if not set(headers) <= set(rh):
+        return False
+
+    result = verify_token(
+        rh[pre + 'auth-token'],
+        rh[pre + 'consumer-key'],
+        rh[pre + 'user-id'],
+        rh[pre + 'auth-token-issue-time']
+    )
+
+    return result
 
 class Consumer():
     def __init__(self, key):

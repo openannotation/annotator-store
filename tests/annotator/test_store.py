@@ -10,6 +10,7 @@ def setup():
 
 class TestStore():
     def setup(self):
+        app.config['AUTH_ON'] = False
         self.app = app.test_client()
         create_all()
 
@@ -81,3 +82,17 @@ class TestStore():
 
         assert headers['Access-Control-Expose-Headers'] == 'Location', \
                 "Did not send the right Access-Control-Expose-Headers header."
+
+class TestStoreAuth():
+    def setup(self):
+        app.config['AUTH_ON'] = True
+        self.app = app.test_client()
+        create_all()
+
+    def teardown(self):
+        session.remove()
+        drop_all()
+
+    def test_reject_bare_request(self):
+        response = self.app.get('/store')
+        assert response.status_code == 401, "response should be 401 NOT AUTHORIZED"

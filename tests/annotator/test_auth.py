@@ -10,6 +10,10 @@ fixture = {
     }
 }
 
+class MockRequest():
+    def __init__(self, headers):
+        self.headers = headers
+
 def iso8601(t):
     t = datetime.datetime.now() if t == 'now' else t
     return t.strftime("%Y-%m-%dT%H:%M:%S")
@@ -17,6 +21,14 @@ def iso8601(t):
 def make_token(consumerKey, userId, issueTime):
     c = auth.Consumer(key=consumerKey)
     return hashlib.sha256(c.secret + userId + issueTime).hexdigest()
+
+def make_request(consumerKey, userId, issueTime):
+    return MockRequest({
+        'x-annotator-consumer-key': consumerKey,
+        'x-annotator-auth-token': make_token(consumerKey, userId, issueTime),
+        'x-annotator-auth-token-issue-time': issueTime,
+        'x-annotator-user-id': userId
+    })
 
 def setup():
     auth.consumers = fixture
@@ -36,6 +48,17 @@ class TestAuth():
         issueTime = iso8601(datetime.datetime.now() - datetime.timedelta(seconds=301))
         tok = make_token('testConsumer', 'alice', issueTime)
         assert not auth.verify_token(tok, 'testConsumer', 'bob', issueTime), "token had expired, should have been rejected"
+
+    def test_verify_request(self):
+        issueTime = iso8601('now')
+        request = make_request('testConsumer', 'alice', issueTime)
+        assert auth.verify_request(request), "request should have been verified"
+
+    def test_reject_request_missing_headers(self):
+        issueTime = iso8601('now')
+        request = make_request('testConsumer', 'alice', issueTime)
+        del request.headers['x-annotator-consumer-key']
+        assert not auth.verify_request(request), "request missing consumerKey should have been rejected"
 
 class TestConsumer():
     def test_consumer_secret(self):
