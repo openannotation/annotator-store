@@ -65,3 +65,17 @@ class TestStore():
     def test_delete_notfound(self):
         response = self.app.delete('/store/123')
         assert response.status_code == 404, "response should be 404 NOT FOUND"
+
+    def test_cors_preflight(self):
+        response = self.app.open('/store', method="OPTIONS")
+
+        headers = dict(response.headers)
+
+        assert headers['Access-Control-Allow-Methods'] == 'GET, POST, PUT, DELETE', \
+            "Did not send the right Access-Control-Allow-Methods header."
+
+        assert headers['Access-Control-Allow-Origin'] == '*', \
+            "Did not send the right Access-Control-Allow-Origin header."
+
+        assert headers['Access-Control-Expose-Headers'] == 'Location', \
+                "Did not send the right Access-Control-Expose-Headers header."
