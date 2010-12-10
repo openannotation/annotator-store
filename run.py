@@ -1,21 +1,21 @@
 import os
 
-from annotator.annotator import app, setup_app
-from annotator.model import *
+import annotator.store as store
+import annotator.model as model
 
 if __name__ == '__main__':
     here = os.path.dirname(os.path.abspath( __file__ ))
 
     if 'ANNOTATOR_CONFIG' in os.environ:
-        app.config.from_envvar('ANNOTATOR_CONFIG')
+        store.app.config.from_envvar('ANNOTATOR_CONFIG')
     else:
-        app.config.from_pyfile(here + '/annotator.cfg')
+        store.app.config.from_pyfile(here + '/annotator.cfg')
 
-    metadata.bind = app.config['DB']
+    model.metadata.bind = store.app.config['DB']
 
     # Create tables
-    setup_all(True)
+    model.setup_all(True)
     # Setup app
-    setup_app()
+    store.setup_app()
 
-    app.run()
+    store.app.run()

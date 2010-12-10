@@ -1,9 +1,15 @@
 from flask import Flask, Module
-from flask import abort, current_app, g, json, redirect, request, url_for
+from flask import abort, current_app, json, redirect, request, url_for
 
 from .model import Annotation, Range, session
 
+__all__ = ["app", "store", "setup_app"]
+
+app = Flask(__name__)
 store = Module(__name__)
+
+def setup_app():
+    app.register_module(store, url_prefix=app.config['MOUNTPOINT'])
 
 # We define our own jsonify rather than using flask.jsonify because we wish
 # to jsonify arbitrary objects (e.g. index returns a list) rather than kwargs.
@@ -13,6 +19,14 @@ def jsonify(obj):
 
 def unjsonify(str):
     return json.loads(str)
+
+@store.after_request
+def after_request(response):
+    response.headers['Access-Control-Allow-Origin']   = '*'
+    response.headers['Access-Control-Expose-Headers'] = 'Location'
+    response.headers['Access-Control-Allow-Methods']  = 'GET, POST, PUT, DELETE'
+    response.headers['Access-Control-Max-Age']        = '86400'
+    return response
 
 # INDEX
 @store.route('')

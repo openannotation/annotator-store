@@ -1,6 +1,6 @@
 from flask import json, url_for
 
-from annotator.annotator import app, setup_app
+from annotator.store import app, setup_app
 from annotator.model import Annotation, Range
 from annotator.model import create_all, drop_all, session
 
