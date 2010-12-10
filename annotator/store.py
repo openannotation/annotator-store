@@ -1,7 +1,7 @@
 from flask import Flask, Module
 from flask import abort, current_app, g, json, redirect, request, url_for
 
-from annotator.model import Annotation, Range, session
+from .model import Annotation, Range, session
 
 store = Module(__name__)
 

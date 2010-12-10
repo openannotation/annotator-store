@@ -1,10 +1,12 @@
 from flask import json, url_for
 
-from annotator import app
+from annotator.annotator import app, setup_app
 from annotator.model import Annotation, Range
 from annotator.model import create_all, drop_all, session
 
-app.mountpoint = '/store'
+def setup():
+    app.config['MOUNTPOINT'] = '/store'
+    setup_app()
 
 class TestStore():
     def setup(self):

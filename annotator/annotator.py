@@ -1,10 +1,9 @@
 from flask import Flask
 from flask import g, json, request
 
-from annotator.store import store
+from .store import store
 
-app = Flask('annotator')
-mountpoint = '/store/annotations'
+app = Flask(__name__)
 
 @store.after_request
 def after_request(response):
@@ -14,11 +13,5 @@ def after_request(response):
     response.headers['Access-Control-Max-Age']        = '86400'
     return response
 
-def run():
-    app.register_module(store, url_prefix=mountpoint)
-    app.debug = True
-    app.run()
-
-def test_client():
-    app.register_module(store, url_prefix=mountpoint)
-    return app.test_client()
+def setup_app():
+    app.register_module(store, url_prefix=app.config['MOUNTPOINT'])
