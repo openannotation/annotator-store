@@ -34,7 +34,7 @@ def create_annotation():
 
 @store.route('/<int:id>')
 def read_annotation(id):
-    annotation = Annotation.get_by(id=id)
+    annotation = Annotation.get(id)
 
     if annotation:
         return jsonify(annotation.to_dict())
@@ -43,7 +43,7 @@ def read_annotation(id):
 
 @store.route('/<int:id>', methods=['PUT'])
 def update_annotation(id):
-    annotation = Annotation.get_by(id=id)
+    annotation = Annotation.get(id)
 
     if annotation:
         if 'json' in request.form:
@@ -58,7 +58,7 @@ def update_annotation(id):
 
 @store.route('/<int:id>', methods=['DELETE'])
 def delete_annotation(id):
-    annotation = Annotation.get_by(id=id)
+    annotation = Annotation.get(id)
 
     if annotation:
         annotation.delete()

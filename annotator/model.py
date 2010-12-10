@@ -14,7 +14,7 @@ class Annotation(Entity):
 
         for range_data in ranges:
             if u'id' in range_data:
-                range = Range.get_by(id=range_data[u'id'])
+                range = Range.get(range_data[u'id'])
             else:
                 range = Range()
 
@@ -30,7 +30,7 @@ class Annotation(Entity):
         return '<Annotation %s>' % (self.id)
 
 class Range(Entity):
-    id = Field(Integer, primary_key=True)
+    id          = Field(Integer, primary_key=True)
     start       = Field(Unicode(255))
     end         = Field(Unicode(255))
     startOffset = Field(Integer)
