@@ -53,7 +53,7 @@ def create_annotation():
 
         session.commit()
 
-        return redirect(url_for('read_annotation', id=annotation.id), 303)
+        return jsonify(annotation.to_dict())
     else:
         return jsonify('No parameters given. Annotation not created.', status=400)
 
