@@ -3,7 +3,7 @@ import hashlib
 
 import iso8601
 
-__all__ = ["consumers", "verify_token", "verify_request", "Consumer"]
+__all__ = ["consumers", "generate_token", "verify_token", "verify_request", "Consumer"]
 
 # Hard-code this for the moment. It can go into the database later.
 consumers = {
@@ -25,6 +25,20 @@ class Utc(datetime.tzinfo):
     def dst(self, dt):
         return ZERO
 UTC = Utc()
+
+def generate_token(key, userId):
+    consumer = Consumer(key)
+
+    issueTime = datetime.datetime.now(UTC).isoformat()
+    token = hashlib.sha256(consumer.secret + userId + issueTime).hexdigest()
+
+    return dict(
+        consumerKey=key,
+        authToken=token,
+        authTokenIssueTime=issueTime,
+        authTokenTTL=consumer.ttl,
+        userId=userId
+    )
 
 def verify_token(token, key, userId, issueTime):
     consumer = Consumer(key)

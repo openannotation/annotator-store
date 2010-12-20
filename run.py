@@ -18,4 +18,9 @@ if __name__ == '__main__':
     # Setup app
     store.setup_app()
 
+    # For testing purposes only
+    if store.app.config['TEST_CONSUMER']:
+        from annotator.consumer import consumer
+        store.app.register_module(consumer, url_prefix='/auth')
+
     store.app.run()
