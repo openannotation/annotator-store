@@ -38,18 +38,17 @@ def after_request(response):
     return response
 
 # INDEX
-@store.route('')
+@store.route('/annotations')
 def index():
     annotations = [a.to_dict() for a in Annotation.query.all()]
     return jsonify(annotations)
 
 # CREATE
-@store.route('', methods=['POST'])
+@store.route('/annotations', methods=['POST'])
 def create_annotation():
-    if 'json' in request.form:
+    if request.json:
         annotation = Annotation()
-        data = unjsonify(request.form['json'])
-        annotation.from_dict(data)
+        annotation.from_dict(request.json)
 
         session.commit()
 
@@ -58,7 +57,7 @@ def create_annotation():
         return jsonify('No parameters given. Annotation not created.', status=400)
 
 # READ
-@store.route('/<int:id>')
+@store.route('/annotations/<int:id>')
 def read_annotation(id):
     annotation = Annotation.get(id)
 
@@ -68,14 +67,13 @@ def read_annotation(id):
         return jsonify('Annotation not found.', status=404)
 
 # UPDATE
-@store.route('/<int:id>', methods=['PUT'])
+@store.route('/annotations/<int:id>', methods=['PUT'])
 def update_annotation(id):
     annotation = Annotation.get(id)
 
     if annotation:
-        if 'json' in request.form:
-            data = unjsonify(request.form['json'])
-            annotation.from_dict(data)
+        if request.json:
+            annotation.from_dict(request.json)
 
             session.commit()
 
@@ -84,7 +82,7 @@ def update_annotation(id):
         return jsonify('Annotation not found. No update performed.', status=404)
 
 # DELETE
-@store.route('/<int:id>', methods=['DELETE'])
+@store.route('/annotations/<int:id>', methods=['DELETE'])
 def delete_annotation(id):
     annotation = Annotation.get(id)
 
@@ -95,3 +93,10 @@ def delete_annotation(id):
         return None, 204
     else:
         return jsonify('Annotation not found. No delete performed.', status=404)
+
+# Search
+@store.route('/search')
+def search_annotations():
+    # TODO: actually do some searching.
+    annotations = [a.to_dict() for a in Annotation.query.all()]
+    return jsonify({'results': annotations})
