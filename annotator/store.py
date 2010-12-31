@@ -21,6 +21,9 @@ def jsonify(obj, *args, **kwargs):
 def unjsonify(str):
     return json.loads(str)
 
+def get_current_userid():
+    return auth.get_request_userid(request)
+
 @store.before_request
 def before_request():
     if app.config['AUTH_ON'] and not auth.verify_request(request):

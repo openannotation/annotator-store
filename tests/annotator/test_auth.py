@@ -63,4 +63,7 @@ class TestAuth():
         request.headers['X-Annotator-Consumer-Key'] = request.headers['x-annotator-consumer-key']
         assert auth.verify_request(request), "request with mixed-case headers should have been verified"
 
-
+    def test_get_request_userid(self):
+        issueTime = iso8601('now')
+        request = make_request('testConsumer', 'bob', issueTime)
+        assert auth.get_request_userid(request) == 'bob', "didn't extract userid from headers"

@@ -73,4 +73,9 @@ def verify_request(request):
 
     return result
 
+def get_request_userid(request):
+    if HEADER_PREFIX + 'user-id' in request.headers:
+        return request.headers[HEADER_PREFIX + 'user-id']
+    else:
+        return None
 
