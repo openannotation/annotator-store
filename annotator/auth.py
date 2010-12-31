@@ -57,7 +57,7 @@ def verify_token(token, key, userId, issueTime):
 def verify_request(request):
     pre = 'x-annotator-'
 
-    required = ['auth-token', 'auth-token-issue-time', 'consumer-key', 'user-id']
+    required = ['auth-token', 'consumer-key', 'user-id', 'auth-token-issue-time']
     headers  = [pre + key for key in required]
 
     rh = request.headers
@@ -66,12 +66,7 @@ def verify_request(request):
     if not set(headers) <= set([key.lower() for key in rh.keys()]):
         return False
 
-    result = verify_token(
-        rh[pre + 'auth-token'],
-        rh[pre + 'consumer-key'],
-        rh[pre + 'user-id'],
-        rh[pre + 'auth-token-issue-time']
-    )
+    result = verify_token( *[rh[h] for h in headers] )
 
     return result
 
