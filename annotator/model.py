@@ -1,4 +1,5 @@
 from elixir import *
+from flask import json
 
 def setup_in_memory():
     metadata.bind = "sqlite:///:memory:"
@@ -7,16 +8,30 @@ def setup_in_memory():
 class Annotation(Entity):
     id     = Field(Integer, primary_key=True)
     text   = Field(UnicodeText)
+    extras = Field(UnicodeText, default=u'{}')
     ranges = OneToMany('Range')
 
     def from_dict(self, data):
-        if u'ranges' in data:
-            ranges = data[u'ranges']
-            del data[u'ranges']
+        obj = {
+            u'extras': json.loads(self.extras if self.extras else u'{}')
+        }
+
+        for key in data:
+            if hasattr(self, key):
+                obj[key] = data[key]
+            else:
+                obj[u'extras'][key] = data[key]
+
+        # Reserialize
+        obj[u'extras'] = json.dumps(obj[u'extras'], ensure_ascii=False)
+
+        if u'ranges' in obj:
+            ranges = obj[u'ranges']
+            del obj[u'ranges']
         else:
             ranges = None
 
-        super(Annotation, self).from_dict(data)
+        super(Annotation, self).from_dict(obj)
 
         if ranges:
             for range in self.ranges:
@@ -33,12 +48,24 @@ class Annotation(Entity):
     def to_dict(self, deep={}, exclude=[]):
         deep.update({'ranges': {}})
 
-        return super(Annotation, self).to_dict(deep, exclude)
+        result = super(Annotation, self).to_dict(deep, exclude)
+
+        try:
+            extras = json.loads(result[u'extras'])
+        except(TypeError):
+            extras = {}
+
+        del result[u'extras'] 
+
+        for key in extras:
+            result[key] = extras[key]
+
+        return result
 
     def delete(self, *args, **kwargs):
         for range in self.ranges:
             range.delete()
-        
+
         return super(Annotation, self).delete(*args, **kwargs)
 
     def __repr__(self):

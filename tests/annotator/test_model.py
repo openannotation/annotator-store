@@ -44,6 +44,18 @@ class TestAnnotation():
         ann.from_dict({'ranges': [{}]})
         assert len(ann.ranges) == 1, "annotation ranges weren't updated from dict"
 
+    def test_extras_in(self):
+        ann = Annotation()
+        ann.from_dict({'foo':1, 'bar':2})
+        print ann.extras
+        assert ann.extras == '{"foo": 1, "bar": 2}', "extras weren't serialized properly"
+
+    def test_extras_out(self):
+        ann = Annotation(extras='{"bar": 3, "baz": 4}')
+        data = ann.to_dict()
+        assert data['bar'] == 3, "extras weren't deserialized properly"
+        assert data['baz'] == 4, "extras weren't deserialized properly"
+
     def test_repr(self):
         ann = Annotation(text="FooBarBaz")
         assert ann.__repr__() == '<Annotation None "FooBarBaz">', "annotation repr incorrect"
