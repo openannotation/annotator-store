@@ -3,15 +3,11 @@ import hashlib
 
 import iso8601
 
-__all__ = ["consumers", "generate_token", "verify_token", "verify_request", "Consumer"]
+from .model import Consumer
 
-# Hard-code this for the moment. It can go into the database later.
-consumers = {
-    'testConsumer': {
-        'secret': 'FKs78jfYVT93S0vU+vTTCHgT48l1XzhxeW79hWglN2+pfCJsMr80aaXv5CZY7pvRswqouUGqRy8a',
-        'ttl': 300
-    }
-}
+__all__ = ["consumers", "generate_token", "verify_token", "verify_request"]
+
+HEADER_PREFIX = 'x-annotator-'
 
 # Yoinked from python docs
 ZERO = datetime.timedelta(0)
@@ -27,7 +23,10 @@ class Utc(datetime.tzinfo):
 UTC = Utc()
 
 def generate_token(key, userId):
-    consumer = Consumer(key)
+    consumer = Consumer.get(key)
+
+    if consumer is None:
+        raise Exception, "Cannot generate token: invalid consumer key specified"
 
     issueTime = datetime.datetime.now(UTC).isoformat()
     token = hashlib.sha256(consumer.secret + userId + issueTime).hexdigest()
@@ -41,7 +40,11 @@ def generate_token(key, userId):
     )
 
 def verify_token(token, key, userId, issueTime):
-    consumer = Consumer(key)
+    consumer = Consumer.get(key)
+
+    if consumer is None:
+        return False # invalid consumer key
+
     computedToken = hashlib.sha256(consumer.secret + userId + issueTime).hexdigest()
 
     if computedToken != token:
@@ -55,7 +58,7 @@ def verify_token(token, key, userId, issueTime):
     return True
 
 def verify_request(request):
-    pre = 'x-annotator-'
+    pre = HEADER_PREFIX
 
     required = ['auth-token', 'consumer-key', 'user-id', 'auth-token-issue-time']
     headers  = [pre + key for key in required]
@@ -70,14 +73,4 @@ def verify_request(request):
 
     return result
 
-class Consumer():
-    def __init__(self, key):
-        self.data = consumers[key]
 
-    @property
-    def secret(self):
-        return self.data['secret']
-
-    @property
-    def ttl(self):
-        return self.data['ttl']

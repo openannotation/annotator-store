@@ -3,14 +3,8 @@ import datetime
 
 from werkzeug import Headers
 
+import annotator.model as model
 import annotator.auth as auth
-
-fixture = {
-    'testConsumer': {
-        'secret': 'testConsumerSecret',
-        'ttl': 300
-    }
-}
 
 class MockRequest():
     def __init__(self, headers):
@@ -21,7 +15,7 @@ def iso8601(t):
     return t.strftime("%Y-%m-%dT%H:%M:%S")
 
 def make_token(consumerKey, userId, issueTime):
-    c = auth.Consumer(key=consumerKey)
+    c = model.Consumer.get(consumerKey)
     return hashlib.sha256(c.secret + userId + issueTime).hexdigest()
 
 def make_request(consumerKey, userId, issueTime):
@@ -33,7 +27,8 @@ def make_request(consumerKey, userId, issueTime):
     ]))
 
 def setup():
-    auth.consumers = fixture
+    c = model.Consumer(key='testConsumer', secret='testConsumerSecret', ttl=300)
+    model.session.commit()
 
 class TestAuth():
     def test_verify_token(self):
@@ -68,11 +63,4 @@ class TestAuth():
         request.headers['X-Annotator-Consumer-Key'] = request.headers['x-annotator-consumer-key']
         assert auth.verify_request(request), "request with mixed-case headers should have been verified"
 
-class TestConsumer():
-    def test_consumer_secret(self):
-        c = auth.Consumer(key='testConsumer')
-        assert c.secret == 'testConsumerSecret'
 
-    def test_consumer_ttl(self):
-        c = auth.Consumer(key='testConsumer')
-        assert c.ttl == 300

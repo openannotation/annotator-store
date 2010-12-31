@@ -1,5 +1,7 @@
-from annotator.model import Annotation, Range
+from annotator.model import Annotation, Range, Consumer
 from annotator.model import create_all, drop_all, session
+
+from nose.tools import assert_raises
 
 class TestAnnotation():
     def setup(self):
@@ -95,3 +97,28 @@ class TestRange():
     def test_repr(self):
         rng = Range(start='/p', startOffset=123, end='/div', endOffset=456)
         assert rng.__repr__() == '<Range None /p@123 /div@456>', "range repr incorrect"
+
+class TestConsumer():
+    def setup(self):
+        create_all()
+
+    def teardown(self):
+        session.remove()
+        drop_all()
+
+    def test_key(self):
+        c = Consumer(key='foo')
+        assert c.key == 'foo', 'Consumer key not set by constructor'
+
+    def test_key_required(self):
+        c = Consumer(secret='foo')
+        assert_raises(Exception, session.commit)
+
+    def test_secret_required(self):
+        c = Consumer(key='foo')
+        assert_raises(Exception, session.commit)
+
+    def test_ttl_required_or_default(self):
+        c = Consumer(key='foo', secret='bar', ttl=None)
+        session.commit()
+        assert c.ttl == 3600, "TTL not set to default of one hour"

@@ -49,7 +49,6 @@ def create_annotation():
     if request.json:
         annotation = Annotation()
         annotation.from_dict(request.json)
-
         session.commit()
 
         return jsonify(annotation.to_dict())

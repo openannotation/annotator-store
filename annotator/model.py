@@ -55,7 +55,7 @@ class Annotation(Entity):
         except(TypeError):
             extras = {}
 
-        del result[u'extras'] 
+        del result[u'extras']
 
         for key in extras:
             result[key] = extras[key]
@@ -82,3 +82,11 @@ class Range(Entity):
 
     def __repr__(self):
         return '<Range %s %s@%s %s@%s>' % (self.id, self.start, self.startOffset, self.end, self.endOffset)
+
+class Consumer(Entity):
+    key    = Field(String(512), primary_key=True, required=True)
+    secret = Field(String(512), required=True)
+    ttl    = Field(Integer, default=3600, nullable=False)
+
+    def __repr__(self):
+        return '<Consumer %s>' % (self.key)
