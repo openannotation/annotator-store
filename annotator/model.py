@@ -35,6 +35,12 @@ class Annotation(Entity):
 
         return super(Annotation, self).to_dict(deep, exclude)
 
+    def delete(self, *args, **kwargs):
+        for range in self.ranges:
+            range.delete()
+        
+        return super(Annotation, self).delete(*args, **kwargs)
+
     def __repr__(self):
         return '<Annotation %s "%s">' % (self.id, self.text)
 
