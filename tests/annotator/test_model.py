@@ -20,6 +20,10 @@ class TestAnnotation():
         ann = Annotation(text="Hello there")
         assert ann.text == "Hello there", "annotation text wasn't set"
 
+    def test_user(self):
+        ann = Annotation(user="Alice")
+        assert ann.user == "Alice", "annotation user wasn't set"
+
     def test_ranges(self):
         ann = Annotation()
         ann.ranges.append(Range())
@@ -28,7 +32,7 @@ class TestAnnotation():
 
     def test_to_dict(self):
         ann = Annotation(text="Foo")
-        data = {'ranges': [], 'text': 'Foo', 'id': None}
+        data = {'ranges': [], 'text': 'Foo', 'id': None, 'user': None}
         assert ann.to_dict() == data, "annotation wasn't converted to dict correctly"
 
     def test_to_dict_with_range(self):
@@ -57,6 +61,36 @@ class TestAnnotation():
         data = ann.to_dict()
         assert data['bar'] == 3, "extras weren't deserialized properly"
         assert data['baz'] == 4, "extras weren't deserialized properly"
+
+    def test_authorise_read_nouser(self):
+        ann = Annotation()
+        assert ann.authorise('read')
+        assert ann.authorise('read', 'bob')
+
+    def test_authorise_read_user(self):
+        ann = Annotation(user='bob')
+        assert ann.authorise('read', 'bob')
+        assert ann.authorise('read', 'alice')
+
+    def test_authorise_update_nouser(self):
+        ann = Annotation()
+        assert ann.authorise('update')
+        assert ann.authorise('update', 'bob')
+
+    def test_authorise_update_user(self):
+        ann = Annotation(user='bob')
+        assert ann.authorise('update', 'bob')
+        assert not ann.authorise('update', 'alice')
+
+    def test_authorise_delete_nouser(self):
+        ann = Annotation()
+        assert ann.authorise('delete')
+        assert ann.authorise('delete', 'bob')
+
+    def test_authorise_delete_user(self):
+        ann = Annotation(user='bob')
+        assert ann.authorise('delete', 'bob')
+        assert not ann.authorise('delete', 'alice')
 
     def test_repr(self):
         ann = Annotation(text="FooBarBaz")

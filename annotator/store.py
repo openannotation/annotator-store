@@ -43,7 +43,7 @@ def after_request(response):
 # INDEX
 @store.route('/annotations')
 def index():
-    annotations = [a.to_dict() for a in Annotation.query.all()]
+    annotations = [a.to_dict() for a in Annotation.query.all() if a.authorise('read', get_current_userid())]
     return jsonify(annotations)
 
 # CREATE
@@ -63,38 +63,46 @@ def create_annotation():
 def read_annotation(id):
     annotation = Annotation.get(id)
 
-    if annotation:
-        return jsonify(annotation.to_dict())
-    else:
+    if not annotation:
         return jsonify('Annotation not found.', status=404)
+
+    elif annotation.authorise('read', get_current_userid()):
+        return jsonify(annotation.to_dict())
+
+    else:
+        return jsonify('Could not authorise request. No update performed', status=401)
 
 # UPDATE
 @store.route('/annotations/<int:id>', methods=['PUT'])
 def update_annotation(id):
     annotation = Annotation.get(id)
 
-    if annotation:
-        if request.json:
-            annotation.from_dict(request.json)
-
-            session.commit()
-
-        return jsonify(annotation.to_dict())
-    else:
+    if not annotation:
         return jsonify('Annotation not found. No update performed.', status=404)
+
+    elif request.json and annotation.authorise('update', get_current_userid()):
+        annotation.from_dict(request.json)
+        session.commit()
+        return jsonify(annotation.to_dict())
+
+    else:
+        return jsonify('Could not authorise request. No update performed', status=401)
 
 # DELETE
 @store.route('/annotations/<int:id>', methods=['DELETE'])
 def delete_annotation(id):
     annotation = Annotation.get(id)
 
-    if annotation:
+    if not annotation:
+        return jsonify('Annotation not found. No delete performed.', status=404)
+
+    elif annotation.authorise('delete', get_current_userid()):
         annotation.delete()
         session.commit()
-
         return None, 204
+
     else:
-        return jsonify('Annotation not found. No delete performed.', status=404)
+        return jsonify('Could not authorise request. No update performed', status=401)
 
 # Search
 @store.route('/search')
