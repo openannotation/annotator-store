@@ -14,18 +14,21 @@ class Annotation(Entity):
             ranges = data[u'ranges']
             del data[u'ranges']
         else:
-            ranges = []
+            ranges = None
 
         super(Annotation, self).from_dict(data)
 
-        for range_data in ranges:
-            if u'id' in range_data:
-                range = Range.get(range_data[u'id'])
-            else:
-                range = Range()
+        if ranges:
+            for range in self.ranges:
+                range.delete()
 
-            range.from_dict(range_data)
-            self.ranges.append(range)
+            for range_data in ranges:
+                if u'id' in range_data:
+                    del range_data[u'id']
+
+                range = Range()
+                range.from_dict(range_data)
+                self.ranges.append(range)
 
     def to_dict(self, deep={}, exclude=[]):
         deep.update({'ranges': {}})
