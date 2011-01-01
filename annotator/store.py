@@ -29,7 +29,6 @@ def before_request():
     if app.config['AUTH_ON'] and not auth.verify_request(request):
         return jsonify("Cannot authorise request. Perhaps you didn't send the x-annotator headers?", status=401)
 
-
 @store.after_request
 def after_request(response):
     if response.status_code < 300:
