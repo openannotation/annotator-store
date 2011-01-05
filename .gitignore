@@ -2,3 +2,4 @@
 /annotator/static
 /pyenv
 /annotator.cfg
+*.pyc
