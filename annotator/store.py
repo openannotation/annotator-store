@@ -106,6 +106,31 @@ def delete_annotation(id):
 # Search
 @store.route('/search')
 def search_annotations():
-    # TODO: actually do some searching.
-    annotations = [a.to_dict() for a in Annotation.query.all()]
-    return jsonify({'results': annotations})
+    params = [
+        (k,v) for k,v in request.args.items() if k not in [ 'all_fields', 'offset', 'limit' ]
+    ]
+    all_fields = request.args.get('all_fields', False)
+    all_fields = bool(all_fields)
+    offset = request.args.get('offset', 0)
+    limit = int(request.args.get('limit', 100))
+    if limit < 0:
+        limit = None
+
+    q = Annotation.query
+    for k,v in params:
+        kwargs = { k: unicode(v) }
+        q = q.filter_by(**kwargs)
+
+    total = q.count()
+    rows = q.offset(offset).limit(limit).all()
+    if all_fields:
+        rows = [ x.to_dict() for x in rows ]
+    else:
+        rows = [ {'id': x.id} for x in rows ]
+
+    qrows = {
+        'total': total,
+        'rows': rows
+    }
+    return jsonify(qrows)
+

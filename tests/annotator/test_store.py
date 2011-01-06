@@ -75,6 +75,61 @@ class TestStore():
         response = self.app.delete('/annotations/123')
         assert response.status_code == 404, "response should be 404 NOT FOUND"
 
+    def test_search(self):
+        uri1 = u'http://xyz.com'
+        uri2 = u'urn:uuid:xxxxx'
+        user = u'levin'
+        user2 = u'anna'
+        anno = Annotation(
+                uri=uri1,
+                text=uri1,
+                user=user,
+                )
+        anno2 = Annotation(
+                uri=uri1,
+                text=uri1 + uri1,
+                user=user2,
+                )
+        anno3 = Annotation(
+                uri=uri2,
+                text=uri2,
+                user=user
+                )
+        session.commit()
+        annoid = anno.id
+        anno2id = anno2.id
+        session.remove()
+
+        url = '/search'
+        res = self.app.get(url)
+        body = json.loads(res.data)
+        assert body['total'] == 3, body
+
+        url = '/search?limit=1'
+        res = self.app.get(url)
+        body = json.loads(res.data)
+        assert body['total'] == 3, body
+        assert len(body['rows']) == 1
+
+        url = '/search?uri=' + uri1 + '&all_fields=1'
+        res = self.app.get(url)
+        body = json.loads(res.data)
+        assert body['total'] == 2, body
+        out = body['rows']
+        assert len(out) == 2
+        assert out[0]['uri'] == uri1
+        assert out[0]['id'] in [ annoid, anno2id ]
+
+        url = '/search?uri=' + uri1
+        res = self.app.get(url)
+        body = json.loads(res.data)
+        assert body['rows'][0].keys() == ['id'], body['rows']
+
+        url = '/search?limit=-1'
+        res = self.app.get(url)
+        body = json.loads(res.data)
+        assert len(body['rows']) == 3, body
+
     def test_cors_preflight(self):
         response = self.app.open('/annotations', method="OPTIONS")
 
