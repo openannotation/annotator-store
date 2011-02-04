@@ -33,7 +33,9 @@ class TestAnnotation():
     def test_to_dict(self):
         ann = Annotation(text="Foo")
         data = {'ranges': [], 'text': 'Foo', 'id': None, 'user': None}
-        assert ann.to_dict() == data, "annotation wasn't converted to dict correctly"
+        outdict = ann.to_dict()
+        for k,v in data.items():
+            assert outdict[k] == v, "annotation wasn't converted to dict correctly"
 
     def test_to_dict_with_range(self):
         ann = Annotation(text="Bar")
