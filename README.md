@@ -35,6 +35,17 @@ The annotation store, a JSON-speaking REST API, will be mounted at `http://local
 
 The "[]" at the end indicates the empty list for your annotations. There are no annotations currently in the store. See the [Annotator repository][ann] for details on getting an annotator talking to this backend.
 
+Here's an example of putting an annotation in the store::
+
+    $ curl -X POST http://localhost:5000/annotations -H "Content-Type: appliation/json" -d '{"text": "abc"}'
+    {
+      "text": "abc", 
+      "uri": null, 
+      "ranges": [], 
+      "user": null, 
+      "id": 1
+    }
+
 [ann]: http://nickstenning.github.com/annotator
 [1]: http://python.org
 [2]: http://flask.pocoo.org
