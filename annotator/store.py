@@ -122,7 +122,7 @@ def search_annotations():
         q = q.filter_by(**kwargs)
 
     total = q.count()
-    rows = q.offset(offset).limit(limit).all()
+    rows = q.order_by(Annotation.id.desc()).offset(offset).limit(limit).all()
     if all_fields:
         rows = [ x.to_dict() for x in rows ]
     else:
