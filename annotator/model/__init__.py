@@ -1,2 +1,3 @@
 from .sqlelixir import Annotation, setup_in_memory, Consumer, Range
-from .sqlelixir import cleanup_all, create_all, session, drop_all
+from .sqlelixir import cleanup_all, create_all, session, drop_all, metadata, setup_all
+

@@ -1,22 +1,21 @@
-from flask import Flask, Module
+from flask import Flask, Module, Response
 from flask import abort, json, redirect, request, url_for
 
 from .model import Annotation, Range, session
 from . import auth
 
-__all__ = ["app", "store", "setup_app"]
+__all__ = ["store"]
 
-app = Flask('annotator')
 store = Module(__name__)
 
-def setup_app():
-    app.register_module(store, url_prefix=app.config['MOUNTPOINT'])
+from flask import current_app 
+
 
 # We define our own jsonify rather than using flask.jsonify because we wish
 # to jsonify arbitrary objects (e.g. index returns a list) rather than kwargs.
 def jsonify(obj, *args, **kwargs):
     res = json.dumps(obj, indent=None if request.is_xhr else 2)
-    return app.response_class(res, mimetype='application/json', *args, **kwargs)
+    return Response(res, mimetype='application/json', *args, **kwargs)
 
 def unjsonify(str):
     return json.loads(str)
@@ -26,7 +25,7 @@ def get_current_userid():
 
 @store.before_request
 def before_request():
-    if app.config['AUTH_ON'] and not auth.verify_request(request):
+    if current_app.config['AUTH_ON'] and not auth.verify_request(request):
         return jsonify("Cannot authorise request. Perhaps you didn't send the x-annotator headers?", status=401)
 
 @store.after_request

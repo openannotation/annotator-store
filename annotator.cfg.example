@@ -5,5 +5,5 @@ DEBUG = True
 ROOT = os.path.dirname(os.path.abspath( __file__ ))
 DB = "sqlite:///%s/db/annotator.sqlite" % ROOT
 
-MOUNTPOINT = "/store/annotations"
+MOUNTPOINT = ""
 AUTH_ON = False
