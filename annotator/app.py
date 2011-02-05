@@ -49,3 +49,7 @@ def configure_app():
         mail_handler.setLevel(logging.ERROR)
         app.logger.addHandler(mail_handler)
 
+@app.route('/')
+def home():
+    return render_template('index.html')
+
