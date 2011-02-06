@@ -1,3 +1,4 @@
+import datetime
 from elixir import *
 from flask import json
 
@@ -35,6 +36,12 @@ class Annotation(Entity):
                 obj[key] = data[key]
             else:
                 obj[u'extras'][key] = data[key]
+
+        # now some defaults 
+        now = datetime.datetime.now().isoformat()
+        if not 'created' in obj[u'extras']:
+            obj[u'extras']['created'] = now
+        obj[u'extras']['updated'] = now
 
         # Reserialize
         obj[u'extras'] = json.dumps(obj[u'extras'], ensure_ascii=False)

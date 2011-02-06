@@ -1,7 +1,9 @@
+import json
+from nose.tools import assert_raises
+
 from annotator.model import Annotation, Range, Consumer
 from annotator.model import create_all, drop_all, session
 
-from nose.tools import assert_raises
 
 class TestAnnotation():
     def setup(self):
@@ -55,8 +57,11 @@ class TestAnnotation():
     def test_extras_in(self):
         ann = Annotation()
         ann.from_dict({'foo':1, 'bar':2})
-        print ann.extras
-        assert ann.extras == '{"foo": 1, "bar": 2}', "extras weren't serialized properly"
+        extras = json.loads(ann.extras)
+        print extras
+        assert set(extras.keys()) == set(['foo','bar','created','updated']), "extras weren't serialized properly"
+        assert extras['foo'] == 1, "extras weren't serialized properly"
+        assert extras['bar'] == 2, "extras weren't serialized properly"
 
     def test_extras_out(self):
         ann = Annotation(extras='{"bar": 3, "baz": 4}')
