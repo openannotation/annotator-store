@@ -18,7 +18,7 @@ You should see something like:
     * Running on http://127.0.0.1:5000/
     * Restarting with reloader...
 
-The annotation store, a JSON-speaking REST API, will be mounted at `http://localhost:5000/store/annotations`. You can test this by running:
+The annotation store, a JSON-speaking REST API, will be mounted at `http://localhost:5000/annotations`. You can test this by running:
 
     $ curl -i http://localhost:5000/store/annotations
     HTTP/1.0 200 OK
@@ -37,7 +37,7 @@ The "[]" at the end indicates the empty list for your annotations. There are no 
 
 Here's an example of putting an annotation in the store::
 
-    $ curl -X POST http://localhost:5000/annotations -H "Content-Type: appliation/json" -d '{"text": "abc"}'
+    $ curl -X POST http://localhost:5000/annotations -H "Content-Type: application/json" -d '{"text": "abc"}'
     {
       "text": "abc", 
       "uri": null, 
