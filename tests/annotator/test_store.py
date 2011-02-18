@@ -17,6 +17,14 @@ class TestStore():
         session.remove()
         drop_all()
 
+    def _create_annotation(self, **kwargs):
+        ann = Annotation(**kwargs)
+        session.commit()
+        return ann
+
+    def _get_annotation(self, id_):
+        return Annotation.get(id_)
+
     def test_index(self):
         assert self.app.get('/annotations').data == "[]", "response should be empty list"
 
@@ -34,8 +42,8 @@ class TestStore():
         assert 'id' in data, "annotation id should be returned in response"
 
     def test_read(self):
-        Annotation(text=u"Foo", id=123)
-        session.commit()
+        kwargs = dict(text=u"Foo", id=123)
+        self._create_annotation(**kwargs)
         response = self.app.get('/annotations/123')
         data = json.loads(response.data)
         assert data['id'] == 123, "annotation id should be returned in response"
@@ -46,12 +54,13 @@ class TestStore():
         assert response.status_code == 404, "response should be 404 NOT FOUND"
 
     def test_update(self):
-        ann = Annotation(text=u"Foo", id=123)
-        session.commit() # commits expire all properties of `ann'
+        kwargs = dict(text=u"Foo", id=123)
+        self._create_annotation(**kwargs)
 
         payload = json.dumps({'id': 123, 'text': 'Bar'})
         response = self.app.put('/annotations/123', data=payload, content_type='application/json')
 
+        ann = self._get_annotation(123)
         assert ann.text == "Bar", "annotation wasn't updated in db"
 
         data = json.loads(response.data)
@@ -62,13 +71,13 @@ class TestStore():
         assert response.status_code == 404, "response should be 404 NOT FOUND"
 
     def test_delete(self):
-        ann = Annotation(text=u"Bar", id=456)
-        session.commit()
+        kwargs = dict(text=u"Bar", id=456)
+        ann = self._create_annotation(**kwargs)
 
         response = self.app.delete('/annotations/456')
         assert response.status_code == 204, "response should be 204 NO CONTENT"
 
-        assert Annotation.get(456) == None, "annotation wasn't deleted in db"
+        assert self._get_annotation(456) == None, "annotation wasn't deleted in db"
 
     def test_delete_notfound(self):
         response = self.app.delete('/annotations/123')
@@ -79,25 +88,23 @@ class TestStore():
         uri2 = u'urn:uuid:xxxxx'
         user = u'levin'
         user2 = u'anna'
-        anno = Annotation(
+        anno = self._create_annotation(**dict(
                 uri=uri1,
                 text=uri1,
                 user=user,
-                )
-        anno2 = Annotation(
+                ))
+        anno2 = self._create_annotation(**dict(
                 uri=uri1,
                 text=uri1 + uri1,
                 user=user2,
-                )
-        anno3 = Annotation(
+                ))
+        anno3 = self._create_annotation(**dict(
                 uri=uri2,
                 text=uri2,
                 user=user
-                )
-        session.commit()
+                ))
         annoid = anno.id
         anno2id = anno2.id
-        session.remove()
 
         url = '/search'
         res = self.app.get(url)
