@@ -1,7 +1,7 @@
 from flask import Flask, Module, Response
 from flask import abort, json, redirect, request, url_for
 
-from .model import Annotation, Range, session
+from .model import Annotation, Range, session, authorize
 from . import auth
 
 __all__ = ["store"]
@@ -42,7 +42,7 @@ def after_request(response):
 # INDEX
 @store.route('/annotations')
 def index():
-    annotations = [a.to_dict() for a in Annotation.query.all() if a.authorise('read', get_current_userid())]
+    annotations = [a.to_dict() for a in Annotation.query.all() if authorize(a, 'read', get_current_userid())]
     return jsonify(annotations)
 
 # CREATE
@@ -65,7 +65,7 @@ def read_annotation(id):
     if not annotation:
         return jsonify('Annotation not found.', status=404)
 
-    elif annotation.authorise('read', get_current_userid()):
+    elif authorize(annotation, 'read', get_current_userid()):
         return jsonify(annotation.to_dict())
 
     else:
@@ -79,7 +79,7 @@ def update_annotation(id):
     if not annotation:
         return jsonify('Annotation not found. No update performed.', status=404)
 
-    elif request.json and annotation.authorise('update', get_current_userid()):
+    elif request.json and authorize(annotation, 'update', get_current_userid()):
         annotation.from_dict(request.json)
         session.commit()
         return jsonify(annotation.to_dict())
@@ -95,7 +95,7 @@ def delete_annotation(id):
     if not annotation:
         return jsonify('Annotation not found. No delete performed.', status=404)
 
-    elif annotation.authorise('delete', get_current_userid()):
+    elif authorize(annotation, 'delete', get_current_userid()):
         annotation.delete()
         session.commit()
         return None, 204

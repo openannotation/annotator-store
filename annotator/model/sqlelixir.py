@@ -14,18 +14,6 @@ class Annotation(Entity):
     extras = Field(UnicodeText, default=u'{}')
     ranges = OneToMany('Range')
 
-    def authorise(self, action, user=None):
-        # If self.user is None, all actions are allowed
-        if not self.user:
-            return True
-
-        # Otherwise, everyone can read and only the same user can
-        # do update/delete
-        if action is 'read':
-            return True
-        else:
-            return user == self.user
-
     def from_dict(self, data):
         obj = {
             u'extras': json.loads(self.extras if self.extras else u'{}')

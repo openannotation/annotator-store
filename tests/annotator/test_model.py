@@ -1,7 +1,7 @@
 import json
 from nose.tools import assert_raises
 
-from annotator.model import Annotation, Range, Consumer
+from annotator.model import Annotation, Range, Consumer, authorize
 from annotator.model import create_all, drop_all, session
 
 
@@ -71,33 +71,33 @@ class TestAnnotation():
 
     def test_authorise_read_nouser(self):
         ann = Annotation()
-        assert ann.authorise('read')
-        assert ann.authorise('read', 'bob')
+        assert authorize(ann, 'read')
+        assert authorize(ann, 'read', 'bob')
 
     def test_authorise_read_user(self):
         ann = Annotation(user='bob')
-        assert ann.authorise('read', 'bob')
-        assert ann.authorise('read', 'alice')
+        assert authorize(ann, 'read', 'bob')
+        assert authorize(ann, 'read', 'alice')
 
     def test_authorise_update_nouser(self):
         ann = Annotation()
-        assert ann.authorise('update')
-        assert ann.authorise('update', 'bob')
+        assert authorize(ann, 'update')
+        assert authorize(ann, 'update', 'bob')
 
     def test_authorise_update_user(self):
         ann = Annotation(user='bob')
-        assert ann.authorise('update', 'bob')
-        assert not ann.authorise('update', 'alice')
+        assert authorize(ann, 'update', 'bob')
+        assert not authorize(ann, 'update', 'alice')
 
     def test_authorise_delete_nouser(self):
         ann = Annotation()
-        assert ann.authorise('delete')
-        assert ann.authorise('delete', 'bob')
+        assert authorize(ann, 'delete')
+        assert authorize(ann, 'delete', 'bob')
 
     def test_authorise_delete_user(self):
         ann = Annotation(user='bob')
-        assert ann.authorise('delete', 'bob')
-        assert not ann.authorise('delete', 'alice')
+        assert authorize(ann, 'delete', 'bob')
+        assert not authorize(ann, 'delete', 'alice')
 
     def test_repr(self):
         ann = Annotation(text="FooBarBaz")
