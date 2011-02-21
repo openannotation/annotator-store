@@ -37,8 +37,13 @@ class DomainObject(Document):
     def get(cls, id):
         return cls.load(Metadata.DB, id)
 
+    def delete(self):
+        Metadata.DB.delete(self)
+
     def to_dict(self):
-        return dict(self.items())
+        out = dict(self.items())
+        out['id'] = self.id
+        return out
 
     @classmethod
     def from_dict(self, dict_):

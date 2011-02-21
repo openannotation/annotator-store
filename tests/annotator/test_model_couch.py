@@ -1,3 +1,4 @@
+import uuid
 import json
 from nose.tools import assert_raises
 
@@ -67,4 +68,17 @@ class TestAnnotation():
         print data
         assert data['bar'] == 3, "extras weren't deserialized properly"
         assert data['baz'] == 4, "extras weren't deserialized properly"
+    
+    def test_delete(self):
+        id_ = str(uuid.uuid4())
+        ann = Annotation(id=id_)
+        ann.save()
+
+        newann = Annotation.get(id_)
+        newann.delete()
+
+        noann = Annotation.get(id_)
+        assert noann == None
+
+
 
