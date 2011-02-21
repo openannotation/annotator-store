@@ -14,6 +14,9 @@ class Annotation(Entity):
     extras = Field(UnicodeText, default=u'{}')
     ranges = OneToMany('Range')
 
+    def save(self):
+        session.commit()
+
     def from_dict(self, data):
         obj = {
             u'extras': json.loads(self.extras if self.extras else u'{}')

@@ -1,7 +1,7 @@
 from flask import Flask, Module, Response
 from flask import abort, json, redirect, request, url_for
 
-from .model import Annotation, Range, session, authorize
+from .model import Annotation, authorize
 from . import auth
 
 __all__ = ["store"]
@@ -51,7 +51,7 @@ def create_annotation():
     if request.json:
         annotation = Annotation()
         annotation.from_dict(request.json)
-        session.commit()
+        annotation.save()
 
         return jsonify(annotation.to_dict())
     else:
@@ -81,7 +81,7 @@ def update_annotation(id):
 
     elif request.json and authorize(annotation, 'update', get_current_userid()):
         annotation.from_dict(request.json)
-        session.commit()
+        annotation.save()
         return jsonify(annotation.to_dict())
 
     else:
@@ -97,7 +97,7 @@ def delete_annotation(id):
 
     elif authorize(annotation, 'delete', get_current_userid()):
         annotation.delete()
-        session.commit()
+        annotation.save()
         return None, 204
 
     else:

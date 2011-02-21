@@ -1,12 +1,14 @@
 import json
 from nose.tools import assert_raises
 
-from annotator.model import Annotation, Range, Consumer, authorize
-from annotator.model import create_all, drop_all, session
+from annotator.model import authorize
+from annotator.model.sqlelixir import Annotation, Range, Consumer
+from annotator.model.sqlelixir import create_all, drop_all, session, setup_in_memory
 
 
 class TestAnnotation():
     def setup(self):
+        setup_in_memory()
         create_all()
 
     def teardown(self):
@@ -105,6 +107,7 @@ class TestAnnotation():
 
 class TestRange():
     def setup(self):
+        setup_in_memory()
         create_all()
 
     def teardown(self):
@@ -141,6 +144,7 @@ class TestRange():
 
 class TestConsumer():
     def setup(self):
+        setup_in_memory()
         create_all()
 
     def teardown(self):

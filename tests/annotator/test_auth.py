@@ -3,8 +3,10 @@ import datetime
 
 from werkzeug import Headers
 
-import annotator.model as model
+import annotator.model.sqlelixir as model
+from annotator.model.sqlelixir import setup_in_memory, create_all, drop_all, session
 import annotator.auth as auth
+
 
 class MockRequest():
     def __init__(self, headers):
@@ -27,8 +29,14 @@ def make_request(consumerKey, userId, issueTime):
     ]))
 
 def setup():
+    setup_in_memory()
+    create_all()
     c = model.Consumer(key='testConsumer', secret='testConsumerSecret', ttl=300)
     model.session.commit()
+
+def teardown():
+    session.remove()
+    drop_all()
 
 class TestAuth():
     def test_verify_token(self):

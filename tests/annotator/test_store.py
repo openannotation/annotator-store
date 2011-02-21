@@ -1,8 +1,8 @@
 from flask import json, url_for
 
 from annotator.app import app, setup_app
-from annotator.model import Annotation, Range
-from annotator.model import create_all, drop_all, session
+from annotator.model.sqlelixir import Annotation, Range
+from annotator.model.sqlelixir import create_all, drop_all, session
 
 def setup():
     setup_app()

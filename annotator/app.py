@@ -1,7 +1,7 @@
 import os
 from flask import Flask, render_template
 from store import store
-import model
+import annotator.model.sqlelixir as model
 
 
 app = Flask('annotator')
