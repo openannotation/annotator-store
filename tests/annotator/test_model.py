@@ -47,18 +47,15 @@ class TestAnnotation():
         assert len(ann.to_dict()['ranges']) == 1, "annotation ranges weren't in dict"
 
     def test_from_dict(self):
-        ann = Annotation()
-        ann.from_dict({'text': 'Baz'})
+        ann = Annotation.from_dict({'text': 'Baz'})
         assert ann.text == "Baz", "annotation wasn't updated from dict"
 
     def test_from_dict_with_range(self):
-        ann = Annotation()
-        ann.from_dict({'ranges': [{}]})
+        ann = Annotation.from_dict({'ranges': [{}]})
         assert len(ann.ranges) == 1, "annotation ranges weren't updated from dict"
 
     def test_extras_in(self):
-        ann = Annotation()
-        ann.from_dict({'foo':1, 'bar':2})
+        ann = Annotation.from_dict({'foo':1, 'bar':2})
         extras = json.loads(ann.extras)
         print extras
         assert set(extras.keys()) == set(['foo','bar','created','updated']), "extras weren't serialized properly"

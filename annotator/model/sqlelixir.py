@@ -17,7 +17,17 @@ class Annotation(Entity):
     def save(self):
         session.commit()
 
-    def from_dict(self, data):
+    @classmethod
+    def from_dict(cls, data):
+        if 'id' in data:
+            ann = cls.get(dict_['id'])
+            del data['id']
+        else:
+            ann = Annotation()
+        ann.from_dict_update(data)
+        return ann
+
+    def from_dict_update(self, data):
         obj = {
             u'extras': json.loads(self.extras if self.extras else u'{}')
         }

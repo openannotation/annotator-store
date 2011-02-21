@@ -49,8 +49,7 @@ def index():
 @store.route('/annotations', methods=['POST'])
 def create_annotation():
     if request.json:
-        annotation = Annotation()
-        annotation.from_dict(request.json)
+        annotation = Annotation.from_dict(request.json)
         annotation.save()
 
         return jsonify(annotation.to_dict())
@@ -80,7 +79,7 @@ def update_annotation(id):
         return jsonify('Annotation not found. No update performed.', status=404)
 
     elif request.json and authorize(annotation, 'update', get_current_userid()):
-        annotation.from_dict(request.json)
+        annotation.from_dict_update(request.json)
         annotation.save()
         return jsonify(annotation.to_dict())
 
