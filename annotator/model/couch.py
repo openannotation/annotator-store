@@ -48,7 +48,7 @@ class DomainObject(Document):
     @classmethod
     def from_dict(self, dict_):
         if 'id' in dict_:
-            ann = Annotation(dict_['id'])
+            ann = Annotation.get(dict_['id'])
             del dict_['id']
         else:
             ann = Annotation()
@@ -76,10 +76,13 @@ class Annotation(DomainObject):
             if (doc.type == 'Annotation' && doc.uri)
                 emit(doc.uri, null);
         }'''
+        ## this assumes include_docs=True
+        wrapper = lambda x: Annotation.wrap(x['doc'])
         ourkwargs = dict(
             map_fun=map_fun,
             offset=offset,
             include_docs=True,
+            wrapper=wrapper
             )
         if limit >= 0:
             ourkwargs['limit'] = limit

@@ -42,7 +42,7 @@ def after_request(response):
 # INDEX
 @store.route('/annotations')
 def index():
-    annotations = [a.to_dict() for a in Annotation.query.all() if authorize(a, 'read', get_current_userid())]
+    annotations = [row.doc for row in Annotation.search() if authorize(a, 'read', get_current_userid())]
     return jsonify(annotations)
 
 # CREATE
@@ -51,13 +51,12 @@ def create_annotation():
     if request.json:
         annotation = Annotation.from_dict(request.json)
         annotation.save()
-
         return jsonify(annotation.to_dict())
     else:
         return jsonify('No parameters given. Annotation not created.', status=400)
 
 # READ
-@store.route('/annotations/<int:id>')
+@store.route('/annotations/<id>')
 def read_annotation(id):
     annotation = Annotation.get(id)
 
@@ -71,7 +70,7 @@ def read_annotation(id):
         return jsonify('Could not authorise request. No update performed', status=401)
 
 # UPDATE
-@store.route('/annotations/<int:id>', methods=['PUT'])
+@store.route('/annotations/<id>', methods=['PUT'])
 def update_annotation(id):
     annotation = Annotation.get(id)
 
@@ -79,7 +78,7 @@ def update_annotation(id):
         return jsonify('Annotation not found. No update performed.', status=404)
 
     elif request.json and authorize(annotation, 'update', get_current_userid()):
-        annotation.from_dict_update(request.json)
+        annotation = Annotation.from_dict(request.json)
         annotation.save()
         return jsonify(annotation.to_dict())
 
@@ -87,8 +86,9 @@ def update_annotation(id):
         return jsonify('Could not authorise request. No update performed', status=401)
 
 # DELETE
-@store.route('/annotations/<int:id>', methods=['DELETE'])
+@store.route('/annotations/<id>', methods=['DELETE'])
 def delete_annotation(id):
+    print id
     annotation = Annotation.get(id)
 
     if not annotation:
@@ -96,7 +96,6 @@ def delete_annotation(id):
 
     elif authorize(annotation, 'delete', get_current_userid()):
         annotation.delete()
-        annotation.save()
         return None, 204
 
     else:
@@ -105,33 +104,14 @@ def delete_annotation(id):
 # Search
 @store.route('/search')
 def search_annotations():
-    params = [
-        (k,v) for k,v in request.args.items() if k not in [ 'all_fields', 'offset', 'limit' ]
-    ]
-    all_fields = request.args.get('all_fields', False)
-    all_fields = bool(all_fields)
-    offset = request.args.get('offset', 0)
-    limit = int(request.args.get('limit', 100))
-    if limit < 0:
-        limit = None
-
-    q = Annotation.query
-    for k,v in params:
-        kwargs = { k: unicode(v) }
-        q = q.filter_by(**kwargs)
-
-    total = q.count()
-    rows = q.order_by(Annotation.id.desc()).offset(offset).limit(limit).all()
-    if all_fields:
-        rows = [ x.to_dict() for x in rows ]
-    else:
-        rows = [ {'id': x.id} for x in rows ]
-
+    kwargs = dict(request.args.items())
+    # TODO: limit results returned to max 200
+    results = [ x.to_dict() for x in Annotation.search(**kwargs) ]
+    # TODO: a proper count(*) for this query
+    total = len(results)
     qrows = {
         'total': total,
-        'rows': rows,
-        # for backwards compatibility
-        'results': rows
+        'rows': results,
     }
     return jsonify(qrows)
 

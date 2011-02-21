@@ -1,4 +1,5 @@
-from .sqlelixir import Annotation, Consumer, Range
+from .couch import Annotation
+from .sqlelixir import Consumer
 
 
 def authorize(annotation, action, user=None):

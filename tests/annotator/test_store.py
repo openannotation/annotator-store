@@ -1,8 +1,8 @@
 from flask import json, url_for
 
 from annotator.app import app, setup_app
-from annotator.model.sqlelixir import Annotation, Range
-from annotator.model.sqlelixir import create_all, drop_all, session
+from annotator.model import Annotation
+from annotator.model.couch import rebuild_db, Metadata
 
 def setup():
     setup_app()
@@ -11,15 +11,13 @@ class TestStore():
     def setup(self):
         app.config['AUTH_ON'] = False
         self.app = app.test_client()
-        create_all()
 
     def teardown(self):
-        session.remove()
-        drop_all()
+        rebuild_db(app.config['COUCHDB_DATABASE'])
 
     def _create_annotation(self, **kwargs):
         ann = Annotation(**kwargs)
-        session.commit()
+        ann.save()
         return ann
 
     def _get_annotation(self, id_):
@@ -42,11 +40,11 @@ class TestStore():
         assert 'id' in data, "annotation id should be returned in response"
 
     def test_read(self):
-        kwargs = dict(text=u"Foo", id=123)
+        kwargs = dict(text=u"Foo", id='123')
         self._create_annotation(**kwargs)
         response = self.app.get('/annotations/123')
         data = json.loads(response.data)
-        assert data['id'] == 123, "annotation id should be returned in response"
+        assert data['id'] == '123', "annotation id should be returned in response"
         assert data['text'] == "Foo", "annotation text should be returned in response"
 
     def test_read_notfound(self):
@@ -54,13 +52,13 @@ class TestStore():
         assert response.status_code == 404, "response should be 404 NOT FOUND"
 
     def test_update(self):
-        kwargs = dict(text=u"Foo", id=123)
+        kwargs = dict(text=u"Foo", id='123')
         self._create_annotation(**kwargs)
 
-        payload = json.dumps({'id': 123, 'text': 'Bar'})
+        payload = json.dumps({'id': '123', 'text': 'Bar'})
         response = self.app.put('/annotations/123', data=payload, content_type='application/json')
 
-        ann = self._get_annotation(123)
+        ann = self._get_annotation('123')
         assert ann.text == "Bar", "annotation wasn't updated in db"
 
         data = json.loads(response.data)
@@ -71,13 +69,13 @@ class TestStore():
         assert response.status_code == 404, "response should be 404 NOT FOUND"
 
     def test_delete(self):
-        kwargs = dict(text=u"Bar", id=456)
+        kwargs = dict(text=u"Bar", id='456')
         ann = self._create_annotation(**kwargs)
 
         response = self.app.delete('/annotations/456')
         assert response.status_code == 204, "response should be 204 NO CONTENT"
 
-        assert self._get_annotation(456) == None, "annotation wasn't deleted in db"
+        assert self._get_annotation('456') == None, "annotation wasn't deleted in db"
 
     def test_delete_notfound(self):
         response = self.app.delete('/annotations/123')
@@ -114,10 +112,10 @@ class TestStore():
         url = '/search?limit=1'
         res = self.app.get(url)
         body = json.loads(res.data)
-        assert body['total'] == 3, body
+        assert body['total'] == 1, body
         assert len(body['rows']) == 1
 
-        url = '/search?uri=' + uri1 + '&all_fields=1'
+        url = '/search?uri=' + uri1
         res = self.app.get(url)
         body = json.loads(res.data)
         assert body['total'] == 2, body
@@ -125,11 +123,6 @@ class TestStore():
         assert len(out) == 2
         assert out[0]['uri'] == uri1
         assert out[0]['id'] in [ annoid, anno2id ]
-
-        url = '/search?uri=' + uri1
-        res = self.app.get(url)
-        body = json.loads(res.data)
-        assert body['rows'][0].keys() == ['id'], body['rows']
 
         url = '/search?limit=-1'
         res = self.app.get(url)
@@ -154,12 +147,11 @@ class TestStoreAuth():
     def setup(self):
         app.config['AUTH_ON'] = True
         self.app = app.test_client()
-        create_all()
 
     def teardown(self):
-        session.remove()
-        drop_all()
+        pass
 
     def test_reject_bare_request(self):
         response = self.app.get('/annotations')
         assert response.status_code == 401, "response should be 401 NOT AUTHORIZED"
+

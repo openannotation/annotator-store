@@ -1,8 +1,6 @@
 import os
 from flask import Flask, render_template
 from store import store
-import annotator.model.sqlelixir as model
-
 
 app = Flask('annotator')
 
@@ -11,9 +9,17 @@ def setup_app():
     configure_app()
     app.register_module(store, url_prefix=app.config.get('MOUNTPOINT', ''))
 
-    model.metadata.bind = app.config['DB']
-    # Create tables
-    model.setup_all(True)
+    sqlalchemy_db = app.config.get('DB', '')
+    if sqlalchemy_db:
+        import annotator.model.sqlelixir as model
+        model.metadata.bind = app.config['DB']
+        # Create tables
+        model.setup_all(True)
+    couchdb = app.config.get('COUCHDB_DATABASE', '') 
+    if couchdb:
+        import annotator.model.couch as model
+        model.init_model(app.config)
+
     # For testing purposes only
     if app.config.get('TEST_CONSUMER', ''):
         from annotator.test_consumer import consumer

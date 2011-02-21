@@ -120,6 +120,6 @@ class TestAnnotation():
 
         res = list(Annotation.search(uri=uri1))
         assert len(res) == 2, [ x.doc for x in res ]
-        assert res[0].doc['uri'] == uri1
-        assert res[0].doc.id in [ annoid, anno2id ]
+        assert res[0].uri == uri1
+        assert res[0].id in [ annoid, anno2id ]
 
