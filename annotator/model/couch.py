@@ -57,10 +57,38 @@ class DomainObject(Document):
         return ann
 
 class Annotation(DomainObject):
+    type = TextField(default='Annotation')
+    uri = TextField()
     user = TextField()
     text = TextField()
     created = DateTimeField(default=datetime.now)
     ranges = ListField(DictField())
+
+    @classmethod
+    def search(self, **kwargs):
+        '''Search by arbitrary attributes.
+
+        WARNING: at the moment only support uri and use temporary views.
+        '''
+        offset = int(kwargs.get('offset', 0))
+        limit = int(kwargs.get('limit', -1))
+        map_fun = '''function(doc) {
+            if (doc.type == 'Annotation' && doc.uri)
+                emit(doc.uri, null);
+        }'''
+        ourkwargs = dict(
+            map_fun=map_fun,
+            offset=offset,
+            include_docs=True,
+            )
+        if limit >= 0:
+            ourkwargs['limit'] = limit
+        q = Metadata.DB.query(**ourkwargs)
+        if 'uri' in kwargs:
+            return q[kwargs['uri']]
+        else:
+            return q
+
 
 # Required views
 # query by document

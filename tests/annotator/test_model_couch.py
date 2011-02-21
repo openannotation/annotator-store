@@ -1,5 +1,6 @@
 import uuid
 import json
+import pprint
 from nose.tools import assert_raises
 
 from annotator.model.couch import Annotation
@@ -54,6 +55,8 @@ class TestAnnotation():
 
     def test_extras_in(self):
         ann = Annotation.from_dict({'foo':1, 'bar':2})
+        ann.save()
+        ann = Annotation.get(ann.id)
         extras = dict(ann.items())
         print extras
         assert 'foo' in extras.keys(), "extras weren't serialized properly"
@@ -80,5 +83,43 @@ class TestAnnotation():
         noann = Annotation.get(id_)
         assert noann == None
 
+    def test_search(self):
+        uri1 = u'http://xyz.com'
+        uri2 = u'urn:uuid:xxxxx'
+        user = u'levin'
+        user2 = u'anna'
+        anno = Annotation(**dict(
+                uri=uri1,
+                text=uri1,
+                user=user,
+                ))
+        anno2 = Annotation(**dict(
+                uri=uri1,
+                text=uri1 + uri1,
+                user=user2,
+                ))
+        anno3 = Annotation(**dict(
+                uri=uri2,
+                text=uri2,
+                user=user
+                ))
+        anno.save()
+        anno2.save()
+        anno3.save()
+        annoid = anno.id
+        anno2id = anno2.id
 
+        # alldocs = [x.doc for x in Metadata.DB.view('_all_docs', include_docs=True)]
+        # pprint.pprint(alldocs)
+
+        res = list(Annotation.search())
+        assert len(res) == 3, res
+
+        res = list(Annotation.search(limit=1))
+        assert len(res) == 1
+
+        res = list(Annotation.search(uri=uri1))
+        assert len(res) == 2, [ x.doc for x in res ]
+        assert res[0].doc['uri'] == uri1
+        assert res[0].doc.id in [ annoid, anno2id ]
 
