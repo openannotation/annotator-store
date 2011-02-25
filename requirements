@@ -1,4 +1,4 @@
-Elixir==0.7.1
+CouchDB==0.8
 Flask==0.6.1
 nose==1.0.0
 iso8601==0.1.4

@@ -3,7 +3,11 @@ import os
 DEBUG = True
 
 ROOT = os.path.dirname(os.path.abspath( __file__ ))
-DB = "sqlite:///%s/db/annotator.sqlite" % ROOT
+# sqlite db
+# DB = "sqlite:///%s/db/annotator.sqlite" % ROOT
+
+COUCHDB_HOST = 'http://localhost:5984/'
+COUCHDB_DATABASE = 'annotator-test'
 
 MOUNTPOINT = ""
 AUTH_ON = False
