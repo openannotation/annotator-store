@@ -1,6 +1,7 @@
 import os
 from flask import Flask, render_template
 from store import store
+from .account import account
 
 app = Flask('annotator')
 
@@ -8,6 +9,7 @@ app = Flask('annotator')
 def setup_app():
     configure_app()
     app.register_module(store, url_prefix=app.config.get('MOUNTPOINT', ''))
+    app.register_module(account, url_prefix='/account')
 
     sqlalchemy_db = app.config.get('DB', '')
     if sqlalchemy_db:

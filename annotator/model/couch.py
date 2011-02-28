@@ -4,7 +4,7 @@ import couchdb
 import couchdb.design
 from couchdb.mapping import Document
 from couchdb.mapping import TextField, IntegerField, DateField, DictField
-from couchdb.mapping import ListField, DateTimeField
+from couchdb.mapping import ListField, DateTimeField, BooleanField
 
 
 class Metadata(object):
@@ -91,6 +91,15 @@ class Annotation(DomainObject):
             return q[kwargs['uri']]
         else:
             return q
+
+
+class Account(DomainObject):
+    type = TextField(default='Account')
+    username = TextField()
+    pwdhash = TextField()
+    email = TextField()
+    activated = BooleanField(default=True)
+    created = DateTimeField(default=datetime.now)
 
 
 # Required views

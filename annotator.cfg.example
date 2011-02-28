@@ -11,3 +11,6 @@ COUCHDB_DATABASE = 'annotator-test'
 
 MOUNTPOINT = ""
 AUTH_ON = False
+
+SECRET_KEY = 'your-random-secret-key'
+
