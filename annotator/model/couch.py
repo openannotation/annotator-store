@@ -100,6 +100,8 @@ class Account(DomainObject):
     email = TextField()
     activated = BooleanField(default=True)
     created = DateTimeField(default=datetime.now)
+    secret = TextField()
+    ttl = IntegerField()
 
 
 # Required views

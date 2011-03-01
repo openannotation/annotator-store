@@ -3,7 +3,7 @@ import hashlib
 
 import iso8601
 
-from .model import Consumer
+from .model import Account
 
 __all__ = ["consumers", "generate_token", "verify_token", "verify_request"]
 
@@ -23,7 +23,7 @@ class Utc(datetime.tzinfo):
 UTC = Utc()
 
 def generate_token(key, userId):
-    consumer = Consumer.get(key)
+    consumer = Account.get(key)
 
     if consumer is None:
         raise Exception, "Cannot generate token: invalid consumer key specified"
@@ -40,7 +40,7 @@ def generate_token(key, userId):
     )
 
 def verify_token(token, key, userId, issueTime):
-    consumer = Consumer.get(key)
+    consumer = Account.get(key)
 
     if consumer is None:
         return False # invalid consumer key
