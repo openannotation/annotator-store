@@ -22,13 +22,6 @@ def setup_app():
         import annotator.model.couch as model
         model.init_model(app.config)
 
-    # For testing purposes only
-    if app.config.get('TEST_CONSUMER', ''):
-        from annotator.test_consumer import consumer
-        consumer.test_consumer_key  = app.config['TEST_CONSUMER_KEY']
-        consumer.test_consumer_user = app.config['TEST_CONSUMER_USER']
-        store.app.register_module(consumer, url_prefix='/auth')
-
 
 def configure_app():
     '''Configure app loading in order from:
