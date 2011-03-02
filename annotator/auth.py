@@ -5,7 +5,7 @@ import iso8601
 
 from .model import Account
 
-__all__ = ["consumers", "generate_token", "verify_token", "verify_request"]
+__all__ = ["consumers", "verify_token", "verify_request"]
 
 HEADER_PREFIX = 'x-annotator-'
 
@@ -21,23 +21,6 @@ class Utc(datetime.tzinfo):
     def dst(self, dt):
         return ZERO
 UTC = Utc()
-
-def generate_token(key, userId):
-    consumer = Account.get(key)
-
-    if consumer is None:
-        raise Exception, "Cannot generate token: invalid consumer key specified"
-
-    issueTime = datetime.datetime.now(UTC).isoformat()
-    token = hashlib.sha256(consumer.secret + userId + issueTime).hexdigest()
-
-    return dict(
-        consumerKey=key,
-        authToken=token,
-        authTokenIssueTime=issueTime,
-        authTokenTTL=consumer.ttl,
-        userId=userId
-    )
 
 def verify_token(token, key, userId, issueTime):
     consumer = Account.get(key)
