@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  {% block head %}
+  <!-- Prevent the conditional comments from stalling page load -->
+  <!--[if IE]><![endif]-->
+
+  <title>{% block title %}{% endblock %} - AnnotateIt - Annotating the Web</title>
+
+  <link href='http://fonts.googleapis.com/css?family=Arvo:regular,bold&amp;subset=latin' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Inconsolata&amp;subset=latin' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/static/main.css">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+
+  {% endblock %}
+</head>
+<body>
+  <div id="airlock">
+    <header>
+      <h1>Annotator</h1>
+      <h2>The <span id="role">copy-editor</span> of the web</h2>
+    </header>
+
+    <div id="content">
+      {% block content %}{% endblock %}
+    </div>
+
+    <footer>
+      {% block footer %}
+      The development of Annotator is supported by the <a href="http://okfn.org">
+      Open Knowledge Foundation</a>. Go see what other cool stuff we're doing at
+      the moment!
+      {% endblock %}
+    </footer>
+  </div>
+</body>
+</html>
+
+    </div>
+  </body>
+</html>
