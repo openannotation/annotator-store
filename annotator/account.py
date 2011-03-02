@@ -10,29 +10,36 @@ account = Module(__name__)
 from flask import current_app 
 from .model import Account
 
+def check_password(email, password):
+    accounts = Account.get_by_email(email)
+    if accounts:
+        return check_password_hash(accounts[0].pwdhash, password)
+    else:
+        return False
+
 
 @account.route('/')
 def index():
     return 'Accounts home page'
 
-class login_form(Form):
-    username = TextField('Username', [validators.Required()])
-    password = TextField('Password', [validators.Required()])
+
+class LoginForm(Form):
+    email = TextField('Email', [validators.Required()])
+    password = PasswordField('Password', [validators.Required()])
 
 @account.route('/login', methods=['GET', 'POST'])
 def login():
-    error = None
-    if request.method == 'POST':
-        if request.form['username'] != app.config['USERNAME']:
-            error = 'Invalid username'
-        elif request.form['password'] != app.config['PASSWORD']:
-            error = 'Invalid password'
+    form = LoginForm(request.form, csrf_enabled=False)
+    if request.method == 'POST' and form.validate():
+        if check_password(form.email.data, form.password.data):
+            flash('Welcome back', 'success')
+            return redirect(url_for('.home'))
         else:
-            session['logged_in'] = True
-            flash('You were logged in')
-            return redirect(url_for('show_entries'))
-    # return render_template('login.html', error=error)
-    return 'Login!'
+            flash('Incorrect email/password', 'error')
+    if request.method == 'POST' and not form.validate():
+        flash('Invalid form')
+    return render_template('account/login.html', form=form)
+
 
 @account.route('/logout')
 def logout():
@@ -59,7 +66,7 @@ def signup():
         account = Account(username=form.username.data, email=form.email.data,
                     pwdhash=pwdhash)
         account.save()
-        flash('Thanks for signing-up')
+        flash('Thanks for signing-up', 'success')
         return redirect(url_for('login'))
     if request.method == 'POST' and not form.validate():
         flash('Please correct the errors')

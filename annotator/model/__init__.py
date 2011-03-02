@@ -16,10 +16,3 @@ def authorize(annotation, action, user=None):
     else:
         return user == annotation.user
 
-def check_password(email, password):
-    from werkzeug import generate_password_hash, check_password_hash
-    # self.pwdhash = generate_password_hash(password)
-    # TODO: make this work!
-    account = Account.get_by_email(email)
-    return check_password_hash(account.pwdhash, password)
-
