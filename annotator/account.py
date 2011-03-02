@@ -10,13 +10,6 @@ account = Module(__name__)
 from flask import current_app 
 from .model import Account
 
-def check_password(email, password):
-    accounts = Account.get_by_email(email)
-    if accounts:
-        return check_password_hash(accounts[0].pwdhash, password)
-    else:
-        return False
-
 
 @account.route('/')
 def index():
@@ -31,7 +24,11 @@ class LoginForm(Form):
 def login():
     form = LoginForm(request.form, csrf_enabled=False)
     if request.method == 'POST' and form.validate():
-        if check_password(form.email.data, form.password.data):
+        password = form.password.data
+        email = form.email.data
+        accounts = Account.get_by_email(email)
+        if accounts and check_password_hash(accounts[0].pwdhash, password):
+            session['account-id'] = accounts[0].id
             flash('Welcome back', 'success')
             return redirect(url_for('.home'))
         else:
@@ -43,7 +40,7 @@ def login():
 
 @account.route('/logout')
 def logout():
-    session.pop('logged_in', None)
+    session.pop('account-id', None)
     flash('You were logged out')
     return redirect(url_for('.home'))
 
