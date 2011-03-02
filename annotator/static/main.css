@@ -71,3 +71,39 @@ hr {
 	visibility: hidden;
 	margin: 1em 0;
 }
+
+/**************************************
+  * Notifications
+  *************************************/
+
+ul.notification {
+  margin: 0;
+  padding: 0;
+}
+
+ul.notification li {
+  width: auto;
+  line-height: 1em;
+  font-size: 14px;
+  padding: 0.8em 1.5%; 
+  font-weight: bold;
+  text-align: center;
+  border-bottom: solid 1px #9f9f9f;
+  color: #133362;
+  list-style-type: none;
+  background: #f4a83d;
+  border-bottom-color: #dddddd;
+}
+
+ul.notification li.success {
+  background-color: #e7f9e0;
+  border-bottom-color: #ccc;
+  color: #2d6b00;
+}
+
+ul.notification li.error {
+  background-color: #ffeae8;
+  border-bottom-color: #ccc;
+  color: #b50000;
+}
+
