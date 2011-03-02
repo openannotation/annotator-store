@@ -137,3 +137,16 @@ class TestAccount():
         c = Account.get('foo')
         assert c.id == 'foo', 'Account key not set by constructor'
 
+    def test_account_by_email(self):
+        email = 'me@me.com'     
+        acc = Account(email=email, username='abc')
+        acc.save()
+
+        out = Account.get_by_email('madeupemail')
+        assert len(out) == 0, out
+
+        out = Account.get_by_email(email)
+        assert len(out) == 1, out
+        assert out[0].email == email
+        assert out[0].username == 'abc'
+

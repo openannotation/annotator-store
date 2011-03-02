@@ -4,7 +4,7 @@ import couchdb
 import couchdb.design
 from couchdb.mapping import Document
 from couchdb.mapping import TextField, IntegerField, DateField, DictField
-from couchdb.mapping import ListField, DateTimeField, BooleanField
+from couchdb.mapping import ListField, DateTimeField, BooleanField, ViewField
 
 
 class Metadata(object):
@@ -103,6 +103,18 @@ class Account(DomainObject):
     secret = TextField()
     ttl = IntegerField()
 
+    by_email = ViewField('account', '''\
+        function(doc) {
+            if (doc.type=='Account') {
+                emit(doc.email, doc);
+            }
+       }''')
+
+    @classmethod
+    def get_by_email(cls, email):
+        out = cls.by_email(Metadata.DB, limit=1)
+        return list(out[email])
+
 
 # Required views
 # query by document
@@ -136,4 +148,8 @@ function(doc) {
     )
     view.get_doc(db)
     view.sync(db)
+
+    Account.by_email.get_doc(db)
+    Account.by_email.sync(db)
+
 
