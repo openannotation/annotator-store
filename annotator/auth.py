@@ -5,7 +5,7 @@ import iso8601
 
 from .model import Account
 
-__all__ = ["consumers", "verify_token", "verify_request"]
+__all__ = ["verify_token", "verify_request"]
 
 HEADER_PREFIX = 'x-annotator-'
 
@@ -22,28 +22,28 @@ class Utc(datetime.tzinfo):
         return ZERO
 UTC = Utc()
 
-def verify_token(token, key, userId, issueTime):
-    consumer = Account.get(key)
+def verify_token(token, key, userId, expiryTime=''):
+    account = Account.get(key)
 
-    if consumer is None:
-        return False # invalid consumer key
+    if account is None:
+        return False # invalid account key
 
-    computedToken = hashlib.sha256(consumer.secret + userId + issueTime).hexdigest()
+    computedToken = hashlib.sha256(account.secret + userId + expiryTime).hexdigest()
 
     if computedToken != token:
         return False # Token inauthentic: computed hash doesn't match.
 
-    expiry = iso8601.parse_date(issueTime) + datetime.timedelta(seconds=consumer.ttl)
-
-    if expiry < datetime.datetime.now(UTC):
-        return False # Token expired: issueTime + ttl > now
+    if expiryTime:
+        expiry = iso8601.parse_date(expiryTime)
+        if expiry < datetime.datetime.now(UTC):
+            return False
 
     return True
 
 def verify_request(request):
     pre = HEADER_PREFIX
 
-    required = ['auth-token', 'consumer-key', 'user-id', 'auth-token-issue-time']
+    required = ['auth-token', 'account-key', 'user-id']
     headers  = [pre + key for key in required]
 
     rh = request.headers
@@ -52,7 +52,11 @@ def verify_request(request):
     if not set(headers) <= set([key.lower() for key in rh.keys()]):
         return False
 
-    result = verify_token( *[rh[h] for h in headers] )
+    ttl_header = pre+'auth-token-valid-until'
+    if ttl_header in rh:
+        result = verify_token( *[rh[h] for h in headers + [ttl_header]] )
+    else:
+        result = verify_token( *[rh[h] for h in headers] )
 
     return result
 

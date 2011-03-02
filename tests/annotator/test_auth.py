@@ -13,18 +13,21 @@ class MockRequest():
         self.headers = headers
 
 def iso8601(t):
-    t = datetime.datetime.now() if t == 'now' else t
+    if t == 'now':
+        t = datetime.datetime.now()
+    elif t == 'future':
+        t = datetime.datetime.now() + datetime.timedelta(seconds=300)
     return t.strftime("%Y-%m-%dT%H:%M:%S")
 
-def make_token(consumerKey, userId, issueTime):
-    c = model.Account.get(consumerKey)
-    return hashlib.sha256(c.secret + userId + issueTime).hexdigest()
+def make_token(accountKey, userId, expiryTime):
+    c = model.Account.get(accountKey)
+    return hashlib.sha256(c.secret + userId + expiryTime).hexdigest()
 
-def make_request(consumerKey, userId, issueTime):
+def make_request(accountKey, userId, expiryTime):
     return MockRequest(Headers([
-        ('x-annotator-consumer-key', consumerKey),
-        ('x-annotator-auth-token', make_token(consumerKey, userId, issueTime)),
-        ('x-annotator-auth-token-issue-time', issueTime),
+        ('x-annotator-account-key', accountKey),
+        ('x-annotator-auth-token', make_token(accountKey, userId, expiryTime)),
+        ('x-annotator-auth-token-valid-until', expiryTime),
         ('x-annotator-user-id', userId)
     ]))
 
@@ -36,7 +39,7 @@ def setup():
         'COUCHDB_DATABASE': testdb
         }
     init_model(config)
-    c = model.Account(id='testAccount', secret='testAccountSecret', ttl=300)
+    c = model.Account(id='testAccount', secret='testAccountSecret')
     c.save()
 
 def teardown(self):
@@ -45,38 +48,38 @@ def teardown(self):
 
 class TestAuth():
     def test_verify_token(self):
-        issueTime = iso8601('now')
-        tok = make_token('testAccount', 'alice', issueTime)
-        assert auth.verify_token(tok, 'testAccount', 'alice', issueTime), "token should have been verified"
+        expiryTime = iso8601('future')
+        tok = make_token('testAccount', 'alice', expiryTime)
+        assert auth.verify_token(tok, 'testAccount', 'alice', expiryTime), "token should have been verified"
 
     def test_reject_inauthentic_token(self):
-        issueTime = iso8601('now')
-        tok = make_token('testAccount', 'alice', issueTime)
-        assert not auth.verify_token(tok, 'testAccount', 'bob', issueTime), "token was inauthentic, should have been rejected"
+        expiryTime = iso8601('future')
+        tok = make_token('testAccount', 'alice', expiryTime)
+        assert not auth.verify_token(tok, 'testAccount', 'bob', expiryTime), "token was inauthentic, should have been rejected"
 
     def test_reject_expired_token(self):
-        issueTime = iso8601(datetime.datetime.now() - datetime.timedelta(seconds=301))
-        tok = make_token('testAccount', 'alice', issueTime)
-        assert not auth.verify_token(tok, 'testAccount', 'bob', issueTime), "token had expired, should have been rejected"
+        expiryTime = iso8601(datetime.datetime.now() - datetime.timedelta(seconds=301))
+        tok = make_token('testAccount', 'alice', expiryTime)
+        assert not auth.verify_token(tok, 'testAccount', 'bob', expiryTime), "token had expired, should have been rejected"
 
     def test_verify_request(self):
-        issueTime = iso8601('now')
-        request = make_request('testAccount', 'alice', issueTime)
+        expiryTime = iso8601('future')
+        request = make_request('testAccount', 'alice', expiryTime)
         assert auth.verify_request(request), "request should have been verified"
 
     def test_reject_request_missing_headers(self):
-        issueTime = iso8601('now')
-        request = make_request('testAccount', 'alice', issueTime)
-        del request.headers['x-annotator-consumer-key']
-        assert not auth.verify_request(request), "request missing consumerKey should have been rejected"
+        expiryTime = iso8601('future')
+        request = make_request('testAccount', 'alice', expiryTime)
+        del request.headers['x-annotator-account-key']
+        assert not auth.verify_request(request), "request missing accountKey should have been rejected"
 
     def test_verify_request_mixedcase_headers(self):
-        issueTime = iso8601('now')
-        request = make_request('testAccount', 'alice', issueTime)
-        request.headers['X-Annotator-Account-Key'] = request.headers['x-annotator-consumer-key']
+        expiryTime = iso8601('future')
+        request = make_request('testAccount', 'alice', expiryTime)
+        request.headers['X-Annotator-Account-Key'] = request.headers['x-annotator-account-key']
         assert auth.verify_request(request), "request with mixed-case headers should have been verified"
 
     def test_get_request_userid(self):
-        issueTime = iso8601('now')
-        request = make_request('testAccount', 'bob', issueTime)
+        expiryTime = iso8601('future')
+        request = make_request('testAccount', 'bob', expiryTime)
         assert auth.get_request_userid(request) == 'bob', "didn't extract userid from headers"
