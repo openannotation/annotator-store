@@ -136,6 +136,7 @@ class TestAccount():
         c.save()
         c = Account.get('foo')
         assert c.id == 'foo', 'Account key not set by constructor'
+        assert len(c.secret) == 36, c
 
     def test_account_by_email(self):
         email = 'me@me.com'     

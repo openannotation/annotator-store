@@ -1,4 +1,5 @@
 from datetime import datetime
+import uuid
 
 import couchdb
 import couchdb.design
@@ -100,7 +101,7 @@ class Account(DomainObject):
     email = TextField()
     activated = BooleanField(default=True)
     created = DateTimeField(default=datetime.now)
-    secret = TextField()
+    secret = TextField(default=str(uuid.uuid4()))
     ttl = IntegerField()
 
     by_email = ViewField('account', '''\
