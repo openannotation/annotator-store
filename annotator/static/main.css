@@ -43,11 +43,16 @@ header h2 {
 }
 
 footer {
+  margin-top: 2em;
 	padding: 1em;
 	display: block;
 	background: rgba(0, 0, 0, 0.1);
 	font-size: 80%;
 	color: rgba(0, 0, 0, 0.5);
+}
+
+footer > p {
+  margin-top: 0;
 }
 
 footer a:link, footer a:visited {

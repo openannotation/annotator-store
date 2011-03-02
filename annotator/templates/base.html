@@ -42,9 +42,22 @@
 
     <footer>
       {% block footer %}
-      The development of Annotator is supported by the <a href="http://okfn.org">
-      Open Knowledge Foundation</a>. Go see what other cool stuff we're doing at
-      the moment!
+      <p>The development of Annotator is supported by the <a
+        href="http://okfn.org"> Open Knowledge Foundation</a>. Go see what
+      other cool stuff we're doing at the moment!</p>
+
+      <div id="account">
+        {% if g.account_id %}
+        Logged in &ndash;
+        <a href="{{ url_for('account.view', id=g.account_id)}}">My Account</a>
+        &ndash;
+        <a href="{{ url_for('account.logout') }}">Logout</a>
+        {% else %}
+        <a href="{{ url_for('account.login')}}">Login</a>
+        &ndash;
+        <a href="{{ url_for('account.signup')}}">Signup</a>
+        {% endif %}
+      </div>
       {% endblock %}
     </footer>
   </div>

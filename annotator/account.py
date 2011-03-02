@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from flask import Module, redirect, request, url_for, render_template, session
-from flask import flash
+from flask import flash, g, abort
 from flaskext.wtf import *
 from werkzeug import generate_password_hash, check_password_hash
 
@@ -9,6 +9,10 @@ account = Module(__name__)
 
 from flask import current_app 
 from .model import Account
+
+@account.before_request
+def before_request():
+    g.account_id = session.get('account-id', None) 
 
 
 @account.route('/')
@@ -28,9 +32,10 @@ def login():
         email = form.email.data
         accounts = Account.get_by_email(email)
         if accounts and check_password_hash(accounts[0].pwdhash, password):
-            session['account-id'] = accounts[0].id
+            acc = accounts[0]
+            session['account-id'] = acc.id
             flash('Welcome back', 'success')
-            return redirect(url_for('.home'))
+            return redirect(url_for('view', id=acc.id))
         else:
             flash('Incorrect email/password', 'error')
     if request.method == 'POST' and not form.validate():
@@ -43,6 +48,14 @@ def logout():
     session.pop('account-id', None)
     flash('You were logged out')
     return redirect(url_for('.home'))
+
+
+@account.route('/v/<id>')
+def view(id):
+    if g.account_id != id:
+        return abort(401)
+    account = Account.get(id)
+    return render_template('account/view.html', account=account)
 
 
 class SignupForm(Form):
