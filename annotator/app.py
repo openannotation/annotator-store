@@ -1,6 +1,7 @@
 import os
 from flask import Flask, render_template
 from store import store
+from .account import account
 
 app = Flask('annotator')
 
@@ -8,6 +9,7 @@ app = Flask('annotator')
 def setup_app():
     configure_app()
     app.register_module(store, url_prefix=app.config.get('MOUNTPOINT', ''))
+    app.register_module(account, url_prefix='/account')
 
     sqlalchemy_db = app.config.get('DB', '')
     if sqlalchemy_db:
@@ -19,13 +21,6 @@ def setup_app():
     if couchdb:
         import annotator.model.couch as model
         model.init_model(app.config)
-
-    # For testing purposes only
-    if app.config.get('TEST_CONSUMER', ''):
-        from annotator.test_consumer import consumer
-        consumer.test_consumer_key  = app.config['TEST_CONSUMER_KEY']
-        consumer.test_consumer_user = app.config['TEST_CONSUMER_USER']
-        store.app.register_module(consumer, url_prefix='/auth')
 
 
 def configure_app():

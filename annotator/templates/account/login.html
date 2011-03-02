@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Login - Account{% endblock %}
+
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+<form method="post" action="">
+  <dl>
+    {{ render_field(form.email) }}
+    {{ render_field(form.password) }}
+  </dl>
+  <input type="submit" value="Signup" />
+</form>
+{% endblock %}

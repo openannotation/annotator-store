@@ -30,12 +30,11 @@ def before_request():
 
 @store.after_request
 def after_request(response):
-    if response.status_code < 300:
-        response.headers['Access-Control-Allow-Origin']   = '*'
-        response.headers['Access-Control-Allow-Headers'] = '*'
-        response.headers['Access-Control-Expose-Headers'] = 'Location'
-        response.headers['Access-Control-Allow-Methods']  = 'GET, POST, PUT, DELETE'
-        response.headers['Access-Control-Max-Age']        = '86400'
+    response.headers['Access-Control-Allow-Origin']   = '*'
+    response.headers['Access-Control-Allow-Headers'] = '*'
+    response.headers['Access-Control-Expose-Headers'] = 'Location'
+    response.headers['Access-Control-Allow-Methods']  = 'GET, POST, PUT, DELETE'
+    response.headers['Access-Control-Max-Age']        = '86400'
 
     return response
 

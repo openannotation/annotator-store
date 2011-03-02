@@ -1,5 +1,7 @@
 from .couch import Annotation
-from .sqlelixir import Consumer
+from .couch import Account
+# TODO: remove asap (here just for backwards compat)
+Consumer = None
 
 
 def authorize(annotation, action, user=None):

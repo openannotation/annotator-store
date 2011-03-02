@@ -1,10 +1,11 @@
 from datetime import datetime
+import uuid
 
 import couchdb
 import couchdb.design
 from couchdb.mapping import Document
 from couchdb.mapping import TextField, IntegerField, DateField, DictField
-from couchdb.mapping import ListField, DateTimeField
+from couchdb.mapping import ListField, DateTimeField, BooleanField, ViewField
 
 
 class Metadata(object):
@@ -93,6 +94,29 @@ class Annotation(DomainObject):
             return q
 
 
+class Account(DomainObject):
+    type = TextField(default='Account')
+    username = TextField()
+    pwdhash = TextField()
+    email = TextField()
+    activated = BooleanField(default=True)
+    created = DateTimeField(default=datetime.now)
+    secret = TextField(default=str(uuid.uuid4()))
+    ttl = IntegerField()
+
+    by_email = ViewField('account', '''\
+        function(doc) {
+            if (doc.type=='Account') {
+                emit(doc.email, doc);
+            }
+       }''')
+
+    @classmethod
+    def get_by_email(cls, email):
+        out = cls.by_email(Metadata.DB, limit=1)
+        return list(out[email])
+
+
 # Required views
 # query by document
 # query by user
@@ -125,4 +149,8 @@ function(doc) {
     )
     view.get_doc(db)
     view.sync(db)
+
+    Account.by_email.get_doc(db)
+    Account.by_email.sync(db)
+
 
