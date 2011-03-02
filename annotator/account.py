@@ -1,4 +1,5 @@
 from datetime import datetime
+import hashlib
 
 from flask import Module, redirect, request, url_for, render_template, session
 from flask import flash, g, abort
@@ -54,8 +55,10 @@ def logout():
 def view(id):
     if g.account_id != id:
         return abort(401)
+    acc = Account.get(g.account_id)
+    token = hashlib.sha256(acc.secret + acc.username).hexdigest()
     account = Account.get(id)
-    return render_template('account/view.html', account=account)
+    return render_template('account/view.html', account=account, token=token)
 
 
 class SignupForm(Form):

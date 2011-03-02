@@ -9,10 +9,16 @@
 <dl>
   <dt>Email</dt>
   <dd>{{account.email}}</dd>
+  <dt>Key (Id)</dt>
+  <dd>{{account.id}}</dd>
   <dt>Secret</dt>
   <dd>{{account.secret}}</dd>
   <dt>Registered since</dt>
   <dd>{{account.created}}</dd>
 </dl>
 
+<h3>Your Auth Token (valid forever)</h3>
+<code>
+  {{token}}
+</code>
 {% endblock %}
