@@ -3,34 +3,30 @@ import json
 import pprint
 from nose.tools import assert_raises
 
-from annotator.model.couch import Annotation
+from annotator.model.couch import Annotation, Account
 from annotator.model.couch import rebuild_db, init_model, Metadata
 
+testdb = 'annotator-test'
 
 class TestAnnotation():
-    testdb = 'annotator-test'
-
     def setup(self):
         config = {
             'COUCHDB_HOST': 'http://localhost:5984',
-            'COUCHDB_DATABASE': self.testdb
+            'COUCHDB_DATABASE': testdb
             }
         init_model(config)
 
     def teardown(self):
-        del Metadata.SERVER[self.testdb]
+        del Metadata.SERVER[testdb]
 
     def test_01_text(self):
         ann = Annotation(text="Hello there", user="Alice")
+        ann.ranges.append({})
+        ann.ranges.append({})
         ann.save()
         ann = Annotation.get(ann.id)
         assert ann.text == "Hello there", "annotation text wasn't set"
         assert ann.user == "Alice", "annotation user wasn't set"
-
-    def test_ranges(self):
-        ann = Annotation()
-        ann.ranges.append({})
-        ann.ranges.append({})
         assert len(ann.ranges) == 2, "ranges weren't added to annotation"
 
     def test_to_dict(self):
@@ -122,4 +118,22 @@ class TestAnnotation():
         assert len(res) == 2, [ x.doc for x in res ]
         assert res[0].uri == uri1
         assert res[0].id in [ annoid, anno2id ]
+
+
+class TestAccount():
+    def setup(self):
+        config = {
+            'COUCHDB_HOST': 'http://localhost:5984',
+            'COUCHDB_DATABASE': testdb
+            }
+        init_model(config)
+
+    def teardown(self):
+        del Metadata.SERVER[testdb]
+
+    def test_key(self):
+        c = Account(id='foo')
+        c.save()
+        c = Account.get('foo')
+        assert c.id == 'foo', 'Account key not set by constructor'
 
