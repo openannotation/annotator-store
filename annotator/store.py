@@ -25,13 +25,14 @@ def get_current_userid():
 
 @store.before_request
 def before_request():
-    if current_app.config['AUTH_ON'] and not auth.verify_request(request):
+    if current_app.config['AUTH_ON'] and not request.method == 'GET' and not auth.verify_request(request):
         return jsonify("Cannot authorise request. Perhaps you didn't send the x-annotator headers?", status=401)
 
 @store.after_request
 def after_request(response):
     response.headers['Access-Control-Allow-Origin']   = '*'
-    response.headers['Access-Control-Allow-Headers'] = '*'
+    # response.headers['Access-Control-Allow-Headers'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'X-Requested-With, Content-Type, X-Annotator-Account-Id, X-Annotator-User-Id, X-Annotator-Auth-Token-Valid-Until, X-Annotator-Auth-Token'
     response.headers['Access-Control-Expose-Headers'] = 'Location'
     response.headers['Access-Control-Allow-Methods']  = 'GET, POST, PUT, DELETE'
     response.headers['Access-Control-Max-Age']        = '86400'
