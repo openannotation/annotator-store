@@ -88,7 +88,6 @@ def update_annotation(id):
 # DELETE
 @store.route('/annotations/<id>', methods=['DELETE'])
 def delete_annotation(id):
-    print id
     annotation = Annotation.get(id)
 
     if not annotation:
