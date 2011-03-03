@@ -9,7 +9,7 @@ ROOT = os.path.dirname(os.path.abspath( __file__ ))
 COUCHDB_HOST = 'http://localhost:5984/'
 COUCHDB_DATABASE = 'annotator-test'
 
-MOUNTPOINT = ""
+MOUNTPOINT = "/api"
 AUTH_ON = False
 
 SECRET_KEY = 'your-random-secret-key'

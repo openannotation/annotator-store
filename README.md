@@ -28,10 +28,14 @@ You should see something like:
     * Running on http://127.0.0.1:5000/
     * Restarting with reloader...
 
-The annotation store, a JSON-speaking REST API, will be mounted at
-`http://localhost:5000/annotations`. You can test this by running:
+## Store API
 
-    $ curl -i http://localhost:5000/annotations
+The Store API is designed to be compatable with the [Annotator][ann].
+
+The annotation store, a JSON-speaking REST API, will be mounted at
+`http://localhost:5000/api/annotations`. You can test this by running:
+
+    $ curl -i http://localhost:5000/api/annotations
     HTTP/1.0 200 OK
     Content-Type: application/json
     Access-Control-Allow-Origin: *
@@ -50,7 +54,7 @@ details on getting an annotator talking to this backend.
 
 Here's an example of putting an annotation in the store::
 
-    $ curl -X POST http://localhost:5000/annotations -H "Content-Type: application/json" -d '{"text": "abc"}'
+    $ curl -X POST http://localhost:5000/api/annotations -H "Content-Type: application/json" -d '{"text": "abc"}'
     {
       ...
       "text": "abc", 
@@ -60,7 +64,7 @@ Here's an example of putting an annotation in the store::
 
 And then we could retrieve this with the command:
 
-    $ curl http://localhost:5000/annotations/MY-ID
+    $ curl http://localhost:5000/api/annotations/MY-ID
 
 where MY-ID is the id field from the response above 
 
