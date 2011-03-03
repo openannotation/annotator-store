@@ -32,6 +32,8 @@ You should see something like:
 
 The Store API is designed to be compatable with the [Annotator][ann].
 
+### REST API
+
 The annotation store, a JSON-speaking REST API, will be mounted at
 `http://localhost:5000/api/annotations`. You can test this by running:
 
@@ -67,6 +69,26 @@ And then we could retrieve this with the command:
     $ curl http://localhost:5000/api/annotations/MY-ID
 
 where MY-ID is the id field from the response above 
+
+### Search
+
+You can search annotations in the store via the search api mounted at
+`http://localhost:5000/api/search`. You can test this by running:
+
+    $ curl -i http://localhost:5000/api/search
+
+The search supports search and offset parameters:
+
+    $ curl -i http://localhost:5000/api/search?limit=5&offset=2
+
+You can filter on any attribute of an annotation:
+
+    $ curl -i http://localhost:5000/api/search?uri=myuri
+
+And you can combine filters:
+
+    $ curl -i http://localhost:5000/api/search?uri=myuri&user=myuser
+
 
 ## Running tests
 
