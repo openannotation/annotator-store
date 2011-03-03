@@ -71,15 +71,23 @@ class Annotation(DomainObject):
     def search(self, **kwargs):
         '''Search by arbitrary attributes.
 
-        WARNING: at the moment only support uri and use temporary views.
+        WARNING: at the moment use temporary views.
         '''
+        non_query_args = ['offset', 'limit']
         offset = int(kwargs.get('offset', 0))
         limit = int(kwargs.get('limit', -1))
+        for k in non_query_args:
+            if k in kwargs:
+                del kwargs[k]
+        terms = kwargs.keys()
+        if terms:
+            couchkey = '[%s]' % ','.join(['doc.' + x for x in terms])
+        else:
+            couchkey = 'null'
         map_fun = '''function(doc) {
-            if (doc.type == 'Annotation' && doc.uri)
-                emit(doc.uri, null);
-        }'''
-        ## this assumes include_docs=True
+            if (doc.type == 'Annotation')
+                emit(%s, null);
+        }''' % couchkey
         wrapper = lambda x: Annotation.wrap(x['doc'])
         ourkwargs = dict(
             map_fun=map_fun,
@@ -90,8 +98,8 @@ class Annotation(DomainObject):
         if limit >= 0:
             ourkwargs['limit'] = limit
         q = Metadata.DB.query(**ourkwargs)
-        if 'uri' in kwargs:
-            return q[kwargs['uri']]
+        if terms:
+            return q[ list(kwargs.values()) ]
         else:
             return q
 

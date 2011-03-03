@@ -104,6 +104,7 @@ class TestAnnotation():
         anno3.save()
         annoid = anno.id
         anno2id = anno2.id
+        anno3id = anno3.id
 
         # alldocs = [x.doc for x in Metadata.DB.view('_all_docs', include_docs=True)]
         # pprint.pprint(alldocs)
@@ -112,12 +113,22 @@ class TestAnnotation():
         assert len(res) == 3, res
 
         res = list(Annotation.search(limit=1))
-        assert len(res) == 1
+        assert len(res) == 1, len(res)
 
         res = list(Annotation.search(uri=uri1))
-        assert len(res) == 2, [ x.doc for x in res ]
+        assert len(res) == 2, [ x for x in res ]
         assert res[0].uri == uri1
         assert res[0].id in [ annoid, anno2id ]
+
+        res = list(Annotation.search(user=user))
+        assert len(res) == 2, [ x for x in res ]
+        assert res[0].user == user
+        assert res[0].id in [ annoid, anno3id ]
+
+        res = list(Annotation.search(user=user, uri=uri2))
+        assert len(res) == 1, [ x for x in res ]
+        assert res[0].user == user
+        assert res[0].id == anno3id
 
 
 class TestAccount():
