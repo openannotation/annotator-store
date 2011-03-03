@@ -143,6 +143,7 @@ class TestStore():
         assert headers['Access-Control-Expose-Headers'] == 'Location', \
                 "Did not send the right Access-Control-Expose-Headers header."
 
+
 class TestStoreAuth():
     def setup(self):
         app.config['AUTH_ON'] = True
@@ -151,7 +152,13 @@ class TestStoreAuth():
     def teardown(self):
         pass
 
-    def test_reject_bare_request(self):
+    def test_get_allowed(self):
         response = self.app.get('/annotations')
+        assert response.status_code == 200, "GET should be allowed"
+
+    def test_reject_post_request(self):
+        payload = json.dumps({'name': 'Foo'})
+        response = self.app.post('/annotations', data=payload,
+                content_type='application/json')
         assert response.status_code == 401, "response should be 401 NOT AUTHORIZED"
 
