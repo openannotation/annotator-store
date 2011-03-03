@@ -18,7 +18,9 @@ def init_model(config):
 
 def setup_db(dbname):
     if dbname in Metadata.SERVER:
-        return Metadata.SERVER[dbname]
+        db = Metadata.SERVER[dbname] 
+        setup_views(db)
+        return db
     else:
         db = Metadata.SERVER.create(dbname)
         setup_views(db)
