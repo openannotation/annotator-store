@@ -73,7 +73,7 @@ class Annotation(DomainObject):
 
         WARNING: at the moment use temporary views.
         '''
-        non_query_args = ['offset', 'limit']
+        non_query_args = ['offset', 'limit', 'all_fields']
         offset = int(kwargs.get('offset', 0))
         limit = int(kwargs.get('limit', -1))
         for k in non_query_args:
