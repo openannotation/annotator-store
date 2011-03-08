@@ -1,7 +1,7 @@
 import json
 from nose.tools import assert_raises
 
-from annotator.model import authorize
+from annotator.authz import authorize
 from annotator.model.couch import Annotation
 from annotator.model.couch import rebuild_db, init_model, Metadata
 

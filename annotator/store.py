@@ -1,7 +1,8 @@
 from flask import Flask, Module, Response
 from flask import abort, json, redirect, request, url_for
 
-from .model import Annotation, authorize
+from .model import Annotation
+from authz import authorize
 from . import auth
 
 __all__ = ["store"]
