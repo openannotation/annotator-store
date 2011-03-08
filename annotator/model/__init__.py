@@ -14,5 +14,5 @@ def authorize(annotation, action, user=None):
     if action is 'read':
         return True
     else:
-        return user == annotation.user
+        return user == annotation.user.get('id', None)
 

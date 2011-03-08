@@ -20,20 +20,23 @@ class TestAnnotation():
         del Metadata.SERVER[testdb]
 
     def test_01_text(self):
-        ann = Annotation(text="Hello there", user="Alice")
+        user = {"id": "Alice", "name": "Alice Wonderland"}
+        ann = Annotation(text="Hello there", user=user)
         ann.ranges.append({})
         ann.ranges.append({})
         ann.save()
         ann = Annotation.get(ann.id)
         assert ann.text == "Hello there", "annotation text wasn't set"
-        assert ann.user == "Alice", "annotation user wasn't set"
+        assert ann.user['id'] == "Alice", "annotation user wasn't set"
+        assert ann.user['name'] == "Alice Wonderland", "annotation user wasn't set"
         assert len(ann.ranges) == 2, "ranges weren't added to annotation"
 
     def test_to_dict(self):
         ann = Annotation(text="Foo")
-        data = {'ranges': [], 'text': 'Foo', 'user': None}
+        data = {'ranges': [], 'text': 'Foo', 'user': {}}
         outdict = ann.to_dict()
         for k,v in data.items():
+            print k,v,outdict[k]
             assert outdict[k] == v, "annotation wasn't converted to dict correctly"
 
     def test_to_dict_with_range(self):
@@ -120,14 +123,14 @@ class TestAnnotation():
         assert res[0].uri == uri1
         assert res[0].id in [ annoid, anno2id ]
 
-        res = list(Annotation.search(user=user))
+        res = list(Annotation.search(**{'user.id':user}))
         assert len(res) == 2, [ x for x in res ]
-        assert res[0].user == user
+        assert res[0].user['id'] == user
         assert res[0].id in [ annoid, anno3id ]
 
-        res = list(Annotation.search(user=user, uri=uri2))
+        res = list(Annotation.search(**{'user.id':user, 'uri': uri2}))
         assert len(res) == 1, [ x for x in res ]
-        assert res[0].user == user
+        assert res[0].user['id'] == user
         assert res[0].id == anno3id
 
 

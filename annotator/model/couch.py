@@ -3,7 +3,7 @@ import uuid
 
 import couchdb
 import couchdb.design
-from couchdb.mapping import Document
+from couchdb.mapping import Document, Mapping
 from couchdb.mapping import TextField, IntegerField, DateField, DictField
 from couchdb.mapping import ListField, DateTimeField, BooleanField, ViewField
 
@@ -44,28 +44,46 @@ class DomainObject(Document):
         Metadata.DB.delete(self)
 
     def to_dict(self):
+        # TODO: use unwrap instead?
         out = dict(self.items())
         out['id'] = self.id
         return out
 
+class Annotation(DomainObject):
+    type = TextField(default='Annotation')
+    uri = TextField()
+    user = DictField()
+    text = TextField()
+    created = DateTimeField(default=datetime.now)
+    ranges = ListField(DictField())
+
+    def __init__(self, id=None, **values):
+        if 'user' in values and isinstance(values['user'], basestring):
+            values['user'] = { 'id': values['user'] }
+        super(Annotation, self).__init__(id, **values)
+
+    @property
+    def userid(self):
+        return user['id']
+
     @classmethod
-    def from_dict(self, dict_):
+    def from_dict(cls, dict_):
         if 'id' in dict_:
             ann = Annotation.get(dict_['id'])
             del dict_['id']
         else:
             ann = Annotation()
-        for k,v in dict_.items():
-            ann[k] = v
-        return ann
 
-class Annotation(DomainObject):
-    type = TextField(default='Annotation')
-    uri = TextField()
-    user = TextField()
-    text = TextField()
-    created = DateTimeField(default=datetime.now)
-    ranges = ListField(DictField())
+        if 'user' in dict_ and isinstance(dict_['user'], basestring):
+            dict_['user'] = { 'id': dict_['user'] }
+
+        attrnames = ann._fields.keys()
+        for k,v in dict_.items():
+            if k in attrnames:
+                setattr(ann, k, v)
+            else:
+                ann[k] = v
+        return ann
 
     @classmethod
     def search(self, **kwargs):
