@@ -19,32 +19,32 @@ class TestAuthorization():
     def teardown(self):
         del Metadata.SERVER[self.testdb]
 
-    def test_authorise_read_nouser(self):
+    def test_authorize_read_nouser(self):
         ann = Annotation()
         assert authorize(ann, 'read')
         assert authorize(ann, 'read', 'bob')
 
-    def test_authorise_read_user(self):
+    def test_authorize_read_user(self):
         ann = Annotation(user='bob')
         assert authorize(ann, 'read', 'bob')
         assert authorize(ann, 'read', 'alice')
 
-    def test_authorise_update_nouser(self):
+    def test_authorize_update_nouser(self):
         ann = Annotation()
         assert authorize(ann, 'update')
         assert authorize(ann, 'update', 'bob')
 
-    def test_authorise_update_user(self):
+    def test_authorize_update_user(self):
         ann = Annotation(user='bob')
         assert authorize(ann, 'update', 'bob')
         assert not authorize(ann, 'update', 'alice')
 
-    def test_authorise_delete_nouser(self):
+    def test_authorize_delete_nouser(self):
         ann = Annotation()
         assert authorize(ann, 'delete')
         assert authorize(ann, 'delete', 'bob')
 
-    def test_authorise_delete_user(self):
+    def test_authorize_delete_user(self):
         ann = Annotation(user='bob')
         assert authorize(ann, 'delete', 'bob')
         assert not authorize(ann, 'delete', 'alice')
