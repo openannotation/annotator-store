@@ -10,6 +10,7 @@ def setup():
 class TestStore():
     def setup(self):
         app.config['AUTH_ON'] = False
+        assert app.config['MOUNTPOINT'] == '', "MOUNTPOINT config option is incorrect for tests. should be ''"
         self.app = app.test_client()
 
     def teardown(self):
