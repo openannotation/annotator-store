@@ -56,6 +56,13 @@ class Annotation(DomainObject):
     text = TextField()
     created = DateTimeField(default=datetime.now)
     ranges = ListField(DictField())
+    permissions = DictField(
+        Mapping.build(
+            read=ListField(TextField()),
+            update=ListField(TextField()),
+            delete=ListField(TextField()),
+            admin=ListField(TextField())
+        ))
 
     def __init__(self, id=None, **values):
         if 'user' in values and isinstance(values['user'], basestring):

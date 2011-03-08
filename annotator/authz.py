@@ -1,12 +1,16 @@
-def authorize(annotation, action, user=None):
-    # If self.user is None, all actions are allowed
-    if not annotation.user:
-        return True
+class ACTION(object):
+    CREATE = u'create'
+    READ = u'read'
+    UPDATE = u'update'
+    DELETE = u'delete'
+    ADMIN = u'admin'
 
-    # Otherwise, everyone can read and only the same user can
-    # do update/delete
-    if action is 'read':
+def authorize(annotation, action, user=None):
+    permissions = annotation.permissions
+    authorized_list = permissions.get(action, [])
+    # no permissions or empty list indicates anyone can do that action
+    if not authorized_list:
         return True
     else:
-        return user == annotation.user.get('id', None)
+        return user in authorized_list
 
