@@ -57,7 +57,7 @@ class Annotation(DomainObject):
     user = DictField()
     text = TextField()
     quote = TextField()
-    created = DateTimeField(default=datetime.now)
+    created = TextField(default=lambda: datetime.now().isoformat())
     ranges = ListField(DictField())
     permissions = DictField(
         Mapping.build(

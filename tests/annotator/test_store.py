@@ -61,7 +61,7 @@ class TestStore():
         assert response.status_code == 404, "response should be 404 NOT FOUND"
 
     def test_update(self):
-        kwargs = dict(text=u"Foo", id='123')
+        kwargs = dict(text=u"Foo", id='123', created='2010-12-10')
         self._create_annotation(**kwargs)
 
         payload = json.dumps({'id': '123', 'text': 'Bar'})
