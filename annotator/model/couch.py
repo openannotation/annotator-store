@@ -73,23 +73,29 @@ class Annotation(DomainObject):
     def userid(self):
         return user['id']
 
+    def update_from_dict(self, dict_):
+        if 'id' in dict_:
+            del dict_['id']
+        if '_id' in dict_:
+            del dict_['_id']
+        if 'user' in dict_ and isinstance(dict_['user'], basestring):
+            dict_['user'] = { 'id': dict_['user'] }
+
+        attrnames = self._fields.keys()
+        for k,v in dict_.items():
+            if k in attrnames:
+                setattr(self, k, v)
+            else:
+                self[k] = v
+        return self
+
     @classmethod
     def from_dict(cls, dict_):
         if 'id' in dict_:
             ann = Annotation.get(dict_['id'])
-            del dict_['id']
         else:
             ann = Annotation()
-
-        if 'user' in dict_ and isinstance(dict_['user'], basestring):
-            dict_['user'] = { 'id': dict_['user'] }
-
-        attrnames = ann._fields.keys()
-        for k,v in dict_.items():
-            if k in attrnames:
-                setattr(ann, k, v)
-            else:
-                ann[k] = v
+        ann.update_from_dict(dict_)
         return ann
 
     @classmethod
