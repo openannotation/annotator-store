@@ -51,10 +51,12 @@ class DomainObject(Document):
 
 class Annotation(DomainObject):
     type = TextField(default='Annotation')
+    annotator_schema_version = TextField(default=u'v1.0')
     uri = TextField()
     account_id = TextField()
     user = DictField()
     text = TextField()
+    quote = TextField()
     created = DateTimeField(default=datetime.now)
     ranges = ListField(DictField())
     permissions = DictField(
