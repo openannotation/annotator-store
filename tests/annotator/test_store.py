@@ -151,7 +151,7 @@ class TestStoreAuth():
         self.app = app.test_client()
 
     def teardown(self):
-        pass
+        app.config['AUTH_ON'] = False
 
     def test_get_allowed(self):
         response = self.app.get('/annotations')
@@ -162,4 +162,79 @@ class TestStoreAuth():
         response = self.app.post('/annotations', data=payload,
                 content_type='application/json')
         assert response.status_code == 401, "response should be 401 NOT AUTHORIZED"
+
+
+class TestStoreAuthz:
+    anno_id = '123'
+    gooduser = u'alice'
+    baduser = u'bob'
+    updateuser = u'charlie'
+    headers = { 'x-annotator-user-id': gooduser }
+    bad_headers = { 'x-annotator-user-id': baduser }
+
+    def setup(self):
+        self.permissions = dict(
+            read=[self.gooduser, self.updateuser],
+            update=[self.gooduser, self.updateuser],
+            admin=[self.gooduser])
+        kwargs = dict(
+            id=self.anno_id,
+            text=u"Foo",
+            permissions=self.permissions
+            )
+        ann = Annotation(**kwargs)
+        ann.save()
+        self.app = app.test_client()
+
+    def teardown(self):
+        rebuild_db(app.config['COUCHDB_DATABASE'])
+
+    def test_read(self):
+        response = self.app.get('/annotations/123')
+        assert response.status_code == 401, response.status_code
+
+        response = self.app.get('/annotations/123', headers=self.bad_headers)
+        assert response.status_code == 401, response.status_code
+
+        response = self.app.get('/annotations/123', headers=self.headers)
+        assert response.status_code == 200, response.status_code
+        data = json.loads(response.data)
+        assert data['text'] == 'Foo'
+
+    def test_update(self):
+        payload = json.dumps({'id': self.anno_id, 'text': 'Bar'})
+
+        response = self.app.put('/annotations/123', data=payload, content_type='application/json')
+        assert response.status_code == 401, response.status_code
+
+        response = self.app.put('/annotations/123', data=payload,
+                content_type='application/json', headers=self.bad_headers)
+        assert response.status_code == 401, response.status_code
+
+        response = self.app.put('/annotations/123', data=payload,
+                content_type='application/json', headers=self.headers)
+        assert response.status_code == 200, response.status_code
+
+    def test_update_change_permissions_not_allowed(self):
+        newperms = dict(self.permissions)
+        newperms['read'] = [self.gooduser, self.baduser]
+        payload = json.dumps({'id': self.anno_id, 'text': 'Bar',
+            'permissions': newperms})
+
+        response = self.app.put('/annotations/123', data=payload,
+                content_type='application/json', headers=self.bad_headers
+                )
+        assert response.status_code == 401, response.status_code
+
+        response = self.app.put('/annotations/123', data=payload,
+                content_type='application/json',
+                headers={'x-annotator-user-id': self.updateuser}
+                )
+        assert response.status_code == 401, response.status_code
+        assert '(permissions change)' in response.data, response.data
+
+        response = self.app.put('/annotations/123', data=payload,
+                content_type='application/json', headers=self.headers
+                )
+        assert response.status_code == 200, response.status_code
 

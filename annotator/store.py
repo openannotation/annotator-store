@@ -2,7 +2,7 @@ from flask import Flask, Module, Response
 from flask import abort, json, redirect, request, url_for
 
 from .model import Annotation
-from authz import authorize
+from authz import authorize, ACTION
 from . import auth
 
 __all__ = ["store"]
@@ -63,12 +63,10 @@ def read_annotation(id):
 
     if not annotation:
         return jsonify('Annotation not found.', status=404)
-
     elif authorize(annotation, 'read', get_current_userid()):
         return jsonify(annotation.to_dict())
-
     else:
-        return jsonify('Could not authorise request. No update performed', status=401)
+        return jsonify('Could not authorise request. Read not allowed', status=401)
 
 # UPDATE
 @store.route('/annotations/<id>', methods=['PUT'])
@@ -79,10 +77,12 @@ def update_annotation(id):
         return jsonify('Annotation not found. No update performed.', status=404)
 
     elif request.json and authorize(annotation, 'update', get_current_userid()):
-        annotation = Annotation.from_dict(request.json)
-        annotation.save()
-        return jsonify(annotation.to_dict())
-
+        updated = Annotation.from_dict(request.json)
+        if updated.permissions != annotation.permissions:
+            if not authorize(annotation, ACTION.ADMIN, get_current_userid()):
+                return jsonify('Could not authorise request (permissions change). No update performed', status=401)
+        updated.save()
+        return jsonify(updated.to_dict())
     else:
         return jsonify('Could not authorise request. No update performed', status=401)
 
