@@ -12,6 +12,8 @@ class TestStore():
         app.config['AUTH_ON'] = False
         assert app.config['MOUNTPOINT'] == '', "MOUNTPOINT config option is incorrect for tests. should be ''"
         self.app = app.test_client()
+        self.account_id = 'testing-user'
+        self.headers = {'x-annotator-account-id': self.account_id}
 
     def teardown(self):
         rebuild_db(app.config['COUCHDB_DATABASE'])
@@ -28,10 +30,15 @@ class TestStore():
         assert self.app.get('/annotations').data == "[]", "response should be empty list"
 
     def test_create(self):
-        import re
         payload = json.dumps({'name': 'Foo'})
-        response = self.app.post('/annotations', data=payload, content_type='application/json')
+        response = self.app.post(
+            '/annotations',
+            data=payload,
+            content_type='application/json',
+            headers=self.headers
+            )
 
+        # import re
         # See http://bit.ly/gxJBHo for details of this change.
         # assert response.status_code == 303, "response should be 303 SEE OTHER"
         # assert re.match(r"http://localhost/store/\d+", response.headers['Location']), "response should redirect to read_annotation url"
@@ -39,6 +46,7 @@ class TestStore():
         assert response.status_code == 200, "response should be 200 OK"
         data = json.loads(response.data)
         assert 'id' in data, "annotation id should be returned in response"
+        assert data['account_id'] == self.account_id
 
     def test_read(self):
         kwargs = dict(text=u"Foo", id='123')

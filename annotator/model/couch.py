@@ -52,6 +52,7 @@ class DomainObject(Document):
 class Annotation(DomainObject):
     type = TextField(default='Annotation')
     uri = TextField()
+    account_id = TextField()
     user = DictField()
     text = TextField()
     created = DateTimeField(default=datetime.now)

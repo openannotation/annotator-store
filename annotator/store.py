@@ -1,5 +1,5 @@
 from flask import Flask, Module, Response
-from flask import abort, json, redirect, request, url_for
+from flask import abort, json, redirect, request, url_for, g
 
 from .model import Annotation
 from authz import authorize, ACTION
@@ -26,6 +26,7 @@ def get_current_userid():
 
 @store.before_request
 def before_request():
+    g.account_id = request.headers.get('x-annotator-account-id', '')
     if current_app.config['AUTH_ON'] and not request.method == 'GET' and not auth.verify_request(request):
         return jsonify("Cannot authorise request. Perhaps you didn't send the x-annotator headers?", status=401)
 
@@ -51,6 +52,7 @@ def index():
 def create_annotation():
     if request.json:
         annotation = Annotation.from_dict(request.json)
+        annotation.account_id = g.account_id
         annotation.save()
         return jsonify(annotation.to_dict())
     else:
