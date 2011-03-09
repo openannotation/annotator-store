@@ -43,7 +43,7 @@ def verify_token(token, key, userId, expiryTime=''):
 def verify_request(request):
     pre = HEADER_PREFIX
 
-    required = ['auth-token', 'account-key', 'user-id']
+    required = ['auth-token', 'account-id', 'user-id']
     headers  = [pre + key for key in required]
 
     rh = request.headers

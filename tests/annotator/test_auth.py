@@ -19,14 +19,14 @@ def iso8601(t):
         t = datetime.datetime.now() + datetime.timedelta(seconds=300)
     return t.strftime("%Y-%m-%dT%H:%M:%S")
 
-def make_token(accountKey, userId, expiryTime):
-    c = model.Account.get(accountKey)
+def make_token(account_id, userId, expiryTime):
+    c = model.Account.get(account_id)
     return hashlib.sha256(c.secret + userId + expiryTime).hexdigest()
 
-def make_request(accountKey, userId, expiryTime):
+def make_request(account_id, userId, expiryTime):
     return MockRequest(Headers([
-        ('x-annotator-account-key', accountKey),
-        ('x-annotator-auth-token', make_token(accountKey, userId, expiryTime)),
+        ('x-annotator-account-id', account_id),
+        ('x-annotator-auth-token', make_token(account_id, userId, expiryTime)),
         ('x-annotator-auth-token-valid-until', expiryTime),
         ('x-annotator-user-id', userId)
     ]))
@@ -70,13 +70,13 @@ class TestAuth():
     def test_reject_request_missing_headers(self):
         expiryTime = iso8601('future')
         request = make_request('testAccount', 'alice', expiryTime)
-        del request.headers['x-annotator-account-key']
-        assert not auth.verify_request(request), "request missing accountKey should have been rejected"
+        del request.headers['x-annotator-account-id']
+        assert not auth.verify_request(request), "request missing account_id should have been rejected"
 
     def test_verify_request_mixedcase_headers(self):
         expiryTime = iso8601('future')
         request = make_request('testAccount', 'alice', expiryTime)
-        request.headers['X-Annotator-Account-Key'] = request.headers['x-annotator-account-key']
+        request.headers['X-Annotator-Account-Key'] = request.headers['x-annotator-account-id']
         assert auth.verify_request(request), "request with mixed-case headers should have been verified"
 
     def test_get_request_userid(self):
