@@ -1,5 +1,4 @@
 /db/*.sqlite
-/annotator/static
 /pyenv
 /annotator.cfg
 *.pyc
