@@ -1,59 +1,154 @@
 {% extends "base.html" %}
 {% block title %}Home{% endblock %}
-{% block head %}
-    {{ super() }}
+
+{% block body %}
+    <header>
+      <h1><a href="/" title="The AnnotateIt Homepage">AnnotateIt</a></h1>
+      <nav>
+        <ul>
+          <li><a href="#sign-up">Sign Up</a></li>
+          <li><a href="#login">Log In</a></li>
+          <li><a href="#annotator">Annotator</a></li>
+          <li><a href="#about">About</a></li>
+        </ul>
+      </nav>
+    </header>
+    <section>
+      <h2>Annotate Anything</h2>
+      <div class="primary">
+        <p>Now you can Annotate any web page or integrate the Annotator into
+           your own site in two lines of javascript or annotate any web page
+           straight off using our bookmarklet.</p>
+        <ul>
+          <li>Annotate any webpage with the bookmarklet</li>
+          <li>Add the Annotator to your own site in just a few lines of code</li>
+          <li>Many other exciting features&hellip;</li>
+        </ul>
+        <p><a href="#sign-up">Sign Up Now</a> (Needs to be a nice button)</p>
+      </div>
+      <div class="secondary">
+        <img class="screenshot" src="/static/images/annotator.png" alt="The annotator" height="223" width="370" />
+      </div>
+    </section>
+    <section>
+      <div id="annotator" class="primary">
+        <h2>The Annotator</h2>
+        <div class="thumbnails">
+          <img src="/static/images/thumb-add.png" alt="Highlight text to annotate" height="128" width="175" />
+          <img src="/static/images/thumb-viewer.png" alt="View annotations by moving your mouse over highlights" height="128" width="175" />
+        </div>
+        <p>The Annotator is a JavaScript tool that can be added to any webpage
+           to allow annotation. Annotations can have comments, tags, users and
+           more. For more information check out the <a href="#develop">developers
+           section</a> below.</p>
+      </div>
+      <div class="secondary">
+        <h2>The Bookmarklet</h2>
+        <div class="thumbnails">
+          <img src="/static/images/thumb-bookmarklet.png" alt="Add the annotator to any page with the bookmarklet" height="128" width="175" />
+          <img src="/static/images/thumb-editor.png" alt="Save annotations to AnnotateIt" height="128" width="175" />
+        </div>
+        <p>The Bookmarklet is a simple tool that allows you to add the annotator
+           to any webpage and save your annotations to AnnotateIt. Next time
+           you visit the website simply reload the bookmarklet and all your
+           annotations will be reloaded.</p>
+        <p>To get your very own bookmarklet simply <a href="#sign-up">sign up</a>
+           for an account below.</p>
+      </div>
+    </section>
+    <section>
+      <div id="sign-up" class="primary forms">
+        <h2>Sign Up <span>or <a href="#login">Login</a></span></h2>
+        <p>Setup an account on AnnotateIt to get your own personal bookmarklet
+           to annotate any webpage <strong>and</strong> create an account key
+           so that you can use the annotator on your own site.</p>
+        <form action="/" method="POST">
+          <ul>
+            <li>
+              <label for="field-username">Username:</label>
+              <input id="field-username" name="username" value="" placeholder="myusername" />
+            </li>
+            <li>
+              <label for="field-email">Email Address:</label>
+              <input type="email" id="field-email" name="email" value="" placeholder="hello@annotateit.org" />
+            </li>
+            <li>
+              <label for="field-password">Password:</label>
+              <input type="password" id="field-password" name="password" value="" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+            </li>
+            <li>
+              <label for="field-password-confirm">Confirm Password:</label>
+              <input type="password" id="field-password-confirm" name="password-confirm" value="" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+            </li>
+          </ul>
+          <div class="actions">
+            <button type="submit">Sign Up</button>
+          </div>
+        </form>
+      </div>
+      <div id="login" class="primary forms">
+        <h2>Log In <span>or <a href="#sign-up">Sign Up</a></span></h2>
+        <p>Login to Annotate it to change your account details and download the
+           bookmarklet.</p>
+        <form action="/" method="POST">
+          <ul>
+            <li>
+              <label for="field-email">Email Address:</label>
+              <input type="email" id="field-email" name="email" value="" placeholder="hello@annotateit.org" />
+            </li>
+            <li>
+              <label for="field-password">Password</label>
+              <input type="password" id="field-password" name="password" value="" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+            </li>
+          </ul>
+          <div class="actions">
+            <button type="submit">Login</button>
+          </div>
+        </form>
+      </div>
+      <div id="about" class="secondary">
+        <h2>About the Project</h2>
+        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex
+        ea commodo consequat. Duis aute irure dolor in reprehenderit in
+        voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+        
+        <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui
+        officia deserunt mollit anim id est laborum.</p>
+      </div>
+    </section>
+    <section>
+        <h2>Developers</h2>
+        <div class="primary">
+          <p>Adding the Annotator to a webpage is easy. First you'll need to
+             <a href="">download the source code</a> and include it on your
+             page along with jQuery. Then simply add the following line to load
+             the annotator.</p>
+          <pre><code>jQuery('#content').annotator();</code></pre>
+          <p>To save the Annotations to the Store you'll need to <a href="#">sign
+             up</a> for an AnnotateIt account to get an Account Key and User
+             Account. Then include the <a href="#">Store</a> and
+            <a href="#">Auth</a> plugins.</p>
+        </div>
+        <div class="secondary">
+          <p>Then sign in to AnnotateIt with the following code</p>
+          <pre><code>jQuery('#content').annotator()
+    .annotator('addPlugin', 'Store', {
+      prefix: 'http://annotateit.org/api'
+    })
+    .annotator('addPlugin', 'Auth', {
+        userId:      'myusername',        // Your AnnotateIt username
+        consumerKey: 'some-big-string',   // Your Account Key
+        authToken:   'some-bigger-string' // Your Auth Token
+    });</code></pre>
+      </div>
+    </section>
+    <aside>
+      <p>AnnotateIt is supported by the <a href="">Open Knowledge Foundation</a>.
+         Go see what other cool stuff we're doing at the moment!</p>
+    </aside>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
     <script src="/static/main.js"></script>
-
-    <!-- Here it is: -->
-    <script src="https://github.com/okfn/annotator/raw/v1.0.0beta2/pkg/annotator.min.js"></script>
-    <link rel="stylesheet" href="https://github.com/okfn/annotator/raw/v1.0.0beta2/pkg/annotator.min.css">
-{% endblock %}
-
-{% block content %}
-      <p>
-        Annotator is a Javascript shim that you can insert into any page, allowing
-        you to select and annotate text, images, or (almost) anything else.
-      </p>
-
-      <p>
-        <strong>How do I use it?</strong> We think you'll get the hang of it
-        pretty quickly. It's running right now on this page &mdash; try it out
-        by selecting some text and clicking on the note icon. Enter a note and
-        press <tt>&ldquo;Enter &#x21A9;&rdquo;</tt>: you should see your annotation
-        as a highlighted piece of text. Hover over the highlight with your mouse
-        to view, edit and delete the annotation.
-      </p>
-
-      <p>
-        <strong>What happens to my annotations?</strong> The ones you create on
-        this page will get lost in the ether, but Annotator comes with the ability
-        to save your annotations to a remote server. Preliminary support for
-        saving to an entirely different website is available using
-        <a href="http://www.w3.org/TR/cors/" title="Cross-Origin Resource Sharing">
-        CORS</a>. A reference backend is available at
-        <a href="https://github.com/okfn/annotator-store-flask">okfn/annotator-store-flask</a>.
-      </p>
-
-      <p>
-        <strong>Give me the code!</strong> Right, go get a tagged release from
-        <a href="https://github.com/okfn/annotator/downloads">this page</a>,
-        load <tt>annotator.min.js</tt> and <tt>annotator.min.css</tt> into your page,
-        and add the following Javascript<sup><a href="#jquery">1</a></sup>:
-      </p>
-
-      <blockquote><p><code>$('body').annotator()</code></p></blockquote>
-
-      <p>
-        When we get a moment we're also going to knock together a bookmarklet to
-        load Annotator into any page, saving annotations to a server of your choice.
-      </p>
-
-      <hr>
-
-      <p class="footnote">
-        <a name="jquery">1:</a> I'm assuming you're already using <a href="http://jquery.com">jQuery</a>, right?
-        If not you'll need to load that too. Best use Google's CDN with a URL like <tt>http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js</tt>.
-      </p>
-
-      <hr>
 {% endblock %}
