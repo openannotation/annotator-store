@@ -11,10 +11,6 @@ account = Module(__name__)
 from flask import current_app 
 from .model import Account
 
-@account.before_request
-def before_request():
-    g.account_id = session.get('account-id', None) 
-
 
 @account.route('/')
 def index():

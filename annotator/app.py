@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template
+from flask import Flask, render_template, session, g
 from store import store
 from .account import account
 
@@ -49,6 +49,11 @@ def configure_app():
                                    ADMINS, 'annotator error')
         mail_handler.setLevel(logging.ERROR)
         app.logger.addHandler(mail_handler)
+
+
+@app.before_request
+def before_request():
+    g.account_id = session.get('account-id', None) 
 
 @app.route('/')
 def home():
