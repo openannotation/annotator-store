@@ -4,12 +4,11 @@ import hashlib
 from flask import Module, redirect, request, url_for, render_template, session
 from flask import flash, g, abort
 from flaskext.wtf import *
-from werkzeug import generate_password_hash, check_password_hash
 
 account = Module(__name__)
 
 from flask import current_app 
-from .model import Account
+from .model import Account, Annotation
 
 
 @account.route('/')
@@ -54,7 +53,10 @@ def view(id):
     acc = Account.get(g.account_id)
     token = hashlib.sha256(acc.secret + acc.username).hexdigest()
     account = Account.get(id)
-    return render_template('account/view.html', account=account, token=token)
+    annotations = list(Annotation.search(account_id=id, limit=20))
+    print annotations
+    return render_template('account/view.html', account=account, token=token,
+            annotations=annotations)
 
 
 class SignupForm(Form):

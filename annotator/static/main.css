@@ -320,7 +320,7 @@ article .screenshot {
 }
 
 /**************************************
-  * OKFN Aside
+  * Footer
   *************************************/
 
 footer {
@@ -350,6 +350,28 @@ footer:hover a {
 
 footer:hover {
 	color: rgba(0, 0, 0, 0.8);
+}
+
+/**************************************
+  * General
+  *************************************/
+
+ul.annotations {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+ul.annotations .annotation {
+  margin-bottom: 1em;
+  font-size: 90%;
+}
+
+.annotation .user {
+  font-style: italic;
+}
+
+.annotation .created {
+  font-size: 90%;
 }
 
 /**************************************

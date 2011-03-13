@@ -4,6 +4,7 @@
 {% block content %}
 <h2>Hi {{account.username}}</h2>
 
+<section>
 <p>Your account details are:</p>
 
 <dl>
@@ -15,10 +16,35 @@
   <dd>{{account.secret}}</dd>
   <dt>Registered since</dt>
   <dd>{{account.created}}</dd>
+  <dt>Your Auth Token (valid forever)</dt>
+  <dd>
+    <code>
+      {{token}}
+    </code>
+  </dd>
 </dl>
+</section>
 
-<h3>Your Auth Token (valid forever)</h3>
-<code>
-  {{token}}
-</code>
+<section>
+<h2>Recent Annotations</h2>
+<ul class="annotations">
+{% for anno in annotations %}
+  <li class="annotation">
+    <div>
+      <span class="user">{{anno.user.id or 'Anonymous'}}</span> &ndash;
+      <span class="created">
+        {{anno.created}}
+      </span>
+    </div>
+    <div>
+      <a href="${{anno.uri or '#'}}">{{anno.uri or 'No url given'}}</a>
+    </div>
+    <div class="text">
+      {{anno.text}}
+    </div>
+  </li>
+{% endfor %}
+</ul>
+</section>
+
 {% endblock %}
