@@ -3,13 +3,17 @@
 
 {% block content %}
 {% from "_formhelpers.html" import render_field %}
-<form method="post" action="">
-  <dl>
-    {{ render_field(form.username) }}
-    {{ render_field(form.email) }}
-    {{ render_field(form.password) }}
-    {{ render_field(form.confirm) }}
-  </dl>
-  <input type="submit" value="Signup" />
-</form>
+  <div class="primary">
+    <form method="post" action="{{url_for('account.signup')}}">
+      <dl>
+        {{ render_field(form.username, placeholder="myusername") }}
+        {{ render_field(form.email, placeholder="hello@annotateit.org") }}
+        {{ render_field(form.password, placeholder="********") }}
+        {{ render_field(form.confirm, placeholder="********") }}
+      </dl>
+      <div class="actions">
+        <button type="submit">Signup</button>
+      </div>
+    </form>
+  </div>
 {% endblock %}

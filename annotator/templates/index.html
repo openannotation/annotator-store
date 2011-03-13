@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_formhelpers.html" import login_form, signup_form %}
 {% block title %}Home{% endblock %}
 
 {% block content %}
@@ -46,56 +47,7 @@
       </div>
     </section>
     <section>
-      <div id="sign-up" class="primary forms">
-        <h2>Sign Up <span>or <a href="#login">Login</a></span></h2>
-        <p>Setup an account on AnnotateIt to get your own personal bookmarklet
-           to annotate any webpage <strong>and</strong> create an account key
-           so that you can use the annotator on your own site.</p>
-        <form action="/" method="POST">
-          <ul>
-            <li>
-              <label for="field-username">Username:</label>
-              <input id="field-username" name="username" value="" placeholder="myusername" />
-            </li>
-            <li>
-              <label for="field-email">Email Address:</label>
-              <input type="email" id="field-email" name="email" value="" placeholder="hello@annotateit.org" />
-            </li>
-            <li>
-              <label for="field-password">Password:</label>
-              <input type="password" id="field-password" name="password" value="" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
-            </li>
-            <li>
-              <label for="field-password-confirm">Confirm Password:</label>
-              <input type="password" id="field-password-confirm" name="password-confirm" value="" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
-            </li>
-          </ul>
-          <div class="actions">
-            <button type="submit">Sign Up</button>
-          </div>
-        </form>
-      </div>
-      <div id="login" class="primary forms">
-        <h2>Log In <span>or <a href="#sign-up">Sign Up</a></span></h2>
-        <p>Login to Annotate it to change your account details and download the
-           bookmarklet.</p>
-        <form action="/" method="POST">
-          <ul>
-            <li>
-              <label for="field-email">Email Address:</label>
-              <input type="email" id="field-email" name="email" value="" placeholder="hello@annotateit.org" />
-            </li>
-            <li>
-              <label for="field-password">Password</label>
-              <input type="password" id="field-password" name="password" value="" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
-            </li>
-          </ul>
-          <div class="actions">
-            <button type="submit">Login</button>
-          </div>
-        </form>
-      </div>
-      <div id="about" class="secondary">
+      <div id="about">
         <h2>About the Project</h2>
         <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
         tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
@@ -108,7 +60,7 @@
       </div>
     </section>
     <section>
-        <h2>Developers</h2>
+        <h2 id="develop">Developers</h2>
         <div class="primary">
           <p>Adding the Annotator to a webpage is easy. First you'll need to
              <a href="">download the source code</a> and include it on your

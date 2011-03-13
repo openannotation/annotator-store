@@ -107,14 +107,13 @@ form {
 	padding: 0.5em;
 }
 
-section form ul,
-section form li {
+form dl,
+form dt, form dd {
 	padding: 0;
 	margin: 0;
-	list-style-type: none;
 }
 
-section form li {
+form dt, form dd {
 	margin-bottom: 0.3125em /* 5px */;
 	line-height: 1;
 }
@@ -259,39 +258,40 @@ section  {
 	clear: left;
 }
 
-section .primary,
-section .secondary {
+article .primary,
+article .secondary {
 	width: 380px;
 }
 
-section .primary {
+article .primary {
 	float: left;
 }
 
-section .secondary  {
+article .secondary  {
 	float: right;
 }
 
-section p,
-section ul,
-section ol,
-section pre {
+article p,
+article ul,
+article ol,
+article pre,
+article dl {
 	font-size: 1.6em /* 16px */;
 	line-height: 1.25em /* 20px */;
 	margin-bottom: 1em;
 }
 
-section ul,
-section ol {
+article ul,
+article ol {
 	padding-left: 20px;
 	line-height: 1.5em /* 24px */;
 }
 
-section ul {
+article ul {
 	list-style-type: square;
 }
 
-section .screenshot {
+article .screenshot {
 	margin-bottom: 4em;
 }
 
@@ -328,8 +328,10 @@ footer {
 	background-color: #fafafa;
 	border: 1px solid #e6e6e6;
 	padding: 1em 0.5em;
+  margin-top: 2em;
 	margin-bottom: 3em;
-    line-height: 1.4;
+  line-height: 1.4;
+  clear: both;
 }
 
 footer,
@@ -367,7 +369,7 @@ footer:hover {
   *************************************/
 
 ul.notification {
-  margin: 0;
+  margin: -10px 0 10px;
   padding: 0;
 }
 
