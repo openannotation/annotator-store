@@ -14,7 +14,7 @@
           <li>Add the Annotator to your own site in just a few lines of code</li>
           <li>Many other exciting features&hellip;</li>
         </ul>
-        <p><a href="#sign-up">Sign Up Now</a> (Needs to be a nice button)</p>
+        <p><a href="{{url_for('account.signup')}}">Sign Up Now &raquo;</a></p>
       </div>
       <div class="secondary">
         <img class="screenshot" src="/static/images/annotator.png" alt="The annotator" height="223" width="370" />
@@ -38,12 +38,10 @@
           <img src="/static/images/thumb-bookmarklet.png" alt="Add the annotator to any page with the bookmarklet" height="128" width="175" />
           <img src="/static/images/thumb-editor.png" alt="Save annotations to AnnotateIt" height="128" width="175" />
         </div>
-        <p>The Bookmarklet is a simple tool that allows you to add the annotator
-           to any webpage and save your annotations to AnnotateIt. Next time
-           you visit the website simply reload the bookmarklet and all your
-           annotations will be reloaded.</p>
-        <p>To get your very own bookmarklet simply <a href="#sign-up">sign up</a>
-           for an account below.</p>
+        <p>The Bookmarklet is a simple tool that allows you to add the
+        annotator to any webpage and save your annotations to AnnotateIt. To
+        get your very own bookmarklet simply <a
+          href="{{url_for('account.signup')}}">sign up</a> for an account.</p>
       </div>
     </section>
     <section>
