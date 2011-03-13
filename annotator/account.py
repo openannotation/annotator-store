@@ -28,7 +28,7 @@ def login():
         password = form.password.data
         email = form.email.data
         accounts = Account.get_by_email(email)
-        if accounts and check_password_hash(accounts[0].pwdhash, password):
+        if accounts and accounts[0].check_password(password):
             acc = accounts[0]
             session['account-id'] = acc.id
             flash('Welcome back', 'success')
@@ -71,9 +71,8 @@ def signup():
     # TODO: re-enable csrf
     form = SignupForm(request.form, csrf_enabled=False)
     if request.method == 'POST' and form.validate():
-        pwdhash = generate_password_hash(form.password.data)
-        account = Account(username=form.username.data, email=form.email.data,
-                    pwdhash=pwdhash)
+        account = Account(username=form.username.data, email=form.email.data)
+        account.password = form.password.data
         account.save()
         flash('Thanks for signing-up', 'success')
         return redirect(url_for('login'))

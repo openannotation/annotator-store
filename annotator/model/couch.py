@@ -1,6 +1,7 @@
 from datetime import datetime
 import uuid
 
+from werkzeug import generate_password_hash, check_password_hash
 import couchdb
 import couchdb.design
 from couchdb.mapping import Document, Mapping
@@ -154,6 +155,14 @@ class Account(DomainObject):
                 emit(doc.email, doc);
             }
        }''')
+
+    def _password_set(self, v):
+        self.pwdhash = generate_password_hash(v)
+
+    password = property(lambda self: self.pwdhash, _password_set)
+
+    def check_password(self, password):
+        return check_password_hash(self.pwdhash, password)
 
     @classmethod
     def get_by_email(cls, email):
