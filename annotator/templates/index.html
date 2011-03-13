@@ -1,18 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Home{% endblock %}
 
-{% block body %}
-    <header>
-      <h1><a href="/" title="The AnnotateIt Homepage">AnnotateIt</a></h1>
-      <nav>
-        <ul>
-          <li><a href="#sign-up">Sign Up</a></li>
-          <li><a href="#login">Log In</a></li>
-          <li><a href="#annotator">Annotator</a></li>
-          <li><a href="#about">About</a></li>
-        </ul>
-      </nav>
-    </header>
+{% block content %}
     <section>
       <h2>Annotate Anything</h2>
       <div class="primary">
@@ -144,11 +133,6 @@
     });</code></pre>
       </div>
     </section>
-    <aside>
-      <p>AnnotateIt is supported by the <a href="">Open Knowledge Foundation</a>.
-         Go see what other cool stuff we're doing at the moment!</p>
-    </aside>
-
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
     <script src="/static/main.js"></script>
 {% endblock %}

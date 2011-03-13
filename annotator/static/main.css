@@ -147,7 +147,7 @@ form .actions button {
   * Header
   *************************************/
 
-header, nav, section, article, aside {
+header, nav, section, article, footer {
 	display: block;
 }
 
@@ -323,16 +323,17 @@ section .screenshot {
   * OKFN Aside
   *************************************/
 
-aside {
+footer {
 	font-size: 1.4em;
 	background-color: #fafafa;
 	border: 1px solid #e6e6e6;
 	padding: 1em 0.5em;
 	margin-bottom: 3em;
+    line-height: 1.4;
 }
 
-aside,
-aside a {
+footer,
+footer a {
 	-webkit-transition: color 0.05s ease-in;
 	-moz-transition: color 0.05s ease-in;
 	-o-transition: color 0.05s ease-in;
@@ -340,12 +341,12 @@ aside a {
 	color: rgba(0, 0, 0, 0.4);
 }
 
-aside:hover,
-aside:hover a {
+footer:hover,
+footer:hover a {
 	color: rgba(0, 0, 0, 0.8);
 }
 
-aside:hover {
+footer:hover {
 	color: rgba(0, 0, 0, 0.8);
 }
 

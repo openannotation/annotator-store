@@ -17,11 +17,33 @@
   {% endblock %}
 </head>
 <body>
-  {% block body %}
   <div id="airlock">
     <header>
-      <h1>Annotator</h1>
+      {% block masthead %}
+      <h1>
+        <a href="{{url_for('.home')}}" title="The AnnotateIt Homepage">
+          AnnotateIt</a>
+      </h1>
+      <!--
       <h2>The <span id="role">copy-editor</span> of the web</h2>
+      -->
+      <nav>
+        <ul>
+        {% if g.account_id %}
+          <li><a href="{{ url_for('account.view', id=g.account_id)}}">My Account</a></li>
+          <li><a href="{{ url_for('account.logout') }}">Logout</a></li>
+        {% else %}
+          <li><a href="{{url_for('account.signup')}}">Sign Up</a></li>
+          <li><a href="{{url_for('account.login')}}">Log In</a></li>
+        {% endif %}
+          <li><a href="{{url_for('.home')}}#annotator">Annotator</a></li>
+          <li><a href="{{url_for('.home')}}#about">About</a></li>
+        </ul>
+
+      <div id="account">
+      </div>
+      </nav>
+      {% endblock %}
     </header>
 
    <div id="content">
@@ -40,29 +62,13 @@
 
     <footer>
       {% block footer %}
-      <p>The development of Annotator is supported by the <a
-        href="http://okfn.org"> Open Knowledge Foundation</a>. Go see what
-      other cool stuff we're doing at the moment!</p>
-
-      <div id="account">
-        {% if g.account_id %}
-        Logged in &ndash;
-        <a href="{{ url_for('account.view', id=g.account_id)}}">My Account</a>
-        &ndash;
-        <a href="{{ url_for('account.logout') }}">Logout</a>
-        {% else %}
-        <a href="{{ url_for('account.login')}}">Login</a>
-        &ndash;
-        <a href="{{ url_for('account.signup')}}">Signup</a>
-        {% endif %}
-      </div>
+      <p>Annotator was developed by the <a href="http://okfn.org">Open
+        Knowledge Foundation</a> with support from the <a
+        href="http://www.shuttleworthfoundation.org/">Shuttleworth
+        Foundation</a>. Go see what other cool stuff we're doing at the
+      moment!</p>
       {% endblock %}
     </footer>
   </div>
-  {% endblock %}
 </body>
-</html>
-
-    </div>
-  </body>
 </html>
