@@ -62,11 +62,61 @@
 
     <footer>
       {% block footer %}
-      <p>Annotator was developed by the <a href="http://okfn.org">Open
+      <p>Annotator was developed by the
+        <img src="http://assets.okfn.org/images/logo/okf_logo_white_and_green_tiny.png" id="footer-okf-logo" />
+        <a href="http://okfn.org">Open
         Knowledge Foundation</a> with support from the <a
         href="http://www.shuttleworthfoundation.org/">Shuttleworth
         Foundation</a>. Go see what other cool stuff we're doing at the
       moment!</p>
+      <div class="widget-area">
+        <ul class="xoxo">
+          <li class="widget-container widget_text">
+          <h3 class="widget-title"></h3>
+          <div class="text-widget">
+            <ul>
+              <li>
+                &copy; <a href="http://www.okfn.org/">Open Knowledge Foundation</a>
+              </li>
+              <li>
+                <a href="http://opendefinition.org/okd/">
+                <img alt="This Content and Data is Open" src="http://assets.okfn.org/images/ok_buttons/oc_80x15_blue.png" class="button" />
+                </a>
+              </li>
+              <li>
+                <a href="http://opendefinition.org/ossd/">
+                <img alt="This Content and Data is Open" src="http://assets.okfn.org/images/ok_buttons/os_80x15_blue.png" class="button" />
+                </a>
+              </li>
+            </ul>
+          </div>
+          </li>
+        </ul>
+        <ul class="xoxo">
+          <li class="widget-container widget_text">
+          <h3 class="widget-title"></h3>
+          <div class="textwidget">
+            <ul>
+              <li>
+                <a href="http://okfn.org/projects/annotator/">Project Home Page</a>
+              </li>
+              <li>
+              <a href="{{url_for('store.home')}}">API</a>
+              </li>
+              <li>
+                <a href="http://github.com/okfn/annotator-store/">API Docs</a>
+              </li>
+              <li>
+                <a href="http://okfn.org/contact/">Contact Us</a>
+              </li>
+              <li>
+                <a href="http://okfn.org/privacy-policy/">Privacy Policy</a>
+              </li>
+            </ul>
+          </div>
+          </li>
+        </ul>
+      </div>
       {% endblock %}
     </footer>
   </div>
