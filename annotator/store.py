@@ -41,6 +41,10 @@ def after_request(response):
 
     return response
 
+@store.route('/')
+def home():
+    return jsonify('Annotator Store API')
+
 # INDEX
 @store.route('/annotations')
 def index():
