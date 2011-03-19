@@ -48,7 +48,7 @@ def home():
 # INDEX
 @store.route('/annotations')
 def index():
-    annotations = [row.doc for row in Annotation.search() if authorize(a, 'read', get_current_userid())]
+    annotations = [anno.to_dict() for anno in Annotation.search() if authorize(anno, 'read', get_current_userid())]
     return jsonify(annotations)
 
 # CREATE
