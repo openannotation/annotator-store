@@ -114,6 +114,10 @@ class TestAnnotation():
 
         res = list(Annotation.search())
         assert len(res) == 3, res
+
+        # ordering (most recent first)
+        assert res[0].text == uri2, res[0]
+        
         res = Annotation.count()
         assert res == 3, res
 

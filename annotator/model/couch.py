@@ -103,14 +103,60 @@ class Annotation(DomainObject):
         return ann
 
 
+
     @classmethod
-    def _query(self, count, **kwargs):
-        '''
-        :param count: prepare a count query rather than a search query
+    def search(self, **kwargs):
+        '''Search by arbitrary attributes.
+
+        Order by created in reverse order (most recent first).
+
+        :param limit: limit the number of results (-1 indicates no limit)
+
+        WARNING: at the moment use temporary views.
         '''
         non_query_args = ['offset', 'limit', 'all_fields']
         offset = int(kwargs.get('offset', 0))
         limit = int(kwargs.get('limit', 20))
+        for k in non_query_args:
+            if k in kwargs:
+                del kwargs[k]
+
+        terms = kwargs.keys()
+        # order by created in reverse order (see descending=True below)
+        terms.append('created')
+        couchkey = '[%s]' % ','.join(['doc.' + x for x in terms])
+
+        map_fun = '''function(doc) {
+            if (doc.type == 'Annotation')
+                emit(%s, 1);
+        }''' % couchkey
+
+        wrapper = lambda x: Annotation.wrap(x['doc'])
+        ourkwargs = dict(
+            map_fun=map_fun,
+            offset=offset,
+            wrapper=wrapper,
+            include_docs=True,
+            descending=True
+            )
+
+        if limit >= 0:
+            ourkwargs['limit'] = limit
+
+        q = Metadata.DB.query(**ourkwargs)
+
+        vals = list(kwargs.values())
+        start = vals + ['null']
+        end = vals + ['{}']
+        # extra q parameter for sorting col (created)
+        out = q[start:end]
+        return out
+        
+    @classmethod
+    def count(self, **kwargs):
+        '''Get the count (total) number of records.
+        '''
+        non_query_args = ['offset', 'limit', 'all_fields']
         for k in non_query_args:
             if k in kwargs:
                 del kwargs[k]
@@ -128,42 +174,18 @@ class Annotation(DomainObject):
 
         ourkwargs = dict(
             map_fun=map_fun,
-            offset=offset,
             )
-        if count:
-            ourkwargs ['reduce_fun'] = '''
-                function(keys, values) { return sum(values); }
-                '''
-        else:
-            wrapper = lambda x: Annotation.wrap(x['doc'])
-            ourkwargs['wrapper'] = wrapper
-            ourkwargs['include_docs'] = True
-
-        if limit >= 0 and not count:
-            ourkwargs['limit'] = limit
+        ourkwargs ['reduce_fun'] = '''
+            function(keys, values) { return sum(values); }
+            '''
 
         q = Metadata.DB.query(**ourkwargs)
 
-        if terms:
-            out = q[ list(kwargs.values()) ]
+        vals = list(kwargs.values())
+        if vals:
+            out = q[ vals ]
         else:
             out = q
-        return out
-
-    @classmethod
-    def search(self, **kwargs):
-        '''Search by arbitrary attributes.
-
-        :param limit: limit the number of results (-1 indicates no limit)
-
-        WARNING: at the moment use temporary views.
-        '''
-        out = self._query(count=False, **kwargs)
-        return out
-        
-    @classmethod
-    def count(self, **kwargs):
-        out = self._query(count=True, **kwargs)
         return list(out)[0].value
 
 
@@ -223,7 +245,7 @@ function(doc) {
     view = couchdb.design.ViewDefinition(design_doc, 'byuri', '''
 function(doc) {
     if(doc.uri) {
-        emit(doc.uri, null);
+        emit([doc.uri,doc.created], null);
     }
 }
 '''
