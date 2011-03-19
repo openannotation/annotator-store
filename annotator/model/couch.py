@@ -106,11 +106,14 @@ class Annotation(DomainObject):
     def search(self, **kwargs):
         '''Search by arbitrary attributes.
 
+
+        :param limit: limit the number of results (-1 indicates no limit)
+
         WARNING: at the moment use temporary views.
         '''
         non_query_args = ['offset', 'limit', 'all_fields']
         offset = int(kwargs.get('offset', 0))
-        limit = int(kwargs.get('limit', -1))
+        limit = int(kwargs.get('limit', 20))
         for k in non_query_args:
             if k in kwargs:
                 del kwargs[k]
