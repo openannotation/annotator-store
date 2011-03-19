@@ -76,7 +76,7 @@ def read_annotation(id):
         return jsonify('Could not authorise request. Read not allowed', status=401)
 
 # UPDATE
-@store.route('/annotations/<id>', methods=['PUT'])
+@store.route('/annotations/<id>', methods=['POST', 'PUT'])
 def update_annotation(id):
     annotation = Annotation.get(id)
 
