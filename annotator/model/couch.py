@@ -186,7 +186,11 @@ class Annotation(DomainObject):
             out = q[ vals ]
         else:
             out = q
-        return list(out)[0].value
+        out = list(out)
+        if out:
+            return out[0].value
+        else:
+            return 0
 
 
 class Account(DomainObject):
