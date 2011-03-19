@@ -56,7 +56,8 @@ def index():
 def create_annotation():
     if request.json:
         annotation = Annotation.from_dict(request.json)
-        annotation.account_id = g.account_id
+        if g.account_id:
+            annotation.account_id = g.account_id
         annotation.save()
         return jsonify(annotation.to_dict())
     else:
