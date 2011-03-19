@@ -58,6 +58,10 @@ a:active {
 	color: #f50998;
 }
 
+a.img {
+  border: none;
+}
+
 pre {
 	background-color: #fafafa;
 	border: 1px solid #e6e6e6;
@@ -354,6 +358,15 @@ footer:hover {
 
 footer img {
   display: inline;
+  border: none;
+}
+
+#footer-okf-logo {
+  margin-bottom: -2px;
+}
+
+footer img.button {
+  margin-bottom: -2px;
 }
 
 footer ul.xoxo, footer p {
