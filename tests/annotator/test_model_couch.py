@@ -114,9 +114,13 @@ class TestAnnotation():
 
         res = list(Annotation.search())
         assert len(res) == 3, res
+        res = Annotation.count()
+        assert res == 3, res
 
         res = list(Annotation.search(limit=1))
         assert len(res) == 1, len(res)
+        res = Annotation.count(limit=1)
+        assert res == 3, res
 
         res = list(Annotation.search(uri=uri1))
         assert len(res) == 2, [ x for x in res ]
@@ -132,6 +136,9 @@ class TestAnnotation():
         assert len(res) == 1, [ x for x in res ]
         assert res[0].user['id'] == user
         assert res[0].id == anno3id
+
+        res = Annotation.count(**{'user.id':user, 'uri': uri2})
+        assert res == 1, res
 
 
 class TestAccount():

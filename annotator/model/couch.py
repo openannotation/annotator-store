@@ -102,14 +102,11 @@ class Annotation(DomainObject):
         ann.update_from_dict(dict_)
         return ann
 
+
     @classmethod
-    def search(self, **kwargs):
-        '''Search by arbitrary attributes.
-
-
-        :param limit: limit the number of results (-1 indicates no limit)
-
-        WARNING: at the moment use temporary views.
+    def _query(self, count, **kwargs):
+        '''
+        :param count: prepare a count query rather than a search query
         '''
         non_query_args = ['offset', 'limit', 'all_fields']
         offset = int(kwargs.get('offset', 0))
@@ -117,29 +114,57 @@ class Annotation(DomainObject):
         for k in non_query_args:
             if k in kwargs:
                 del kwargs[k]
+
         terms = kwargs.keys()
         if terms:
             couchkey = '[%s]' % ','.join(['doc.' + x for x in terms])
         else:
             couchkey = 'null'
+
         map_fun = '''function(doc) {
             if (doc.type == 'Annotation')
-                emit(%s, null);
+                emit(%s, 1);
         }''' % couchkey
-        wrapper = lambda x: Annotation.wrap(x['doc'])
+
         ourkwargs = dict(
             map_fun=map_fun,
             offset=offset,
-            include_docs=True,
-            wrapper=wrapper
             )
-        if limit >= 0:
-            ourkwargs['limit'] = limit
-        q = Metadata.DB.query(**ourkwargs)
-        if terms:
-            return q[ list(kwargs.values()) ]
+        if count:
+            ourkwargs ['reduce_fun'] = '''
+                function(keys, values) { return sum(values); }
+                '''
         else:
-            return q
+            wrapper = lambda x: Annotation.wrap(x['doc'])
+            ourkwargs['wrapper'] = wrapper
+            ourkwargs['include_docs'] = True
+
+        if limit >= 0 and not count:
+            ourkwargs['limit'] = limit
+
+        q = Metadata.DB.query(**ourkwargs)
+
+        if terms:
+            out = q[ list(kwargs.values()) ]
+        else:
+            out = q
+        return out
+
+    @classmethod
+    def search(self, **kwargs):
+        '''Search by arbitrary attributes.
+
+        :param limit: limit the number of results (-1 indicates no limit)
+
+        WARNING: at the moment use temporary views.
+        '''
+        out = self._query(count=False, **kwargs)
+        return out
+        
+    @classmethod
+    def count(self, **kwargs):
+        out = self._query(count=True, **kwargs)
+        return list(out)[0].value
 
 
 class Account(DomainObject):

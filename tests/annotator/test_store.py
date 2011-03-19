@@ -121,7 +121,7 @@ class TestStore():
         url = '/search?limit=1'
         res = self.app.get(url)
         body = json.loads(res.data)
-        assert body['total'] == 1, body
+        assert body['total'] == 3, body
         assert len(body['rows']) == 1
 
         url = '/search?uri=' + uri1

@@ -112,10 +112,8 @@ def delete_annotation(id):
 @store.route('/search')
 def search_annotations():
     kwargs = dict(request.args.items())
-    # TODO: limit results returned to max 200
     results = [ x.to_dict() for x in Annotation.search(**kwargs) ]
-    # TODO: a proper count(*) for this query
-    total = len(results)
+    total = Annotation.count(**kwargs)
     qrows = {
         'total': total,
         'rows': results,
