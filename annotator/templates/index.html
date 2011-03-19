@@ -4,15 +4,13 @@
 
 {% block content %}
     <section>
-      <h2>Annotate Anything</h2>
       <div class="primary">
-        <p>Now you can Annotate any web page or integrate the Annotator into
-           your own site in two lines of javascript or annotate any web page
-           straight off using our bookmarklet.</p>
+        <h2>Annotate Anything</h2>
+        <p>Now you can Annotate any web page simply by incorporating two lines
+        of javascript into your site or running our bookmarklet.</p>
         <ul>
           <li>Annotate any webpage with the bookmarklet</li>
-          <li>Add the Annotator to your own site in just a few lines of code</li>
-          <li>Many other exciting features&hellip;</li>
+          <li>Add the Annotator to your own site in just two lines of code</li>
         </ul>
         <p><a href="{{url_for('account.signup')}}">Sign Up Now &raquo;</a></p>
       </div>
@@ -21,6 +19,7 @@
       </div>
     </section>
     <section>
+      <div id="about">
       <div id="annotator" class="primary">
         <h2>The Annotator</h2>
         <div class="thumbnails">
@@ -28,9 +27,10 @@
           <img src="/static/images/thumb-viewer.png" alt="View annotations by moving your mouse over highlights" height="128" width="175" />
         </div>
         <p>The Annotator is a JavaScript tool that can be added to any webpage
-           to allow annotation. Annotations can have comments, tags, users and
-           more. For more information check out the <a href="#develop">developers
-           section</a> below.</p>
+        to allow annotation. Annotations can have comments, tags, users and
+        more. See a <a href="http://okfn.github.com/annotator/">live
+          demonstration</a> or more in the <a href="#develop">developers
+          section</a> below.</p>
       </div>
       <div class="secondary">
         <h2>The Bookmarklet</h2>
@@ -39,22 +39,13 @@
           <img src="/static/images/thumb-editor.png" alt="Save annotations to AnnotateIt" height="128" width="175" />
         </div>
         <p>The Bookmarklet is a simple tool that allows you to add the
-        annotator to any webpage and save your annotations to AnnotateIt. To
-        get your very own bookmarklet simply <a
-          href="{{url_for('account.signup')}}">sign up</a> for an account.</p>
+        annotator to any webpage and save your annotations to AnnotateIt.
+        Check out the <a
+          href="http://okfn.github.com/annotator/bookmarklet">Bookmarklet
+          demo</a> or get your very own bookmarklet right now by <a
+          href="{{url_for('account.signup')}}">signing up</a> for an
+        account.</p>
       </div>
-    </section>
-    <section>
-      <div id="about">
-        <h2>About the Project</h2>
-        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex
-        ea commodo consequat. Duis aute irure dolor in reprehenderit in
-        voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-        
-        <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui
-        officia deserunt mollit anim id est laborum.</p>
       </div>
     </section>
     <section>
