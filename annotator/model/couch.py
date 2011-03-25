@@ -50,60 +50,6 @@ class DomainObject(Document):
         out['id'] = self.id
         return out
 
-class Annotation(DomainObject):
-    type = TextField(default='Annotation')
-    annotator_schema_version = TextField(default=u'v1.0')
-    uri = TextField()
-    account_id = TextField()
-    user = DictField()
-    text = TextField()
-    quote = TextField()
-    created = TextField(default=lambda: datetime.now().isoformat())
-    ranges = ListField(DictField())
-    permissions = DictField(
-        Mapping.build(
-            read=ListField(TextField()),
-            update=ListField(TextField()),
-            delete=ListField(TextField()),
-            admin=ListField(TextField())
-        ))
-
-    def __init__(self, id=None, **values):
-        if 'user' in values and isinstance(values['user'], basestring):
-            values['user'] = { 'id': values['user'] }
-        super(Annotation, self).__init__(id, **values)
-
-    @property
-    def userid(self):
-        return user['id']
-
-    def update_from_dict(self, dict_):
-        if 'id' in dict_:
-            del dict_['id']
-        if '_id' in dict_:
-            del dict_['_id']
-        if 'user' in dict_ and isinstance(dict_['user'], basestring):
-            dict_['user'] = { 'id': dict_['user'] }
-
-        attrnames = self._fields.keys()
-        for k,v in dict_.items():
-            if k in attrnames:
-                setattr(self, k, v)
-            else:
-                self[k] = v
-        return self
-
-    @classmethod
-    def from_dict(cls, dict_):
-        if 'id' in dict_:
-            ann = Annotation.get(dict_['id'])
-        else:
-            ann = Annotation()
-        ann.update_from_dict(dict_)
-        return ann
-
-
-
     @classmethod
     def search(self, **kwargs):
         '''Search by arbitrary attributes.
@@ -127,11 +73,11 @@ class Annotation(DomainObject):
         couchkey = '[%s]' % ','.join(['doc.' + x for x in terms])
 
         map_fun = '''function(doc) {
-            if (doc.type == 'Annotation')
+            if (doc.type == '%s')
                 emit(%s, 1);
-        }''' % couchkey
+        }''' % (self.__name__, couchkey)
 
-        wrapper = lambda x: Annotation.wrap(x['doc'])
+        wrapper = lambda x: self.wrap(x['doc'])
         ourkwargs = dict(
             map_fun=map_fun,
             offset=offset,
@@ -191,6 +137,59 @@ class Annotation(DomainObject):
             return out[0].value
         else:
             return 0
+
+
+class Annotation(DomainObject):
+    type = TextField(default='Annotation')
+    annotator_schema_version = TextField(default=u'v1.0')
+    uri = TextField()
+    account_id = TextField()
+    user = DictField()
+    text = TextField()
+    quote = TextField()
+    created = TextField(default=lambda: datetime.now().isoformat())
+    ranges = ListField(DictField())
+    permissions = DictField(
+        Mapping.build(
+            read=ListField(TextField()),
+            update=ListField(TextField()),
+            delete=ListField(TextField()),
+            admin=ListField(TextField())
+        ))
+
+    def __init__(self, id=None, **values):
+        if 'user' in values and isinstance(values['user'], basestring):
+            values['user'] = { 'id': values['user'] }
+        super(Annotation, self).__init__(id, **values)
+
+    @property
+    def userid(self):
+        return user['id']
+
+    def update_from_dict(self, dict_):
+        if 'id' in dict_:
+            del dict_['id']
+        if '_id' in dict_:
+            del dict_['_id']
+        if 'user' in dict_ and isinstance(dict_['user'], basestring):
+            dict_['user'] = { 'id': dict_['user'] }
+
+        attrnames = self._fields.keys()
+        for k,v in dict_.items():
+            if k in attrnames:
+                setattr(self, k, v)
+            else:
+                self[k] = v
+        return self
+
+    @classmethod
+    def from_dict(cls, dict_):
+        if 'id' in dict_:
+            ann = Annotation.get(dict_['id'])
+        else:
+            ann = Annotation()
+        ann.update_from_dict(dict_)
+        return ann
 
 
 class Account(DomainObject):
