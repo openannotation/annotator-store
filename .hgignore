@@ -5,4 +5,5 @@ pyenv
 annotator.cfg
 *.pyc
 *.egg-info
+sandbox/*
 
