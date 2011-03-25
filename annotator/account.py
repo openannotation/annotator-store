@@ -13,7 +13,8 @@ from .model import Account, Annotation
 
 @account.route('/')
 def index():
-    return 'Accounts home page'
+    accounts = Account.search()
+    return render_template('account/home.html', accounts=accounts)
 
 
 class LoginForm(Form):
