@@ -54,10 +54,15 @@ def view(id):
     acc = Account.get(g.account_id)
     token = hashlib.sha256(acc.secret + acc.username).hexdigest()
     account = Account.get(id)
+    store_api = 'http://' + request.headers.get('host') + current_app.config.get('MOUNTPOINT', '')
+    bookmarklet = get_bookmarklet(account, token, store_api)
     annotations = list(Annotation.search(account_id=id, limit=20))
-    print annotations
-    return render_template('account/view.html', account=account, token=token,
-            annotations=annotations)
+    return render_template('account/view.html',
+        account=account,
+        token=token,
+        bookmarklet=bookmarklet,
+        annotations=annotations
+        )
 
 
 class SignupForm(Form):
@@ -82,4 +87,35 @@ def signup():
     if request.method == 'POST' and not form.validate():
         flash('Please correct the errors')
     return render_template('account/signup.html', form=form)
+
+
+#######################################
+## Helper methods
+
+def get_bookmarklet(account, token, store_api):
+    config = render_template('account/bookmarklet.config.json',
+            account=account, token=token, store_api=store_api)
+    bookmarklet = render_template('account/bookmarklet.js', config=config)
+    bookmarklet = compress(bookmarklet)
+    return bookmarklet
+
+
+import httplib, urllib
+def compress(javascript):
+    '''Compress bookmarklet using closure compiler.'''
+    params = urllib.urlencode([
+            ('js_code', javascript),
+            ('compilation_level', 'WHITESPACE_ONLY'),
+            ('output_format', 'text'),
+            ('output_info', 'compiled_code'),
+        ])
+
+    # Always use the following value for the Content-type header.
+    headers = { "Content-type": "application/x-www-form-urlencoded" }
+    conn = httplib.HTTPConnection('closure-compiler.appspot.com')
+    conn.request('POST', '/compile', params, headers)
+    response = conn.getresponse()
+    data = response.read()
+    conn.close
+    return data
 

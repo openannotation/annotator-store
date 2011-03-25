@@ -1,0 +1,37 @@
+{
+  // External scripts required for the bookmarklet to run. jQuery is optional.
+  "externals": {
+    "jQuery":  "https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.js",
+    "source": "http://assets.annotateit.org/annotator/v1.0.0rc3/annotator-full.min.js",
+    "styles": "http://assets.annotateit.org/annotator/v1.0.0rc3/annotator.min.css"
+  },
+  // These HTTP headers will be submitted with each request to the store.
+  "auth": {
+    "headers": {
+      "X-Annotator-Account-Id":            "{{account.id}}",
+      "X-Annotator-User-Id":               "{{account.id}}",
+      "X-Annotator-Auth-Token":            "{{token}}"
+    }
+  },
+  // Include the tags plugin?
+  "tags": true,
+  // Subset of the Store plugin options.
+  "store": {
+    "prefix": "{{store_api}}"
+  },
+  // Subset of the Permissions plugin options.
+  "permissions": {
+    "showViewPermissionsCheckbox": true,
+    "showEditPermissionsCheckbox": true,
+    "user": {
+      "id": "{{account.id}}",
+      "name": "{{account.username}}"
+    },
+    "permissions": {
+      "read":   [],
+      "update": ["{{account.id}}"],
+      "delete": ["{{account.id}}"],
+      "admin":  ["{{account.id}}"]
+    }
+  }
+}
