@@ -36,20 +36,20 @@ it (just click on the bookmark).</p>
 
 <section>
 <h2>Recent Annotations</h2>
+
 <ul class="annotations">
 {% for anno in annotations %}
   <li class="annotation">
-    <div>
-      <span class="user">{{anno.user.id or 'Anonymous'}}</span> &ndash;
+    <div class="text">{{anno.text}}</div>
+    <div class="source">
+      <q class="quote">{{anno.quote}}</q>
+      <a href="{{anno.uri or '#'}}">{{anno.uri or 'No url given'}}</a>
+    </div>
+    <div class="meta">
+      <span class="user">{{anno.user.name or anno.user.id or 'Anonymous'}}</span> &ndash;
       <span class="created">
         {{anno.created}}
       </span>
-    </div>
-    <div>
-      <a href="${{anno.uri or '#'}}">{{anno.uri or 'No url given'}}</a>
-    </div>
-    <div class="text">
-      {{anno.text}}
     </div>
   </li>
 {% endfor %}
