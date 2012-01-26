@@ -4,15 +4,12 @@ This is a backend store for the [Annotator][ann].
 
 ## Getting going
 
-You'll need a recent version of [python][1] (>=2.6) and couchdb (>=1.0)
-installed -- we use couchdb as our database backend.
+You'll need a recent version of [Python][1] (>=2.6) and [CouchDB][2] (>=1.0)
+installed.
 
-[ann]: http://annotateit.org/annotator
+[ann]: http://okfnlabs.org/annotator/
 [1]: http://python.org
-[2]: http://flask.pocoo.org
-
-The set of required python libraries is listed in the requirements file, which
-is designed for use by pip (see below)
+[2]: http://couchdb.apache.org
 
 The quickest way to get going assumes you have the `pip` and `virtualenv` tools
 installed (protip: `easy_install virtualenv` will get them both). Run the
@@ -60,15 +57,13 @@ Here's an example of putting an annotation in the store::
     {
       ...
       "text": "abc", 
-      "id": MY-ID
+      "id": 42
       ...
     }
 
 And then we could retrieve this with the command:
 
-    $ curl http://localhost:5000/annotations/MY-ID
-
-where MY-ID is the id field from the response above 
+    $ curl http://localhost:5000/annotations/42
 
 ### Search
 
@@ -89,12 +84,11 @@ And you can combine filters:
 
     $ curl -i http://localhost:5000/search?uri=myuri&user=myuser
 
-
 ## Running tests
 
-Running `pip -E pyenv install -r requirements` or similar, as described above,
-should have installed `nose` for you. In the virtualenv, you should be able to
-run the tests as follows:
+Running `pip -E pyenv install -e .` or similar, as described above,
+should have installed `nosetests` for you. In the virtualenv, you should
+be able to run the tests as follows:
 
     $ nosetests
     .....................
