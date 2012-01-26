@@ -7,15 +7,8 @@ from flaskext.wtf import *
 
 account = Module(__name__)
 
-from flask import current_app 
+from flask import current_app
 from .model import Account, Annotation
-
-
-@account.route('/')
-def index():
-    accounts = Account.search()
-    return render_template('account/home.html', accounts=accounts)
-
 
 class LoginForm(Form):
     email = TextField('Email', [validators.Required()])

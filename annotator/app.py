@@ -17,7 +17,7 @@ def setup_app():
         model.metadata.bind = app.config['DB']
         # Create tables
         model.setup_all(True)
-    couchdb = app.config.get('COUCHDB_DATABASE', '') 
+    couchdb = app.config.get('COUCHDB_DATABASE', '')
     if couchdb:
         import annotator.model.couch as model
         model.init_model(app.config)
@@ -53,7 +53,7 @@ def configure_app():
 
 @app.before_request
 def before_request():
-    g.account_id = session.get('account-id', None) 
+    g.account_id = session.get('account-id', None)
 
 @app.route('/')
 def home():
