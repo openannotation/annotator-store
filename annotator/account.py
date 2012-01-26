@@ -16,7 +16,7 @@ class LoginForm(Form):
 
 @account.route('/login', methods=['GET', 'POST'])
 def login():
-    form = LoginForm(request.form, csrf_enabled=False)
+    form = LoginForm(request.form)
     if request.method == 'POST' and form.validate():
         password = form.password.data
         email = form.email.data
@@ -69,8 +69,7 @@ class SignupForm(Form):
 
 @account.route('/signup', methods=['GET', 'POST'])
 def signup():
-    # TODO: re-enable csrf
-    form = SignupForm(request.form, csrf_enabled=False)
+    form = SignupForm(request.form)
     if request.method == 'POST' and form.validate():
         account = Account(username=form.username.data, email=form.email.data)
         account.password = form.password.data

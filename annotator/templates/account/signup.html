@@ -5,6 +5,7 @@
 {% from "_formhelpers.html" import render_field %}
   <div class="primary">
     <form method="post" action="{{url_for('account.signup')}}">
+      {{ form.csrf }}
       <dl>
         {{ render_field(form.username, placeholder="myusername") }}
         {{ render_field(form.email, placeholder="hello@annotateit.org") }}
