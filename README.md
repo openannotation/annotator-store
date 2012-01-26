@@ -35,9 +35,9 @@ The Store API is designed to be compatable with the [Annotator][ann].
 ### REST API
 
 The annotation store, a JSON-speaking REST API, will be mounted at
-`http://localhost:5000/api/annotations`. You can test this by running:
+`http://localhost:5000/annotations`. You can test this by running:
 
-    $ curl -i http://localhost:5000/api/annotations
+    $ curl -i http://localhost:5000/annotations
     HTTP/1.0 200 OK
     Content-Type: application/json
     Access-Control-Allow-Origin: *
@@ -56,7 +56,7 @@ details on getting an annotator talking to this backend.
 
 Here's an example of putting an annotation in the store::
 
-    $ curl -X POST http://localhost:5000/api/annotations -H "Content-Type: application/json" -d '{"text": "abc"}'
+    $ curl -X POST http://localhost:5000/annotations -H "Content-Type: application/json" -d '{"text": "abc"}'
     {
       ...
       "text": "abc", 
@@ -66,28 +66,28 @@ Here's an example of putting an annotation in the store::
 
 And then we could retrieve this with the command:
 
-    $ curl http://localhost:5000/api/annotations/MY-ID
+    $ curl http://localhost:5000/annotations/MY-ID
 
 where MY-ID is the id field from the response above 
 
 ### Search
 
 You can search annotations in the store via the search api mounted at
-`http://localhost:5000/api/search`. You can test this by running:
+`http://localhost:5000/search`. You can test this by running:
 
-    $ curl -i http://localhost:5000/api/search
+    $ curl -i http://localhost:5000/search
 
 The search supports search and offset parameters:
 
-    $ curl -i http://localhost:5000/api/search?limit=5&offset=2
+    $ curl -i http://localhost:5000/search?limit=5&offset=2
 
 You can filter on any attribute of an annotation:
 
-    $ curl -i http://localhost:5000/api/search?uri=myuri
+    $ curl -i http://localhost:5000/search?uri=myuri
 
 And you can combine filters:
 
-    $ curl -i http://localhost:5000/api/search?uri=myuri&user=myuser
+    $ curl -i http://localhost:5000/search?uri=myuri&user=myuser
 
 
 ## Running tests
