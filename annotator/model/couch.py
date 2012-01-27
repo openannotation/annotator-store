@@ -19,7 +19,7 @@ def init_model(config):
 
 def setup_db(dbname):
     if dbname in Metadata.SERVER:
-        db = Metadata.SERVER[dbname] 
+        db = Metadata.SERVER[dbname]
         setup_views(db)
         return db
     else:
@@ -97,7 +97,7 @@ class DomainObject(Document):
         # extra q parameter for sorting col (created)
         out = q[start:end]
         return out
-        
+
     @classmethod
     def count(self, **kwargs):
         '''Get the count (total) number of records.
@@ -143,7 +143,7 @@ class Annotation(DomainObject):
     type = TextField(default='Annotation')
     annotator_schema_version = TextField(default=u'v1.0')
     uri = TextField()
-    account_id = TextField()
+    consumer_key = TextField()
     user = DictField()
     text = TextField()
     quote = TextField()
@@ -192,8 +192,8 @@ class Annotation(DomainObject):
         return ann
 
 
-class Account(DomainObject):
-    type = TextField(default='Account')
+class User(DomainObject):
+    type = TextField(default='User')
     username = TextField()
     pwdhash = TextField()
     email = TextField()
@@ -202,9 +202,9 @@ class Account(DomainObject):
     secret = TextField(default=str(uuid.uuid4()))
     ttl = IntegerField()
 
-    by_email = ViewField('account', '''\
+    by_email = ViewField('user', '''\
         function(doc) {
-            if (doc.type=='Account') {
+            if (doc.type=='User') {
                 emit(doc.email, doc);
             }
        }''')
@@ -227,7 +227,7 @@ class Account(DomainObject):
 # query by document
 # query by user
 # query by document and user
-# query 
+# query
 # TODO: general, change from all_fields to include_docs=True ?
 # Remove offset ....?
 # limit the same
@@ -256,7 +256,7 @@ function(doc) {
     view.get_doc(db)
     view.sync(db)
 
-    Account.by_email.get_doc(db)
-    Account.by_email.sync(db)
+    User.by_email.get_doc(db)
+    User.by_email.sync(db)
 
 

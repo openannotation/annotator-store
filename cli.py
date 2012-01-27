@@ -9,9 +9,9 @@ import annotator.model as model
 
 def fixtures():
     '''Create some fixtures (e.g. for demoing).'''
-    acc = model.Account.get('tester')
+    acc = model.User.get('tester')
     if acc is None:
-        acc = model.Account(
+        acc = model.User(
             id='tester',
             username='tester',
             email='tester@annotateit.org'
@@ -20,7 +20,8 @@ def fixtures():
         acc.save()
     for x in [1,2,3]:
         anno = model.Annotation(
-            account_id=acc.id,
+            consumer_key='annotateit',
+            user=user.id,
             text=x*str(x)
             )
         anno.save()

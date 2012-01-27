@@ -1,3 +1,3 @@
 from .couch import Annotation
-from .couch import Account
+from .couch import User
 

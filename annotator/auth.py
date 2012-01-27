@@ -3,7 +3,7 @@ import hashlib
 
 import iso8601
 
-from .model import Account
+from .model import User
 
 __all__ = ["verify_token", "verify_request"]
 
@@ -23,7 +23,7 @@ class Utc(datetime.tzinfo):
 UTC = Utc()
 
 def verify_token(token, key, userId, expiryTime=''):
-    account = Account.get(key)
+    account = User.get(key)
 
     if account is None:
         return False # invalid account key
