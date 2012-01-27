@@ -143,8 +143,10 @@ class Annotation(DomainObject):
     type = TextField(default='Annotation')
     annotator_schema_version = TextField(default=u'v1.0')
     uri = TextField()
-    consumer_key = TextField()
-    user = DictField()
+
+    consumer = TextField()
+    user = TextField()
+
     text = TextField()
     quote = TextField()
     created = TextField(default=lambda: datetime.now().isoformat())
@@ -158,21 +160,13 @@ class Annotation(DomainObject):
         ))
 
     def __init__(self, id=None, **values):
-        if 'user' in values and isinstance(values['user'], basestring):
-            values['user'] = { 'id': values['user'] }
         super(Annotation, self).__init__(id, **values)
-
-    @property
-    def userid(self):
-        return user['id']
 
     def update_from_dict(self, dict_):
         if 'id' in dict_:
             del dict_['id']
         if '_id' in dict_:
             del dict_['_id']
-        if 'user' in dict_ and isinstance(dict_['user'], basestring):
-            dict_['user'] = { 'id': dict_['user'] }
 
         attrnames = self._fields.keys()
         for k,v in dict_.items():
@@ -191,6 +185,24 @@ class Annotation(DomainObject):
         ann.update_from_dict(dict_)
         return ann
 
+class Consumer(DomainObject):
+    type = TextField(default='Consumer')
+    key = TextField()
+    secret = TextField(default=str(uuid.uuid4()))
+    ttl = IntegerField(default=86400)
+    created = DateTimeField(default=datetime.now)
+
+    by_key = ViewField('consumer', '''\
+        function(doc) {
+            if (doc.type=='Consumer') {
+                emit(doc.key, doc);
+            }
+       }''')
+
+    @classmethod
+    def get(cls, key):
+        out = cls.by_key(Metadata.DB, limit=1)
+        return out[key].rows[0]
 
 class User(DomainObject):
     type = TextField(default='User')
@@ -199,8 +211,6 @@ class User(DomainObject):
     email = TextField()
     activated = BooleanField(default=True)
     created = DateTimeField(default=datetime.now)
-    secret = TextField(default=str(uuid.uuid4()))
-    ttl = IntegerField()
 
     by_email = ViewField('user', '''\
         function(doc) {
@@ -258,5 +268,8 @@ function(doc) {
 
     User.by_email.get_doc(db)
     User.by_email.sync(db)
+
+    Consumer.by_key.get_doc(db)
+    Consumer.by_key.sync(db)
 
 

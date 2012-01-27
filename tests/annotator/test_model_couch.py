@@ -3,12 +3,12 @@ import json
 import pprint
 from nose.tools import assert_raises
 
-from annotator.model.couch import Annotation, Account
+from annotator.model.couch import Annotation, Consumer, User
 from annotator.model.couch import rebuild_db, init_model, Metadata
 
 testdb = 'annotator-test'
 
-class TestAnnotation():
+class TestAnnotation(object):
     def setup(self):
         config = {
             'COUCHDB_HOST': 'http://localhost:5984',
@@ -20,20 +20,19 @@ class TestAnnotation():
         del Metadata.SERVER[testdb]
 
     def test_01_text(self):
-        user = {"id": "Alice", "name": "Alice Wonderland"}
+        user = "Alice"
         ann = Annotation(text="Hello there", user=user)
         ann.ranges.append({})
         ann.ranges.append({})
         ann.save()
         ann = Annotation.get(ann.id)
         assert ann.text == "Hello there", "annotation text wasn't set"
-        assert ann.user['id'] == "Alice", "annotation user wasn't set"
-        assert ann.user['name'] == "Alice Wonderland", "annotation user wasn't set"
+        assert ann.user == "Alice", "annotation user wasn't set"
         assert len(ann.ranges) == 2, "ranges weren't added to annotation"
 
     def test_to_dict(self):
         ann = Annotation(text="Foo")
-        data = {'ranges': [], 'text': 'Foo', 'user': {}}
+        data = {'ranges': [], 'text': 'Foo', 'user': None}
         outdict = ann.to_dict()
         for k,v in data.items():
             print k,v,outdict[k]
@@ -70,7 +69,7 @@ class TestAnnotation():
         print data
         assert data['bar'] == 3, "extras weren't deserialized properly"
         assert data['baz'] == 4, "extras weren't deserialized properly"
-    
+
     def test_delete(self):
         id_ = str(uuid.uuid4())
         ann = Annotation(id=id_)
@@ -117,7 +116,7 @@ class TestAnnotation():
 
         # ordering (most recent first)
         assert res[0].text == uri2, res[0]
-        
+
         res = Annotation.count()
         assert res == 3, res
 
@@ -131,21 +130,21 @@ class TestAnnotation():
         assert res[0].uri == uri1
         assert res[0].id in [ annoid, anno2id ]
 
-        res = list(Annotation.search(**{'user.id':user}))
+        res = list(Annotation.search(**{'user':user}))
         assert len(res) == 2, [ x for x in res ]
-        assert res[0].user['id'] == user
+        assert res[0].user == user
         assert res[0].id in [ annoid, anno3id ]
 
-        res = list(Annotation.search(**{'user.id':user, 'uri': uri2}))
+        res = list(Annotation.search(**{'user':user, 'uri': uri2}))
         assert len(res) == 1, [ x for x in res ]
-        assert res[0].user['id'] == user
+        assert res[0].user == user
         assert res[0].id == anno3id
 
-        res = Annotation.count(**{'user.id':user, 'uri': uri2})
+        res = Annotation.count(**{'user':user, 'uri': uri2})
         assert res == 1, res
 
 
-class TestAccount():
+class TestConsumer(object):
     def setup(self):
         config = {
             'COUCHDB_HOST': 'http://localhost:5984',
@@ -157,21 +156,38 @@ class TestAccount():
         del Metadata.SERVER[testdb]
 
     def test_key(self):
-        c = Account(id='foo')
+        c = Consumer(key='foo')
         c.save()
-        c = Account.get('foo')
-        assert c.id == 'foo', 'Account key not set by constructor'
+        c = Consumer.get('foo')
+        assert c.key == 'foo', 'Consumer key not set by constructor'
         assert len(c.secret) == 36, c
 
-    def test_account_by_email(self):
-        email = 'me@me.com'     
-        acc = Account(email=email, username='abc')
+class TestUser(object):
+    def setup(self):
+        config = {
+            'COUCHDB_HOST': 'http://localhost:5984',
+            'COUCHDB_DATABASE': testdb
+            }
+        init_model(config)
+
+    def teardown(self):
+        del Metadata.SERVER[testdb]
+
+    def test_id(self):
+        c = User(id='foo')
+        c.save()
+        c = User.get('foo')
+        assert c.id == 'foo', 'User id not set by constructor'
+
+    def test_user_by_email(self):
+        email = 'me@me.com'
+        acc = User(email=email, username='abc')
         acc.save()
 
-        out = Account.get_by_email('madeupemail')
+        out = User.get_by_email('madeupemail')
         assert len(out) == 0, out
 
-        out = Account.get_by_email(email)
+        out = User.get_by_email(email)
         assert len(out) == 1, out
         assert out[0].email == email
         assert out[0].username == 'abc'

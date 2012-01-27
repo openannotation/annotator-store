@@ -2,14 +2,14 @@ from flask import Flask, Module, Response
 from flask import abort, json, redirect, request, url_for, g
 
 from .model import Annotation
-from authz import authorize, ACTION
+from .authz import authorize, ACTION
 from . import auth
 
 __all__ = ["store"]
 
 store = Module(__name__)
 
-from flask import current_app 
+from flask import current_app
 
 
 # We define our own jsonify rather than using flask.jsonify because we wish
@@ -18,23 +18,24 @@ def jsonify(obj, *args, **kwargs):
     res = json.dumps(obj, indent=None if request.is_xhr else 2)
     return Response(res, mimetype='application/json', *args, **kwargs)
 
-def unjsonify(str):
-    return json.loads(str)
-
 def get_current_userid():
     return auth.get_request_userid(request)
 
 @store.before_request
 def before_request():
-    g.account_id = request.headers.get('x-annotator-account-id', '')
-    if current_app.config['AUTH_ON'] and not request.method == 'GET' and not auth.verify_request(request):
+    g.consumer_key = request.headers.get('x-annotator-consumer-key')
+    g.user_id = request.headers.get('x-annotator-user-id')
+
+    if current_app.config['AUTH_ON'] and \
+       not request.method == 'GET' and \
+       not auth.verify_request(request):
         return jsonify("Cannot authorise request. Perhaps you didn't send the x-annotator headers?", status=401)
 
 @store.after_request
 def after_request(response):
     response.headers['Access-Control-Allow-Origin']   = '*'
     # response.headers['Access-Control-Allow-Headers'] = '*'
-    response.headers['Access-Control-Allow-Headers'] = 'X-Requested-With, Content-Type, X-Annotator-Account-Id, X-Annotator-User-Id, X-Annotator-Auth-Token-Valid-Until, X-Annotator-Auth-Token'
+    response.headers['Access-Control-Allow-Headers'] = 'X-Requested-With, Content-Type, X-Annotator-Consumer-Key, X-Annotator-User-Id, X-Annotator-Auth-Token-Valid-Until, X-Annotator-Auth-Token'
     response.headers['Access-Control-Expose-Headers'] = 'Location'
     response.headers['Access-Control-Allow-Methods']  = 'GET, POST, PUT, DELETE'
     response.headers['Access-Control-Max-Age']        = '86400'
@@ -56,8 +57,12 @@ def index():
 def create_annotation():
     if request.json:
         annotation = Annotation.from_dict(request.json)
-        if g.account_id:
-            annotation.account_id = g.account_id
+
+        if g.consumer_key:
+            annotation.consumer = g.consumer_key
+        if g.user_id:
+            annotation.user = g.user_id
+
         annotation.save()
         return jsonify(annotation.to_dict())
     else:

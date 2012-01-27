@@ -1,3 +1,5 @@
+import os
+
 from flask import json, url_for
 
 from annotator.app import app, setup_app
@@ -5,15 +7,23 @@ from annotator.model import Annotation
 from annotator.model.couch import rebuild_db, Metadata
 
 def setup():
-    setup_app()
+    test_root = os.path.dirname(os.path.dirname(__file__))
+    cfg_file = os.path.join(test_root, 'test.cfg')
+
+    setup_app(cfg_file)
 
 class TestStore():
     def setup(self):
         app.config['AUTH_ON'] = False
-        assert app.config['MOUNTPOINT'] == '', "MOUNTPOINT config option is incorrect for tests. should be ''"
         self.app = app.test_client()
-        self.account_id = 'testing-user'
-        self.headers = {'x-annotator-account-id': self.account_id}
+
+        self.user_id = 'test-user'
+        self.consumer_key = 'test-consumer-key'
+
+        self.headers = {
+            'x-annotator-user-id': self.user_id,
+            'x-annotator-consumer-key': self.consumer_key
+        }
 
     def teardown(self):
         rebuild_db(app.config['COUCHDB_DATABASE'])
@@ -31,12 +41,10 @@ class TestStore():
 
     def test_create(self):
         payload = json.dumps({'name': 'Foo'})
-        response = self.app.post(
-            '/annotations',
-            data=payload,
-            content_type='application/json',
-            headers=self.headers
-            )
+        response = self.app.post('/annotations',
+                                 data=payload,
+                                 content_type='application/json',
+                                 headers=self.headers)
 
         # import re
         # See http://bit.ly/gxJBHo for details of this change.
@@ -46,7 +54,8 @@ class TestStore():
         assert response.status_code == 200, "response should be 200 OK"
         data = json.loads(response.data)
         assert 'id' in data, "annotation id should be returned in response"
-        assert data['account_id'] == self.account_id
+        assert data['user'] == self.user_id
+        assert data['consumer'] == self.consumer_key
 
     def test_read(self):
         kwargs = dict(text=u"Foo", id='123')
