@@ -67,6 +67,9 @@ Actions:
 __all__ = [ '_main' ]
 
 if __name__ == '__main__':
-    _setup_app()
+    here = os.path.dirname(os.path.abspath(__file__))
+    config_file = os.path.join(here, 'annotator.cfg')
+
+    _setup_app(config_file)
     _main(locals())
 

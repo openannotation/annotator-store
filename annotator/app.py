@@ -6,8 +6,8 @@ from .account import account
 app = Flask('annotator')
 
 
-def setup_app():
-    configure_app()
+def setup_app(config_file):
+    configure_app(config_file)
     app.register_module(store, url_prefix=app.config.get('MOUNTPOINT', ''))
     app.register_module(account, url_prefix='/account')
 
@@ -17,29 +17,24 @@ def setup_app():
         model.metadata.bind = app.config['DB']
         # Create tables
         model.setup_all(True)
+
     couchdb = app.config.get('COUCHDB_DATABASE', '')
     if couchdb:
         import annotator.model.couch as model
         model.init_model(app.config)
 
 
-def configure_app():
-    '''Configure app loading in order from:
-
-    [annotator.settings_default]
-    [annotator.settings_local]
-    annotator.cfg # in app root dir
-    config file specified by env var ANNOTATOR_CONFIG
+def configure_app(config_file):
     '''
-    # app.config.from_object('annotator.settings_default')
-    # app.config.from_object('annotator.settings_local')
-    here = os.path.dirname(os.path.abspath( __file__ ))
-    # parent directory
-    config_path = os.path.join(os.path.dirname(here), 'annotator.cfg')
-    if os.path.exists(config_path):
-        app.config.from_pyfile(config_path)
-    if 'ANNOTATOR_CONFIG' in os.environ:
-        app.config.from_envvar('ANNOTATOR_CONFIG')
+    Configure app loading in order from:
+
+    1. config_file
+    2. config file specified by env var ANNOTATOR_CONFIG
+    '''
+
+    app.config.from_pyfile(config_file)
+    app.config.from_envvar('ANNOTATOR_CONFIG', silent=True)
+
     ADMINS = app.config.get('ADMINS', '')
     if not app.debug and ADMINS:
         import logging
