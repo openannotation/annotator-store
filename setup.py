@@ -7,9 +7,11 @@ setup(
     packages = find_packages(),
 
     install_requires = [
-        'CouchDB==0.8',
-        'Flask==0.6.1',
+        'Flask==0.8',
         'Flask-WTF==0.5.2',
+        'Flask-SQLAlchemy==0.15',
+        'SQLAlchemy==0.7.4',
+        'pyes==0.16.0',
         'nose==1.0.0',
         'iso8601==0.1.4'
     ],
