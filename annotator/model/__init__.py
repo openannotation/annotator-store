@@ -1,4 +1,4 @@
-from .couch import Annotation
-from .couch import Consumer
-from .couch import User
+from .annotation import Annotation
+from .consumer import Consumer
+from .user import User
 
