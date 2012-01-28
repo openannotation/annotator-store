@@ -12,10 +12,10 @@
           <li>Annotate any webpage with the bookmarklet</li>
           <li>Add the Annotator to your own site in just two lines of code</li>
         </ul>
-        <p><a href="{{url_for('account.signup')}}">Sign Up Now &raquo;</a></p>
+        <p><a href="{{ url_for('user.signup') }}">Sign Up Now &raquo;</a></p>
       </div>
       <div class="secondary">
-        <img class="screenshot" src="/static/images/annotator.png" alt="The annotator" height="223" width="370" />
+        <img class="screenshot" src="/static/images/annotator.png" alt="The Annotator" height="223" width="370" />
       </div>
     </section>
     <section>
@@ -43,7 +43,7 @@
         Check out the <a
           href="http://okfn.github.com/annotator/bookmarklet">Bookmarklet
           demo</a> or get your very own bookmarklet right now by <a
-          href="{{url_for('account.signup')}}">signing up</a> for an
+          href="{{url_for('user.signup')}}">signing up</a> for an
         account.</p>
       </div>
       </div>
@@ -56,21 +56,21 @@
              page along with jQuery. Then simply add the following line to load
              the annotator.</p>
           <pre><code>jQuery('#content').annotator();</code></pre>
-          <p>To save the Annotations to the Store you'll need to <a href="#">sign
-             up</a> for an AnnotateIt account to get an Account Key and User
-             Account. Then include the <a href="#">Store</a> and
-            <a href="#">Auth</a> plugins.</p>
+          <p>
+            To save the Annotations to the Store you'll need to <a href="#">sign
+            up</a> for an AnnotateIt account. Then include the <a href="#">Store</a> and
+            <a href="#">Auth</a> plugins.
+          </p>
         </div>
         <div class="secondary">
           <p>Then sign in to AnnotateIt with the following code</p>
           <pre><code>jQuery('#content').annotator()
     .annotator('addPlugin', 'Store', {
-      prefix: 'http://annotateit.org/api'
+        prefix: 'http://annotateit.org/api'
     })
     .annotator('addPlugin', 'Auth', {
         userId:      'myusername',        // Your AnnotateIt username
-        consumerKey: 'some-big-string',   // Your Account Key
-        authToken:   'some-bigger-string' // Your Auth Token
+        consumerKey: 'FIXME'              // The AnnotateIt consumer key
     });</code></pre>
       </div>
     </section>

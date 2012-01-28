@@ -22,26 +22,21 @@
       {% block masthead %}
       <h1>
         <a href="{{url_for('.home')}}" title="The AnnotateIt Homepage">
-          AnnotateIt</a>
+          AnnotateIt
+        </a>
       </h1>
-      <!--
-      <h2>The <span id="role">copy-editor</span> of the web</h2>
-      -->
       <nav>
         <ul>
-        {% if g.account_id %}
-          <li><a href="{{ url_for('account.view', id=g.account_id)}}">My Account</a></li>
-          <li><a href="{{ url_for('account.logout') }}">Logout</a></li>
+        {% if g.user_id %}
+          <li><a href="{{ url_for('user.view', id=g.user_id) }}">My Account</a></li>
+          <li><a href="{{ url_for('user.logout') }}">Logout</a></li>
         {% else %}
-          <li><a href="{{url_for('account.signup')}}">Sign Up</a></li>
-          <li><a href="{{url_for('account.login')}}">Log In</a></li>
+          <li><a href="{{ url_for('user.signup') }}">Sign Up</a></li>
+          <li><a href="{{ url_for('user.login') }}">Log In</a></li>
         {% endif %}
-          <li><a href="{{url_for('.home')}}#annotator">Annotator</a></li>
-          <li><a href="{{url_for('.home')}}#about">About</a></li>
+          <li><a href="{{ url_for('.home') }}#annotator">Annotator</a></li>
+          <li><a href="{{ url_for('.home') }}#about">About</a></li>
         </ul>
-
-      <div id="account">
-      </div>
       </nav>
       {% endblock %}
     </header>
@@ -62,13 +57,18 @@
 
     <footer>
       {% block footer %}
-      <p>Annotator was developed by the
-        <img src="http://assets.okfn.org/images/logo/okf_logo_white_and_green_tiny.png" id="footer-okf-logo" />
-        <a href="http://okfn.org">Open
-        Knowledge Foundation</a> with support from the <a
-        href="http://www.shuttleworthfoundation.org/">Shuttleworth
-        Foundation</a>. Go see what other cool stuff we're doing at the
-      moment!</p>
+      <p>
+        Annotator was developed by the
+        <img src="http://assets.okfn.org/images/logo/okf_logo_white_and_green_tiny.png" 
+             id="footer-okf-logo" />
+        <a href="http://okfn.org">Open Knowledge Foundation</a> 
+        with support from the 
+        <a href="http://www.shuttleworthfoundation.org/">
+          Shuttleworth Foundation
+        </a>. 
+        Go see what other cool stuff we're doing at the moment!
+      </p>
+      
       <div class="widget-area">
         <ul class="xoxo">
           <li class="widget-container widget_text">
