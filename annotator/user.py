@@ -7,7 +7,6 @@ from flaskext.wtf import *
 
 user = Blueprint('user', __name__)
 
-from . import db
 from .model import User, Annotation
 
 def get_current_user():
@@ -75,8 +74,8 @@ def signup():
         user = User(username=form.username.data,
                     email=form.email.data,
                     password=form.password.data)
-        db.session.add(user)
-        db.session.commit()
+        current_app.db.session.add(user)
+        current_app.db.session.commit()
 
         flash('Thanks for signing up!', 'success')
         return redirect(url_for('.login'))

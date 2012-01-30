@@ -8,54 +8,76 @@ __license__ = 'MIT'
 __author__ = 'Rufus Pollock and Nick Stenning (Open Knowledge Foundation)'
 
 __all__ = ['__version__', '__license__', '__author__',
-           'app', 'db', 'es', 'create_indices', 'drop_indices', 'create_all', 'drop_all']
+           'create_app', 'create_db', 'drop_db',
+           'create_indices', 'drop_indices',
+           'create_all', 'drop_all']
 
 from flask import Flask
 from flaskext.sqlalchemy import SQLAlchemy
 import pyes
 
-app = Flask(__name__, instance_relative_config=True)
+app = None
+db = SQLAlchemy()
+es = None
 
-app.config.from_object('annotator.default_settings')
-app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'] % app.instance_path
+def create_app():
+    global app, db, es
 
-app.config.from_pyfile('annotator.cfg', silent=True)
-app.config.from_envvar('ANNOTATOR_CONFIG', silent=True)
+    app = Flask(__name__, instance_relative_config=True)
 
-# Configure database
-db = SQLAlchemy(app)
+    app.config.from_object('annotator.default_settings')
+    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'] % app.instance_path
 
-# Configure ES
-es = pyes.ES(app.config['ELASTICSEARCH_HOST'])
+    app.config.from_pyfile('annotator.cfg', silent=True)
+    app.config.from_envvar('ANNOTATOR_CONFIG', silent=True)
 
-# Mount controllers
-from .store import store
-from .user import user
-from .home import home
+    # Configure database
+    db.init_app(app)
 
-if app.config['MOUNT_STORE']:
-    app.register_blueprint(store, url_prefix=app.config['MOUNT_STORE'])
-if app.config['MOUNT_USER']:
-    app.register_blueprint(user, url_prefix=app.config['MOUNT_USER'])
-if app.config['MOUNT_HOME']:
-    app.register_blueprint(home, url_prefix=app.config['MOUNT_HOME'])
+    # Configure ES
+    from . import model
+    es = pyes.ES(app.config['ELASTICSEARCH_HOST'])
+    model.annotation.configure(es, app.config)
+
+    # Mount controllers
+    from .store import store
+    from .user import user
+    from .home import home
+
+    if app.config['MOUNT_STORE']:
+        app.register_blueprint(store, url_prefix=app.config['MOUNT_STORE'])
+    if app.config['MOUNT_USER']:
+        app.register_blueprint(user, url_prefix=app.config['MOUNT_USER'])
+    if app.config['MOUNT_HOME']:
+        app.register_blueprint(home, url_prefix=app.config['MOUNT_HOME'])
+
+    return app
 
 def create_indices():
-    from .model.annotation import INDEX, TYPE, MAPPING
-    es.create_index(INDEX)
-    es.put_mapping(TYPE, {'properties': MAPPING}, INDEX)
+    with app.test_request_context():
+        from .model.annotation import index, TYPE, MAPPING
+        es.create_index(index)
+        es.put_mapping(TYPE, {'properties': MAPPING}, index)
 
 def drop_indices():
-    from .model.annotation import INDEX
-    es.delete_index(INDEX)
+    with app.test_request_context():
+        from .model.annotation import index
+        es.delete_index(index)
+
+def create_db():
+    from . import model
+    with app.test_request_context():
+        db.create_all()
+
+def drop_db():
+    from . import model
+    with app.test_request_context():
+        db.drop_all()
 
 def create_all():
-    # This import must remain here to prevent circular imports from annotator.model
-    from . import model
-    db.create_all()
     create_indices()
+    create_db()
 
 def drop_all():
-    from . import model
-    db.drop_all()
     drop_indices()
+    drop_db()

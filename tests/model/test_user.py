@@ -1,19 +1,8 @@
-from .. import helpers as h
+from .. import TestCase, helpers as h
 
-from annotator import db
-from annotator.model.user import *
+from annotator.model import User
 
-def save(x):
-    db.session.add(x)
-    db.session.commit()
-
-class TestUser(object):
-
-    def setup(self):
-        db.create_all()
-
-    def teardown(self):
-        db.drop_all()
+class TestUser(TestCase):
 
     def test_constructor(self):
         u = User('joe', 'joe@bloggs.com')

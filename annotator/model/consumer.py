@@ -1,7 +1,9 @@
 from datetime import datetime
 import uuid
 
-from .. import db
+from annotator import db
+
+__all__ = ['Consumer']
 
 def _uuid():
     return str(uuid.uuid4())

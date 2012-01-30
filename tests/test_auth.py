@@ -1,16 +1,20 @@
 import hashlib
 import datetime
 
-from . import helpers as h
+from . import TestCase, helpers as h
 
 from werkzeug import Headers
 
-from annotator.model import Consumer
-from annotator import auth, db, create_all, drop_all
+from annotator import auth
 
 class MockRequest():
     def __init__(self, headers):
         self.headers = headers
+
+class MockConsumer():
+    key = 'Consumer'
+    secret = 'ConsumerSecret'
+    ttl = 300
 
 def iso8601(t):
     if t == 'now':
@@ -20,7 +24,7 @@ def iso8601(t):
     return t.strftime("%Y-%m-%dT%H:%M:%S")
 
 def make_token(key, user_id, issue_time):
-    consumer = Consumer.fetch(key)
+    consumer = MockConsumer()
     token = hashlib.sha256(consumer.secret + user_id + issue_time).hexdigest()
     return token
 
@@ -32,20 +36,16 @@ def make_request(key, user_id, issue_time):
         ('x-annotator-user-id', user_id)
     ]))
 
+class TestAuth(object):
 
-testdb = 'annotator-test'
-def setup():
-    create_all()
-    c = Consumer(key='Consumer')
-    c.secret = 'ConsumerSecret'
-    c.ttl=300
-    db.session.add(c)
-    db.session.commit()
+    def setup(self):
+        self.patcher = h.patch.object(auth.Consumer, 'fetch')
+        self.mock_consumer_cls = self.patcher.start()
+        self.mock_consumer_cls.return_value = MockConsumer()
 
-def teardown(self):
-    drop_all()
+    def teardown(self):
+        self.patcher.stop()
 
-class TestAuth():
     def test_verify_token(self):
         issue_time = iso8601('future')
         tok = make_token('Consumer', 'alice', issue_time)

@@ -1,19 +1,13 @@
-from .. import helpers as h
+from .. import TestCase, helpers as h
 
-from annotator import db
-from annotator.model.consumer import *
+import annotator
+from annotator.model import Consumer
 
 def save(c):
-    db.session.add(c)
-    db.session.commit()
+    annotator.db.session.add(c)
+    annotator.db.session.commit()
 
-class TestConsumer(object):
-
-    def setup(self):
-        db.create_all()
-
-    def teardown(self):
-        db.drop_all()
+class TestConsumer(TestCase):
 
     def test_key(self):
         c = Consumer(key='foo')

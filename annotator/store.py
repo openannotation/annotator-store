@@ -9,8 +9,6 @@ __all__ = ["store"]
 
 store = Blueprint('store', __name__)
 
-from flask import current_app
-
 # We define our own jsonify rather than using flask.jsonify because we wish
 # to jsonify arbitrary objects (e.g. index returns a list) rather than kwargs.
 def jsonify(obj, *args, **kwargs):

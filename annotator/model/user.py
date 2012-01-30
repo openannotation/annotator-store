@@ -1,7 +1,9 @@
 from datetime import datetime
 from werkzeug import generate_password_hash, check_password_hash
 
-from .. import db
+from annotator import db
+
+__all__ = ['User']
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)

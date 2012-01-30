@@ -1,7 +1,7 @@
 import os
 import logging
 
-from annotator import app
+import annotator
 
 def _configure_logger(app):
     admins = app.config.get('ADMINS')
@@ -15,4 +15,5 @@ def _configure_logger(app):
         app.logger.addHandler(handler)
 
 if __name__ == '__main__':
-    app.run()
+    annotator.create_app()
+    annotator.app.run()

@@ -1,15 +1,9 @@
-from .. import helpers as h
+from .. import TestCase, helpers as h
 
-from annotator import es, create_indices, drop_indices
-from annotator.model.annotation import *
+import annotator
+from annotator.model import Annotation
 
-class TestAnnotation(object):
-
-    def setup(self):
-        create_indices()
-
-    def teardown(self):
-        drop_indices()
+class TestAnnotation(TestCase):
 
     def test_new(self):
         a = Annotation()
@@ -62,7 +56,7 @@ class TestAnnotation(object):
         anno2.save()
         anno3.save()
 
-        es.refresh(INDEX)
+        annotator.es.refresh()
 
         res = Annotation.search()
         h.assert_equal(len(res), 3)

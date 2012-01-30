@@ -1,19 +1,20 @@
+from . import TestCase
+
 from flask import json, url_for
 
-from annotator import app, es, create_all, drop_all
+import annotator
 from annotator import auth, db
 from annotator.model import Annotation, Consumer
 
 def save(x):
-    db.session.add(x)
-    db.session.commit()
+    annotator.db.session.add(x)
+    annotator.db.session.commit()
 
-class TestStore(object):
+class TestStore(TestCase):
     def setup(self):
-        create_all()
+        super(TestStore, self).setup()
 
-        self.app = app.test_client()
-
+        self.app = annotator.app.test_client()
         self.consumer = Consumer('test-consumer-key')
         save(self.consumer)
 
@@ -22,8 +23,6 @@ class TestStore(object):
         token = auth.generate_token(self.consumer.key, self.user)
         self.headers = auth.headers_for_token(token)
 
-    def teardown(self):
-        drop_all()
 
     def _create_annotation(self, **kwargs):
         ann = Annotation(**kwargs)
@@ -111,7 +110,7 @@ class TestStore(object):
         annoid = anno.id
         anno2id = anno2.id
 
-        es.refresh()
+        annotator.es.refresh()
 
         url = '/api/search'
         res = self.app.get(url, headers=self.headers)
@@ -152,10 +151,11 @@ class TestStore(object):
         assert headers['Access-Control-Expose-Headers'] == 'Location', \
             "Did not send the right Access-Control-Expose-Headers header."
 
-class TestStoreAuthz(object):
+class TestStoreAuthz(TestCase):
 
     def setup(self):
-        create_all()
+        super(TestStoreAuthz, self).setup()
+        self.app = annotator.app.test_client()
 
         self.anno_id = '123'
         self.permissions = {
@@ -175,11 +175,6 @@ class TestStoreAuthz(object):
         for u in ['alice', 'bob', 'charlie']:
             token = auth.generate_token(self.consumer.key, u)
             setattr(self, '%s_headers' % u, auth.headers_for_token(token))
-
-        self.app = app.test_client()
-
-    def teardown(self):
-        drop_all()
 
     def test_read(self):
         response = self.app.get('/api/annotations/123')

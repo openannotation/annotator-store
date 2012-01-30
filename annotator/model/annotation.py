@@ -1,10 +1,9 @@
 from datetime import datetime
-import json
 import pyes
 
-from .. import app, es
+conn = None
+index = None
 
-INDEX = app.config['ELASTICSEARCH_INDEX']
 TYPE = 'annotation'
 MAPPING = {
     'annotator_schema_version': {'type': 'string', 'null_value': 'v1.0'},
@@ -26,6 +25,11 @@ MAPPING = {
     }
 }
 
+def configure(c, config):
+    global conn, index
+    conn = c
+    index = config['ELASTICSEARCH_INDEX']
+
 class ValidationError(Exception):
     pass
 
@@ -36,7 +40,7 @@ class Annotation(dict):
     @classmethod
     def fetch(cls, id):
         try:
-            doc = es.get(INDEX, TYPE, id)
+            doc = conn.get(index, TYPE, id)
         # We should be more specific than this, but pyes doesn't raise the
         # correct exception for missing documents at the moment
         except pyes.exceptions.ElasticSearchException:
@@ -61,14 +65,14 @@ class Annotation(dict):
     @classmethod
     def search(cls, limit=20, **kwargs):
         q = cls._build_query(limit, **kwargs)
-        res = es.search(q, INDEX, TYPE)
+        res = conn.search(q, index, TYPE)
         docs = res['hits']['hits']
         return [cls(d['_source'], id=d['_id']) for d in docs]
 
     @classmethod
     def count(cls, **kwargs):
         q = cls._build_query(**kwargs)
-        res = es.count(q['query'], INDEX, TYPE)
+        res = conn.count(q['query'], index, TYPE)
         return res['count']
 
     def _set_id(self, rhs):
@@ -83,12 +87,12 @@ class Annotation(dict):
         _add_created(self)
         _add_updated(self)
 
-        res = es.index(self, INDEX, TYPE, self.id)
+        res = conn.index(self, index, TYPE, self.id)
         self.id = res['_id']
 
     def delete(self):
         if self.id:
-            es.delete(INDEX, TYPE, self.id)
+            conn.delete(index, TYPE, self.id)
 
 def _add_created(ann):
     if 'created' not in ann:
