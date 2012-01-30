@@ -5,7 +5,7 @@ from annotator.model.consumer import *
 
 def save(c):
     db.session.add(c)
-    db.session.flush()
+    db.session.commit()
 
 class TestConsumer(object):
 
@@ -13,7 +13,6 @@ class TestConsumer(object):
         db.create_all()
 
     def teardown(self):
-        db.session.close()
         db.drop_all()
 
     def test_key(self):
