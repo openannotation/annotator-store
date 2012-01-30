@@ -28,6 +28,10 @@ db = SQLAlchemy(app)
 # Configure ES
 es = pyes.ES(app.config['ELASTICSEARCH_HOST'])
 
+# Mount controllers
+from .store import store
+app.register_blueprint(store, url_prefix=app.config.get('MOUNTPOINT', ''))
+
 def create_indices():
     from . import model
     es.create_index(model.annotation.INDEX)

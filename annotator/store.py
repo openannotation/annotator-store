@@ -1,4 +1,4 @@
-from flask import Flask, Module, Response
+from flask import Flask, Blueprint, Response
 from flask import abort, json, redirect, request, url_for, g
 
 from .model import Annotation
@@ -7,7 +7,7 @@ from . import auth
 
 __all__ = ["store"]
 
-store = Module(__name__)
+store = Blueprint('store', __name__)
 
 from flask import current_app
 
@@ -34,8 +34,7 @@ def before_request():
 @store.after_request
 def after_request(response):
     response.headers['Access-Control-Allow-Origin']   = '*'
-    # response.headers['Access-Control-Allow-Headers'] = '*'
-    response.headers['Access-Control-Allow-Headers'] = 'X-Requested-With, Content-Type, X-Annotator-Consumer-Key, X-Annotator-User-Id, X-Annotator-Auth-Token-Valid-Until, X-Annotator-Auth-Token'
+    response.headers['Access-Control-Allow-Headers']  = 'X-Requested-With, Content-Type, X-Annotator-Consumer-Key, X-Annotator-User-Id, X-Annotator-Auth-Token-Valid-Until, X-Annotator-Auth-Token'
     response.headers['Access-Control-Expose-Headers'] = 'Location'
     response.headers['Access-Control-Allow-Methods']  = 'GET, POST, PUT, DELETE'
     response.headers['Access-Control-Max-Age']        = '86400'
@@ -49,7 +48,7 @@ def home():
 # INDEX
 @store.route('/annotations')
 def index():
-    annotations = [anno.to_dict() for anno in Annotation.search() if authorize(anno, 'read', get_current_userid())]
+    annotations = [anno for anno in Annotation.search() if authorize(anno, 'read', get_current_userid())]
     return jsonify(annotations)
 
 # CREATE
@@ -90,7 +89,7 @@ def update_annotation(id):
 
     elif request.json and authorize(annotation, 'update', get_current_userid()):
         updated = Annotation(request.json)
-        if updated.permissions != annotation.permissions:
+        if updated.get('permissions', {}) != annotation.get('permissions', {}):
             if not authorize(annotation, ACTION.ADMIN, get_current_userid()):
                 return jsonify('Could not authorise request (permissions change). No update performed', status=401)
         updated.save()
@@ -117,7 +116,7 @@ def delete_annotation(id):
 @store.route('/search')
 def search_annotations():
     kwargs = dict(request.args.items())
-    results = [ x.to_dict() for x in Annotation.search(**kwargs) ]
+    results = [anno for anno in Annotation.search(**kwargs) if authorize(anno, 'read', get_current_userid())]
     total = Annotation.count(**kwargs)
     qrows = {
         'total': total,

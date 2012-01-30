@@ -1,6 +1,6 @@
 from flask import json, url_for
 
-from annotator import app, create_all, drop_all
+from annotator import app, es, create_all, drop_all
 from annotator.model import Annotation
 
 class TestStore(object):
@@ -70,7 +70,7 @@ class TestStore(object):
         response = self.app.put('/annotations/123', data=payload, content_type='application/json')
 
         ann = self._get_annotation('123')
-        assert ann.text == "Bar", "annotation wasn't updated in db"
+        assert ann['text'] == "Bar", "annotation wasn't updated in db"
 
         data = json.loads(response.data)
         assert data['text'] == "Bar", "update annotation should be returned in response"
@@ -103,6 +103,8 @@ class TestStore(object):
         annoid = anno.id
         anno2id = anno2.id
 
+        es.refresh()
+
         url = '/search'
         res = self.app.get(url)
         body = json.loads(res.data)
@@ -123,7 +125,7 @@ class TestStore(object):
         assert out[0]['uri'] == uri1
         assert out[0]['id'] in [ annoid, anno2id ]
 
-        url = '/search?limit=-1'
+        url = '/search'
         res = self.app.get(url)
         body = json.loads(res.data)
         assert len(body['rows']) == 3, body
