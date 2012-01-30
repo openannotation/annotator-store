@@ -1,10 +1,3 @@
-class ACTION(object):
-    CREATE = u'create'
-    READ = u'read'
-    UPDATE = u'update'
-    DELETE = u'delete'
-    ADMIN = u'admin'
-
 def authorize(annotation, action, user=None):
     permissions = annotation.get('permissions', {})
     authorized_list = permissions.get(action, [])
