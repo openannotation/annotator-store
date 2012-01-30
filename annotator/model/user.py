@@ -18,17 +18,21 @@ class User(db.Model):
     def fetch(cls, id):
         return cls.query.filter_by(id=id).first()
 
-    def __init__(self, username, email):
+    def __init__(self, username, email, password=None):
         self.username = username
         self.email = email
+        if password:
+            self.password = password
 
     def __repr__(self):
         return '<User %r>' % self.username
 
     def _password_set(self, v):
-        self.pwdhash = generate_password_hash(v)
+        self.password_hash = generate_password_hash(v)
 
     password = property(None, _password_set)
 
     def check_password(self, password):
+        if not self.password_hash:
+            return False
         return check_password_hash(self.password_hash, password)
