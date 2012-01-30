@@ -77,3 +77,11 @@ def get_request_userid(request):
     else:
         return None
 
+def headers_for_token(token):
+    return {
+        HEADER_PREFIX + 'consumer-key': token['consumerKey'],
+        HEADER_PREFIX + 'auth-token': token['authToken'],
+        HEADER_PREFIX + 'auth-token-issue-time': token['authTokenIssueTime'],
+        HEADER_PREFIX + 'auth-token-ttl': token['authTokenTTL'],
+        HEADER_PREFIX + 'user-id': token['userId']
+    }

@@ -21,21 +21,21 @@
     <header>
       {% block masthead %}
       <h1>
-        <a href="{{url_for('.home')}}" title="The AnnotateIt Homepage">
+        <a href="{{url_for('home.index')}}" title="The AnnotateIt Homepage">
           AnnotateIt
         </a>
       </h1>
       <nav>
         <ul>
-        {% if g.user_id %}
-          <li><a href="{{ url_for('user.view', id=g.user_id) }}">My Account</a></li>
+        {% if g.user %}
+          <li><a href="{{ url_for('user.home') }}">My Account</a></li>
           <li><a href="{{ url_for('user.logout') }}">Logout</a></li>
         {% else %}
           <li><a href="{{ url_for('user.signup') }}">Sign Up</a></li>
           <li><a href="{{ url_for('user.login') }}">Log In</a></li>
         {% endif %}
-          <li><a href="{{ url_for('.home') }}#annotator">Annotator</a></li>
-          <li><a href="{{ url_for('.home') }}#about">About</a></li>
+          <li><a href="{{ url_for('home.index') }}#annotator">Annotator</a></li>
+          <li><a href="{{ url_for('home.index') }}#about">About</a></li>
         </ul>
       </nav>
       {% endblock %}

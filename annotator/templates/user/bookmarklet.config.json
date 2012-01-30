@@ -8,9 +8,8 @@
   // These HTTP headers will be submitted with each request to the store.
   "auth": {
     "headers": {
-      "X-Annotator-Account-Id":            "{{account.id}}",
-      "X-Annotator-User-Id":               "{{account.id}}",
-      "X-Annotator-Auth-Token":            "{{token}}"
+      "X-Annotator-Consumer-Key":          "FIXME",
+      "X-Annotator-User-Id":               "{{user.username}}"
     }
   },
   // Include the tags plugin?
@@ -23,15 +22,12 @@
   "permissions": {
     "showViewPermissionsCheckbox": true,
     "showEditPermissionsCheckbox": true,
-    "user": {
-      "id": "{{account.id}}",
-      "name": "{{account.username}}"
-    },
+    "user": "{{user.username}}",
     "permissions": {
       "read":   [],
-      "update": ["{{account.id}}"],
-      "delete": ["{{account.id}}"],
-      "admin":  ["{{account.id}}"]
+      "update": ["{{user.username}}"],
+      "delete": ["{{user.username}}"],
+      "admin":  ["{{user.username}}"]
     }
   }
 }

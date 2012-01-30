@@ -1,6 +1,8 @@
 import hashlib
 import datetime
 
+from . import helpers as h
+
 from werkzeug import Headers
 
 from annotator.model import Consumer
@@ -38,10 +40,9 @@ def setup():
     c.secret = 'ConsumerSecret'
     c.ttl=300
     db.session.add(c)
-    db.session.flush()
+    db.session.commit()
 
 def teardown(self):
-    db.session.remove()
     drop_all()
 
 class TestAuth():
@@ -81,3 +82,19 @@ class TestAuth():
         issue_time = iso8601('future')
         request = make_request('Consumer', 'bob', issue_time)
         assert auth.get_request_userid(request) == 'bob', "didn't extract user id from headers"
+
+    def test_headers_for_token(self):
+        headers = auth.headers_for_token({
+            'consumerKey': 'consumerFoo',
+            'authToken': 'abc',
+            'authTokenIssueTime': 'now',
+            'authTokenTTL': 300,
+            'userId': 'userBar'
+        })
+        h.assert_equal(headers, {
+            'x-annotator-consumer-key': 'consumerFoo',
+            'x-annotator-auth-token': 'abc',
+            'x-annotator-auth-token-issue-time': 'now',
+            'x-annotator-auth-token-ttl': 300,
+            'x-annotator-user-id': 'userBar'
+        })

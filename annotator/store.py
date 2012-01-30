@@ -2,7 +2,7 @@ from flask import Flask, Blueprint, Response
 from flask import abort, json, redirect, request, url_for, g
 
 from .model import Annotation
-from .authz import authorize, ACTION
+from .authz import authorize
 from . import auth
 
 __all__ = ["store"]
@@ -10,7 +10,6 @@ __all__ = ["store"]
 store = Blueprint('store', __name__)
 
 from flask import current_app
-
 
 # We define our own jsonify rather than using flask.jsonify because we wish
 # to jsonify arbitrary objects (e.g. index returns a list) rather than kwargs.
@@ -26,24 +25,18 @@ def before_request():
     g.consumer_key = request.headers.get('x-annotator-consumer-key')
     g.user_id = request.headers.get('x-annotator-user-id')
 
-    if current_app.config['AUTH_ON'] and \
-       not request.method == 'GET' and \
-       not auth.verify_request(request):
+    if not auth.verify_request(request):
         return jsonify("Cannot authorise request. Perhaps you didn't send the x-annotator headers?", status=401)
 
 @store.after_request
 def after_request(response):
     response.headers['Access-Control-Allow-Origin']   = '*'
-    response.headers['Access-Control-Allow-Headers']  = 'X-Requested-With, Content-Type, X-Annotator-Consumer-Key, X-Annotator-User-Id, X-Annotator-Auth-Token-Valid-Until, X-Annotator-Auth-Token'
+    response.headers['Access-Control-Allow-Headers']  = 'X-Requested-With, Content-Type, X-Annotator-Consumer-Key, X-Annotator-User-Id, X-Annotator-Auth-Token-Issue-Time, X-Annotator-Auth-Token-TTL, X-Annotator-Auth-Token'
     response.headers['Access-Control-Expose-Headers'] = 'Location'
     response.headers['Access-Control-Allow-Methods']  = 'GET, POST, PUT, DELETE'
     response.headers['Access-Control-Max-Age']        = '86400'
 
     return response
-
-@store.route('/')
-def home():
-    return jsonify('Annotator Store API')
 
 # INDEX
 @store.route('/annotations')
@@ -89,8 +82,8 @@ def update_annotation(id):
 
     elif request.json and authorize(annotation, 'update', get_current_userid()):
         updated = Annotation(request.json)
-        if updated.get('permissions', {}) != annotation.get('permissions', {}):
-            if not authorize(annotation, ACTION.ADMIN, get_current_userid()):
+        if 'permissions' in updated and updated.get('permissions') != annotation.get('permissions', {}):
+            if not authorize(annotation, 'admin', get_current_userid()):
                 return jsonify('Could not authorise request (permissions change). No update performed', status=401)
         updated.save()
         return jsonify(updated)

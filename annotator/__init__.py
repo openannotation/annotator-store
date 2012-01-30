@@ -8,7 +8,7 @@ __license__ = 'MIT'
 __author__ = 'Rufus Pollock and Nick Stenning (Open Knowledge Foundation)'
 
 __all__ = ['__version__', '__license__', '__author__',
-           'app', 'db', 'es', 'create_all', 'drop_all']
+           'app', 'db', 'es', 'create_indices', 'drop_indices', 'create_all', 'drop_all']
 
 from flask import Flask
 from flaskext.sqlalchemy import SQLAlchemy
@@ -30,17 +30,24 @@ es = pyes.ES(app.config['ELASTICSEARCH_HOST'])
 
 # Mount controllers
 from .store import store
-app.register_blueprint(store, url_prefix=app.config.get('MOUNTPOINT', ''))
+from .user import user
+from .home import home
+
+if app.config['MOUNT_STORE']:
+    app.register_blueprint(store, url_prefix=app.config['MOUNT_STORE'])
+if app.config['MOUNT_USER']:
+    app.register_blueprint(user, url_prefix=app.config['MOUNT_USER'])
+if app.config['MOUNT_HOME']:
+    app.register_blueprint(home, url_prefix=app.config['MOUNT_HOME'])
 
 def create_indices():
-    from . import model
-    es.create_index(model.annotation.INDEX)
-    es.put_mapping(model.annotation.TYPE,
-                   {'properties': model.annotation.MAPPING},
-                   model.annotation.INDEX)
+    from .model.annotation import INDEX, TYPE, MAPPING
+    es.create_index(INDEX)
+    es.put_mapping(TYPE, {'properties': MAPPING}, INDEX)
 
 def drop_indices():
-    es.delete_index(model.annotation.INDEX)
+    from .model.annotation import INDEX
+    es.delete_index(INDEX)
 
 def create_all():
     # This import must remain here to prevent circular imports from annotator.model

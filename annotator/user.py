@@ -1,16 +1,21 @@
-from datetime import datetime
-import hashlib
 import httplib
 import urllib
 
-from flask import Module, redirect, request, url_for, render_template, session
-from flask import flash, g, abort
+from flask import Blueprint, current_app
+from flask import g, redirect, request, url_for, render_template, session, flash
 from flaskext.wtf import *
 
-user = Module(__name__)
+user = Blueprint('user', __name__)
 
-from flask import current_app
+from . import db
 from .model import User, Annotation
+
+def get_current_user():
+    username = session.get('user')
+    if not username:
+        return None
+    else:
+        return User.query.filter_by(username=username).first()
 
 ## WTForms classes
 
@@ -29,29 +34,38 @@ class SignupForm(Form):
 
 ## Routes
 
+@user.before_request
+def before_request():
+    g.user = get_current_user()
+
 @user.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm(request.form)
+
     if request.method == 'POST' and form.validate():
         password = form.password.data
         email = form.email.data
-        users = User.get_by_email(email)
-        if users and users[0].check_password(password):
-            u = users[0]
-            session['user_id'] = u.id
+        user = User.query.filter_by(email=email).first()
+
+        if user and user.check_password(password):
+            session['user'] = user.username
             flash('Welcome back', 'success')
-            return redirect(url_for('view', id=u.id))
+            return redirect(url_for('.home'))
+
         else:
-            flash('Incorrect email/password', 'error')
+            flash('Email/password combination not recognized', 'error')
+
     if request.method == 'POST' and not form.validate():
-        flash('Invalid form')
+        flash('Invalid form', 'error')
+
     return render_template('user/login.html', form=form)
 
 
 @user.route('/logout')
 def logout():
-    session.pop('user_id', None)
+    session.pop('user', None)
     flash('You were logged out')
+
     return redirect(url_for('.home'))
 
 @user.route('/signup', methods=['GET', 'POST'])
@@ -61,32 +75,30 @@ def signup():
         user = User(username=form.username.data,
                     email=form.email.data,
                     password=form.password.data)
-        user.save()
+        db.session.add(user)
+        db.session.commit()
 
         flash('Thanks for signing up!', 'success')
-        return redirect(url_for('login'))
+        return redirect(url_for('.login'))
 
     if request.method == 'POST' and not form.validate():
         flash('Errors found while attempting to sign up!')
 
     return render_template('user/signup.html', form=form)
 
-@user.route('/<id>')
-def view(id):
-    user_id = session.get('user_id')
-
-    if not user_id == id:
-        return abort(401)
-
-    u = User.get(user_id)
+@user.route('/home')
+def home():
+    if not g.user:
+        flash('Please log in to see your profile!')
+        return redirect(url_for('login'))
 
     store_api = 'http://' + request.headers.get('host') + current_app.config.get('MOUNTPOINT', '')
 
-    bookmarklet = _get_bookmarklet(user, store_api)
-    annotations = list(Annotation.search(user_id=user_id, limit=20))
+    bookmarklet = _get_bookmarklet(g.user, store_api)
+    annotations = Annotation.search(user=g.user.username, limit=20)
 
-    return render_template('user/view.html',
-                           user=user,
+    return render_template('user/home.html',
+                           user=g.user,
                            bookmarklet=bookmarklet,
                            annotations=annotations)
 

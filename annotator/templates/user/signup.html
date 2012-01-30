@@ -4,7 +4,7 @@
 {% block content %}
 {% from "_formhelpers.html" import render_field %}
   <div class="primary">
-    <form method="post" action="{{url_for('account.signup')}}">
+    <form method="post" action="{{url_for('user.signup')}}">
       {{ form.csrf }}
       <dl>
         {{ render_field(form.username, placeholder="myusername") }}
