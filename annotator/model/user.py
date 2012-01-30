@@ -1,4 +1,5 @@
 from datetime import datetime
+from werkzeug import generate_password_hash, check_password_hash
 
 from .. import db
 
@@ -13,9 +14,21 @@ class User(db.Model):
 
     consumers = db.relationship('Consumer', backref='user', lazy='dynamic')
 
+    @classmethod
+    def fetch(cls, id):
+        return cls.query.filter_by(id=id).first()
+
     def __init__(self, username, email):
         self.username = username
         self.email = email
 
     def __repr__(self):
         return '<User %r>' % self.username
+
+    def _password_set(self, v):
+        self.pwdhash = generate_password_hash(v)
+
+    password = property(None, _password_set)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)

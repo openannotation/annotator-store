@@ -56,52 +56,52 @@ def index():
 @store.route('/annotations', methods=['POST'])
 def create_annotation():
     if request.json:
-        annotation = Annotation.from_dict(request.json)
+        annotation = Annotation(request.json)
 
         if g.consumer_key:
-            annotation.consumer = g.consumer_key
+            annotation['consumer'] = g.consumer_key
         if g.user_id:
-            annotation.user = g.user_id
+            annotation['user'] = g.user_id
 
         annotation.save()
-        return jsonify(annotation.to_dict())
+        return jsonify(annotation)
     else:
         return jsonify('No parameters given. Annotation not created.', status=400)
 
 # READ
 @store.route('/annotations/<id>')
 def read_annotation(id):
-    annotation = Annotation.get(id)
+    annotation = Annotation.fetch(id)
 
     if not annotation:
         return jsonify('Annotation not found.', status=404)
     elif authorize(annotation, 'read', get_current_userid()):
-        return jsonify(annotation.to_dict())
+        return jsonify(annotation)
     else:
         return jsonify('Could not authorise request. Read not allowed', status=401)
 
 # UPDATE
 @store.route('/annotations/<id>', methods=['POST', 'PUT'])
 def update_annotation(id):
-    annotation = Annotation.get(id)
+    annotation = Annotation.fetch(id)
 
     if not annotation:
         return jsonify('Annotation not found. No update performed.', status=404)
 
     elif request.json and authorize(annotation, 'update', get_current_userid()):
-        updated = Annotation.from_dict(request.json)
+        updated = Annotation(request.json)
         if updated.permissions != annotation.permissions:
             if not authorize(annotation, ACTION.ADMIN, get_current_userid()):
                 return jsonify('Could not authorise request (permissions change). No update performed', status=401)
         updated.save()
-        return jsonify(updated.to_dict())
+        return jsonify(updated)
     else:
         return jsonify('Could not authorise request. No update performed', status=401)
 
 # DELETE
 @store.route('/annotations/<id>', methods=['DELETE'])
 def delete_annotation(id):
-    annotation = Annotation.get(id)
+    annotation = Annotation.fetch(id)
 
     if not annotation:
         return jsonify('Annotation not found. No delete performed.', status=404)

@@ -3,9 +3,8 @@ import datetime
 
 from werkzeug import Headers
 
-import annotator.model as model
-import annotator.auth as auth
-from annotator.model.couch import rebuild_db, init_model, Metadata
+from annotator.model import Consumer
+from annotator import auth, db, create_all, drop_all
 
 class MockRequest():
     def __init__(self, headers):
@@ -19,7 +18,7 @@ def iso8601(t):
     return t.strftime("%Y-%m-%dT%H:%M:%S")
 
 def make_token(key, user_id, issue_time):
-    consumer = model.Consumer.get(key)
+    consumer = Consumer.fetch(key)
     token = hashlib.sha256(consumer.secret + user_id + issue_time).hexdigest()
     return token
 
@@ -34,17 +33,16 @@ def make_request(key, user_id, issue_time):
 
 testdb = 'annotator-test'
 def setup():
-    config = {
-        'COUCHDB_HOST': 'http://localhost:5984',
-        'COUCHDB_DATABASE': testdb
-        }
-    init_model(config)
-    c = model.Consumer(key='Consumer', secret='ConsumerSecret', ttl=300)
-    c.save()
+    create_all()
+    c = Consumer(key='Consumer')
+    c.secret = 'ConsumerSecret'
+    c.ttl=300
+    db.session.add(c)
+    db.session.flush()
 
 def teardown(self):
-    del Metadata.SERVER[testdb]
-
+    db.session.remove()
+    drop_all()
 
 class TestAuth():
     def test_verify_token(self):

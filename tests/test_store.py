@@ -1,19 +1,12 @@
-import os
-
 from flask import json, url_for
 
-from annotator.app import app, setup_app
+from annotator import app, create_all, drop_all
 from annotator.model import Annotation
-from annotator.model.couch import rebuild_db, Metadata
 
-def setup():
-    test_root = os.path.dirname(os.path.dirname(__file__))
-    cfg_file = os.path.join(test_root, 'test.cfg')
-
-    setup_app(cfg_file)
-
-class TestStore():
+class TestStore(object):
     def setup(self):
+        create_all()
+
         app.config['AUTH_ON'] = False
         self.app = app.test_client()
 
@@ -26,7 +19,7 @@ class TestStore():
         }
 
     def teardown(self):
-        rebuild_db(app.config['COUCHDB_DATABASE'])
+        drop_all()
 
     def _create_annotation(self, **kwargs):
         ann = Annotation(**kwargs)
@@ -34,7 +27,7 @@ class TestStore():
         return ann
 
     def _get_annotation(self, id_):
-        return Annotation.get(id_)
+        return Annotation.fetch(id_)
 
     def test_index(self):
         assert self.app.get('/annotations').data == "[]", "response should be empty list"
@@ -104,21 +97,9 @@ class TestStore():
         uri2 = u'urn:uuid:xxxxx'
         user = u'levin'
         user2 = u'anna'
-        anno = self._create_annotation(**dict(
-                uri=uri1,
-                text=uri1,
-                user=user,
-                ))
-        anno2 = self._create_annotation(**dict(
-                uri=uri1,
-                text=uri1 + uri1,
-                user=user2,
-                ))
-        anno3 = self._create_annotation(**dict(
-                uri=uri2,
-                text=uri2,
-                user=user
-                ))
+        anno = self._create_annotation(uri=uri1, text=uri1, user=user)
+        anno2 = self._create_annotation(uri=uri1, text=uri1 + uri1, user=user2)
+        anno3 = self._create_annotation(uri=uri2, text=uri2, user=user)
         annoid = anno.id
         anno2id = anno2.id
 
@@ -162,12 +143,14 @@ class TestStore():
                 "Did not send the right Access-Control-Expose-Headers header."
 
 
-class TestStoreAuth():
+class TestStoreAuth(object):
     def setup(self):
+        create_all()
         app.config['AUTH_ON'] = True
         self.app = app.test_client()
 
     def teardown(self):
+        drop_all()
         app.config['AUTH_ON'] = False
 
     def test_get_allowed(self):
@@ -181,7 +164,7 @@ class TestStoreAuth():
         assert response.status_code == 401, "response should be 401 NOT AUTHORIZED"
 
 
-class TestStoreAuthz:
+class TestStoreAuthz(object):
     anno_id = '123'
     gooduser = u'alice'
     baduser = u'bob'
@@ -190,6 +173,7 @@ class TestStoreAuthz:
     bad_headers = { 'x-annotator-user-id': baduser }
 
     def setup(self):
+        create_all()
         self.permissions = dict(
             read=[self.gooduser, self.updateuser],
             update=[self.gooduser, self.updateuser],
@@ -204,7 +188,7 @@ class TestStoreAuthz:
         self.app = app.test_client()
 
     def teardown(self):
-        rebuild_db(app.config['COUCHDB_DATABASE'])
+        drop_all()
 
     def test_read(self):
         response = self.app.get('/annotations/123')

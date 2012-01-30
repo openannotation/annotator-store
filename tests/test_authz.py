@@ -1,23 +1,7 @@
-import json
-from nose.tools import assert_raises
-
 from annotator.authz import authorize, ACTION
-from annotator.model.couch import Annotation
-from annotator.model.couch import rebuild_db, init_model, Metadata
+from annotator.model import Annotation
 
-
-class TestAuthorization():
-    testdb = 'annotator-test'
-
-    def setup(self):
-        config = {
-            'COUCHDB_HOST': 'http://localhost:5984',
-            'COUCHDB_DATABASE': self.testdb
-            }
-        init_model(config)
-
-    def teardown(self):
-        del Metadata.SERVER[self.testdb]
+class TestAuthorization(object):
 
     def test_authorize_read_nouser(self):
         ann = Annotation()
