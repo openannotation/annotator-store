@@ -65,12 +65,11 @@
         <div class="secondary">
           <p>Then sign in to AnnotateIt with the following code</p>
           <pre><code>jQuery('#content').annotator()
-    .annotator('addPlugin', 'Store', {
-        prefix: '{{url_for('store.root', _external=True)}}'
-    })
     .annotator('addPlugin', 'Auth', {
-        userId:      'myusername', // Your AnnotateIt username
-        consumerKey: 'annotateit'  // The AnnotateIt consumer key
+        tokenUrl: 'http://annotateit.org/api/token'
+    })
+    .annotator('addPlugin', 'Store', {
+        prefix: 'http://annotateit.org/api'
     });</code></pre>
       </div>
     </section>
