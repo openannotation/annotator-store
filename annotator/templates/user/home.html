@@ -32,9 +32,9 @@ it (just click on the bookmark).</p>
 <ul class="annotations">
 {% for anno in annotations %}
   <li class="annotation">
-    <div class="text">{{anno.get('text')}}</div>
+    <div class="text">{{anno.get('text') | truncate(100)}}</div>
     <div class="source">
-      <q class="quote">{{anno.get('quote')}}</q>
+      <q class="quote">{{anno.get('quote') | truncate(100)}}</q>
       <a href="{{anno.get('uri', '#')}}">{{anno.get('uri', '[No URI]')}}</a>
     </div>
     <div class="meta">

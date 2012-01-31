@@ -152,6 +152,12 @@
       jQuery.getScript(this.config('externals.source'), callback);
     },
 
+    authOptions: function () {
+      return {
+        tokenUrl: this.config('store.prefix') +  '/token'
+      };
+    },
+
     storeOptions: function () {
       var uri = location.href.split(/#|\?/).shift();
       return {
@@ -167,14 +173,7 @@
     },
 
     permissionsOptions: function () {
-      return jQuery.extend({}, {
-        userId: function (user) {
-          return user && user.id ? user.id : '';
-        },
-        userString: function (user) {
-          return user && user.name ? user.name : '';
-        }
-      }, this.config('permissions'));
+      return this.config('permissions');
     },
 
     setup: function () {
@@ -182,12 +181,9 @@
 
       annotator
         .addPlugin('Unsupported')
+        .addPlugin('Auth', this.authOptions())
         .addPlugin('Store', this.storeOptions())
-        .addPlugin('Permissions', this.permissionsOptions())
-        // As we're not requesting the auth tokens for the bookmarklet we
-        // don't need the Auth plugin. Instead we just need to set the required
-        // headers on each request.
-        .element.data('annotator:headers', this.config('auth.headers'));
+        .addPlugin('Permissions', this.permissionsOptions());
 
       if (this.config('tags') === true) {
           annotator.addPlugin('Tags');
@@ -212,10 +208,10 @@
     init: function () {
       if (window._annotator.instance) {
         window._annotator.Annotator.showNotification(
-          'Annotator is already loaded. Try highlighting some text to get started'
+          'Annotator is already loaded. Try highlighting some text to get started.'
         );
       } else {
-        notification.show('Loading Annotator into page');
+        notification.show('Loading Annotator into page...');
 
         if (window.jQuery === undefined || !window.jQuery.sub) {
           this.loadjQuery();

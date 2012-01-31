@@ -440,6 +440,11 @@ ul.annotations .annotation {
   content: 'On "';
 }
 
+.annotation .source q:after {
+  display: inline-block;
+  content: '"';
+}
+
 .annotation .meta {
   font-size: 85%;
 }
