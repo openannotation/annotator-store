@@ -1,35 +1,45 @@
-from flask import Flask, Blueprint, Response
-from flask import abort, json, redirect, request, url_for, g
+from flask import Flask, Blueprint
+from flask import abort, redirect, request, g
 
-from .model import Annotation
-from .authz import authorize
-from . import auth
+from annotator.model import Annotation
+from annotator.authz import authorize
+from annotator.util import jsonify
+from annotator.user import get_current_user
+from annotator import auth
 
 __all__ = ["store"]
 
 store = Blueprint('store', __name__)
-
-# We define our own jsonify rather than using flask.jsonify because we wish
-# to jsonify arbitrary objects (e.g. index returns a list) rather than kwargs.
-def jsonify(obj, *args, **kwargs):
-    res = json.dumps(obj, indent=None if request.is_xhr else 2)
-    return Response(res, mimetype='application/json', *args, **kwargs)
 
 def get_current_userid():
     return auth.get_request_userid(request)
 
 @store.before_request
 def before_request():
+    # Don't require authentication headers with OPTIONS request
+    if request.method == 'OPTIONS':
+        return
+
+    # Don't require authentication headers for auth token request
+    # (expecting a session cookie instead)
+    if request.url.endswith('/token'):
+        return
+
     if not auth.verify_request(request):
         return jsonify("Cannot authorise request. Perhaps you didn't send the x-annotator headers?", status=401)
 
 @store.after_request
 def after_request(response):
-    response.headers['Access-Control-Allow-Origin']   = '*'
-    response.headers['Access-Control-Allow-Headers']  = 'X-Requested-With, Content-Type, X-Annotator-Consumer-Key, X-Annotator-User-Id, X-Annotator-Auth-Token-Issue-Time, X-Annotator-Auth-Token-TTL, X-Annotator-Auth-Token'
-    response.headers['Access-Control-Expose-Headers'] = 'Location'
-    response.headers['Access-Control-Allow-Methods']  = 'GET, POST, PUT, DELETE'
-    response.headers['Access-Control-Max-Age']        = '86400'
+    ac = 'Access-Control-'
+
+    response.headers[ac + 'Allow-Origin']      = request.headers.get('origin', '*')
+    response.headers[ac + 'Allow-Credentials'] = 'true'
+
+    if request.method == 'OPTIONS':
+        response.headers[ac + 'Allow-Headers']  = 'X-Requested-With, Content-Type, X-Annotator-Consumer-Key, X-Annotator-User-Id, X-Annotator-Auth-Token-Issue-Time, X-Annotator-Auth-Token-TTL, X-Annotator-Auth-Token'
+        response.headers[ac + 'Expose-Headers'] = 'Location'
+        response.headers[ac + 'Allow-Methods']  = 'GET, POST, PUT, DELETE, OPTIONS'
+        response.headers[ac + 'Max-Age']        = '86400'
 
     return response
 
@@ -108,7 +118,7 @@ def delete_annotation(id):
     else:
         return jsonify('Could not authorise request. No update performed', status=401)
 
-# Search
+# SEARCH
 @store.route('/search')
 def search_annotations():
     kwargs = dict(request.args.items())
@@ -120,3 +130,12 @@ def search_annotations():
     }
     return jsonify(qrows)
 
+# AUTH TOKEN
+@store.route('/token')
+def auth_token():
+    user = get_current_user()
+
+    if user:
+        return jsonify(auth.generate_token('annotateit', user.username))
+    else:
+        return jsonify('Please go to http://annotateit.org to log in!', status=401)

@@ -12,7 +12,7 @@ __all__ = ['__version__', '__license__', '__author__',
            'create_indices', 'drop_indices',
            'create_all', 'drop_all']
 
-from flask import Flask
+from flask import Flask, g
 from flaskext.sqlalchemy import SQLAlchemy
 import pyes
 
@@ -40,16 +40,18 @@ def create_app():
     model.annotation.configure(es, app.config)
 
     # Mount controllers
-    from .store import store
-    from .user import user
-    from .home import home
+    from annotator import store, user, home
 
     if app.config['MOUNT_STORE']:
-        app.register_blueprint(store, url_prefix=app.config['MOUNT_STORE'])
+        app.register_blueprint(store.store, url_prefix=app.config['MOUNT_STORE'])
     if app.config['MOUNT_USER']:
-        app.register_blueprint(user, url_prefix=app.config['MOUNT_USER'])
+        app.register_blueprint(user.user, url_prefix=app.config['MOUNT_USER'])
     if app.config['MOUNT_HOME']:
-        app.register_blueprint(home, url_prefix=app.config['MOUNT_HOME'])
+        app.register_blueprint(home.home, url_prefix=app.config['MOUNT_HOME'])
+
+    @app.before_request
+    def before_request():
+        g.user = user.get_current_user()
 
     return app
 

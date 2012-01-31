@@ -7,7 +7,7 @@ from flaskext.wtf import *
 
 user = Blueprint('user', __name__)
 
-from .model import User, Annotation
+from annotator.model import User, Annotation
 
 def get_current_user():
     username = session.get('user')
@@ -32,10 +32,6 @@ class SignupForm(Form):
     confirm = PasswordField('Repeat Password')
 
 ## Routes
-
-@user.before_request
-def before_request():
-    g.user = get_current_user()
 
 @user.route('/login', methods=['GET', 'POST'])
 def login():
@@ -65,7 +61,7 @@ def logout():
     session.pop('user', None)
     flash('You were logged out')
 
-    return redirect(url_for('.home'))
+    return redirect(url_for('.login'))
 
 @user.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -89,7 +85,7 @@ def signup():
 def home():
     if not g.user:
         flash('Please log in to see your profile!')
-        return redirect(url_for('login'))
+        return redirect(url_for('.login'))
 
     store_api = 'http://' + request.headers.get('host') + current_app.config.get('MOUNTPOINT', '')
 
@@ -100,7 +96,6 @@ def home():
                            user=g.user,
                            bookmarklet=bookmarklet,
                            annotations=annotations)
-
 
 def _get_bookmarklet(user, store_api):
     config = render_template('user/bookmarklet.config.json',
@@ -114,6 +109,10 @@ def _get_bookmarklet(user, store_api):
 
 def _compress(javascript):
     '''Compress bookmarklet using closure compiler.'''
+
+    if current_app.config['DEBUG']:
+        return javascript
+
     params = urllib.urlencode([
         ('js_code', javascript),
         ('compilation_level', 'WHITESPACE_ONLY'),
@@ -121,7 +120,6 @@ def _compress(javascript):
         ('output_info', 'compiled_code'),
     ])
 
-    # Always use the following value for the Content-Type header.
     headers = { "Content-Type": "application/x-www-form-urlencoded" }
     conn = httplib.HTTPConnection('closure-compiler.appspot.com')
     conn.request('POST', '/compile', params, headers)
