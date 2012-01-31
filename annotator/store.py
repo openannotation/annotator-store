@@ -20,9 +20,6 @@ def get_current_userid():
 
 @store.before_request
 def before_request():
-    g.consumer_key = request.headers.get('x-annotator-consumer-key')
-    g.user_id = request.headers.get('x-annotator-user-id')
-
     if not auth.verify_request(request):
         return jsonify("Cannot authorise request. Perhaps you didn't send the x-annotator headers?", status=401)
 
@@ -50,13 +47,16 @@ def index():
 # CREATE
 @store.route('/annotations', methods=['POST'])
 def create_annotation():
+    consumer_key = request.headers.get('x-annotator-consumer-key')
+    user_id = request.headers.get('x-annotator-user-id')
+
     if request.json:
         annotation = Annotation(request.json)
 
-        if g.consumer_key:
-            annotation['consumer'] = g.consumer_key
-        if g.user_id:
-            annotation['user'] = g.user_id
+        if consumer_key:
+            annotation['consumer'] = consumer_key
+        if user_id:
+            annotation['user'] = user_id
 
         annotation.save()
         return jsonify(annotation)
