@@ -8,7 +8,7 @@
   // These HTTP headers will be submitted with each request to the store.
   "auth": {
     "headers": {
-      "X-Annotator-Consumer-Key":          "FIXME",
+      "X-Annotator-Consumer-Key":          "annotateit",
       "X-Annotator-User-Id":               "{{user.username}}"
     }
   },
