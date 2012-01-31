@@ -3,9 +3,7 @@ import hashlib
 
 import iso8601
 
-from .model import Consumer
-
-__all__ = ["verify_token", "verify_request"]
+from annotator.model import Consumer
 
 HEADER_PREFIX = 'x-annotator-'
 
@@ -21,6 +19,8 @@ class Utc(datetime.tzinfo):
     def dst(self, dt):
         return ZERO
 UTC = Utc()
+
+# Main auth routines
 
 def generate_token(key, user_id):
     consumer = Consumer.fetch(key)
@@ -50,7 +50,11 @@ def verify_token(token, key, user_id, issue_time):
     if computed_token != token:
         return False # Token inauthentic: computed hash doesn't match.
 
-    expiry = iso8601.parse_date(issue_time) + datetime.timedelta(seconds=consumer.ttl)
+    validity = iso8601.parse_date(issue_time)
+    expiry = validity + datetime.timedelta(seconds=consumer.ttl)
+
+    if validity > datetime.datetime.now(UTC):
+        return False # Token not yet valid
 
     if expiry < datetime.datetime.now(UTC):
         return False # Token expired: issue_time + ttl > now
