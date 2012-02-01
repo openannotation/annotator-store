@@ -54,6 +54,32 @@ class TestStore(TestCase):
         assert data['user'] == self.user
         assert data['consumer'] == self.consumer.key
 
+    def test_create_ignore_created(self):
+        payload = json.dumps({'created': 'abc'})
+
+        response = self.app.post('/api/annotations',
+                                 data=payload,
+                                 content_type='application/json',
+                                 headers=self.headers)
+
+        data = json.loads(response.data)
+        ann = self._get_annotation(data['id'])
+
+        assert ann['created'] != 'abc', "annotation 'created' field should not be used by API"
+
+    def test_create_ignore_updated(self):
+        payload = json.dumps({'updated': 'abc'})
+
+        response = self.app.post('/api/annotations',
+                                 data=payload,
+                                 content_type='application/json',
+                                 headers=self.headers)
+
+        data = json.loads(response.data)
+        ann = self._get_annotation(data['id'])
+
+        assert ann['updated'] != 'abc', "annotation 'updated' field should not be used by API"
+
     def test_read(self):
         kwargs = dict(text=u"Foo", id='123')
         self._create_annotation(**kwargs)
@@ -67,8 +93,7 @@ class TestStore(TestCase):
         assert response.status_code == 404, "response should be 404 NOT FOUND"
 
     def test_update(self):
-        kwargs = dict(text=u"Foo", id='123', created='2010-12-10')
-        self._create_annotation(**kwargs)
+        self._create_annotation(text=u"Foo", id='123', created='2010-12-10')
 
         payload = json.dumps({'id': '123', 'text': 'Bar'})
         response = self.app.put('/api/annotations/123',
@@ -83,8 +108,7 @@ class TestStore(TestCase):
         assert data['text'] == "Bar", "update annotation should be returned in response"
 
     def test_update_without_payload_id(self):
-        kwargs = dict(text=u"Foo", id='123')
-        self._create_annotation(**kwargs)
+        self._create_annotation(text=u"Foo", id='123')
 
         payload = json.dumps({'text': 'Bar'})
         response = self.app.put('/api/annotations/123',
@@ -96,8 +120,7 @@ class TestStore(TestCase):
         assert ann['text'] == "Bar", "annotation wasn't updated in db"
 
     def test_update_with_wrong_payload_id(self):
-        kwargs = dict(text=u"Foo", id='123')
-        self._create_annotation(**kwargs)
+        self._create_annotation(text=u"Foo", id='123')
 
         payload = json.dumps({'text': 'Bar', 'id': 'abc'})
         response = self.app.put('/api/annotations/123',
@@ -111,6 +134,35 @@ class TestStore(TestCase):
     def test_update_notfound(self):
         response = self.app.put('/api/annotations/123', headers=self.headers)
         assert response.status_code == 404, "response should be 404 NOT FOUND"
+
+    def test_update_ignore_created(self):
+        ann = self._create_annotation(text=u"Foo", id='123')
+
+        payload = json.dumps({'created': 'abc'})
+
+        response = self.app.put('/api/annotations/123',
+                                data=payload,
+                                content_type='application/json',
+                                headers=self.headers)
+
+        upd = self._get_annotation('123')
+
+        assert upd['created'] == ann['created'], "annotation 'created' field should not be updated by API"
+
+    def test_update_ignore_updated(self):
+        ann = self._create_annotation(text=u"Foo", id='123')
+
+        payload = json.dumps({'updated': 'abc'})
+
+        response = self.app.put('/api/annotations/123',
+                                data=payload,
+                                content_type='application/json',
+                                headers=self.headers)
+
+        upd = self._get_annotation('123')
+
+        assert upd['created'] != 'abc', "annotation 'updated' field should not be updated by API"
+
 
     def test_delete(self):
         kwargs = dict(text=u"Bar", id='456')

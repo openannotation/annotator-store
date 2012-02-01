@@ -1,7 +1,14 @@
+import pyes
+
 import annotator
 
 def setup():
     annotator.create_app()
+    try:
+        annotator.drop_all()
+    except pyes.exceptions.ElasticSearchException:
+        pass
+
 
 class TestCase(object):
     def setup(self):

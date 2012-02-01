@@ -61,7 +61,7 @@ def create_annotation():
     user_id = request.headers.get('x-annotator-user-id')
 
     if request.json:
-        annotation = Annotation(request.json)
+        annotation = Annotation(_filter_input(request.json))
 
         if consumer_key:
             annotation['consumer'] = consumer_key
@@ -94,14 +94,17 @@ def update_annotation(id):
         return jsonify('Annotation not found. No update performed.', status=404)
 
     elif request.json and authorize(annotation, 'update', get_current_userid()):
-        updated = Annotation(request.json)
-        updated.id = id # use id from URL, regardless of what arrives in payload json
+        updated = _filter_input(request.json)
+        updated['id'] = id # use id from URL, regardless of what arrives in payload json
 
         if 'permissions' in updated and updated.get('permissions') != annotation.get('permissions', {}):
             if not authorize(annotation, 'admin', get_current_userid()):
                 return jsonify('Could not authorise request (permissions change). No update performed', status=401)
-        updated.save()
-        return jsonify(updated)
+
+        annotation.update(updated)
+        annotation.save()
+
+        return jsonify(annotation)
     else:
         return jsonify('Could not authorise request. No update performed', status=401)
 
@@ -141,3 +144,10 @@ def auth_token():
         return jsonify(auth.generate_token('annotateit', user.username))
     else:
         return jsonify('Please go to http://annotateit.org to log in!', status=401)
+
+def _filter_input(obj):
+    for field in ['updated', 'created']:
+        if field in obj:
+            del obj[field]
+
+    return obj
