@@ -142,7 +142,7 @@ class TestStore(TestCase):
 
         headers = dict(response.headers)
 
-        assert headers['Access-Control-Allow-Methods'] == 'GET, POST, PUT, DELETE', \
+        assert headers['Access-Control-Allow-Methods'] == 'GET, POST, PUT, DELETE, OPTIONS', \
             "Did not send the right Access-Control-Allow-Methods header."
 
         assert headers['Access-Control-Allow-Origin'] == '*', \
@@ -164,7 +164,10 @@ class TestStoreAuthz(TestCase):
             'admin': ['alice']
         }
 
-        ann = Annotation(id=self.anno_id, text='Foobar', permissions=self.permissions)
+        ann = Annotation(id=self.anno_id,
+                         user='alice',
+                         text='Foobar',
+                         permissions=self.permissions)
         ann.save()
 
         self.consumer = Consumer('test-consumer-key')
@@ -230,5 +233,22 @@ class TestStoreAuthz(TestCase):
                                 data=payload,
                                 content_type='application/json',
                                 headers=self.alice_headers)
+        assert response.status_code == 200, "response should be 200 OK"
+
+    def test_update_other_users_annotation(self):
+        ann = Annotation(id=123,
+                         user='foo',
+                         permissions={'update': []})
+        ann.save()
+
+        payload = json.dumps({
+            'id': 123,
+            'text': 'Foo'
+        })
+
+        response = self.app.put('/api/annotations/123',
+                                data=payload,
+                                content_type='application/json',
+                                headers=self.bob_headers)
         assert response.status_code == 200, "response should be 200 OK"
 
