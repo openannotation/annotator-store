@@ -95,6 +95,8 @@ def update_annotation(id):
 
     elif request.json and authorize(annotation, 'update', get_current_userid()):
         updated = Annotation(request.json)
+        updated.id = id # use id from URL, regardless of what arrives in payload json
+
         if 'permissions' in updated and updated.get('permissions') != annotation.get('permissions', {}):
             if not authorize(annotation, 'admin', get_current_userid()):
                 return jsonify('Could not authorise request (permissions change). No update performed', status=401)

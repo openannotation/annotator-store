@@ -82,6 +82,32 @@ class TestStore(TestCase):
         data = json.loads(response.data)
         assert data['text'] == "Bar", "update annotation should be returned in response"
 
+    def test_update_without_payload_id(self):
+        kwargs = dict(text=u"Foo", id='123')
+        self._create_annotation(**kwargs)
+
+        payload = json.dumps({'text': 'Bar'})
+        response = self.app.put('/api/annotations/123',
+                                data=payload,
+                                content_type='application/json',
+                                headers=self.headers)
+
+        ann = self._get_annotation('123')
+        assert ann['text'] == "Bar", "annotation wasn't updated in db"
+
+    def test_update_with_wrong_payload_id(self):
+        kwargs = dict(text=u"Foo", id='123')
+        self._create_annotation(**kwargs)
+
+        payload = json.dumps({'text': 'Bar', 'id': 'abc'})
+        response = self.app.put('/api/annotations/123',
+                                data=payload,
+                                content_type='application/json',
+                                headers=self.headers)
+
+        ann = self._get_annotation('123')
+        assert ann['text'] == "Bar", "annotation wasn't updated in db"
+
     def test_update_notfound(self):
         response = self.app.put('/api/annotations/123', headers=self.headers)
         assert response.status_code == 404, "response should be 404 NOT FOUND"
