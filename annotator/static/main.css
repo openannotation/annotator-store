@@ -423,6 +423,7 @@ ul.annotations {
 }
 
 ul.annotations .annotation {
+  margin: 0 0 10px 0;
   padding: 8px;
   font-size: 90%;
   background-color: rgba(251, 251, 251, 0.98);
@@ -438,10 +439,6 @@ ul.annotations .annotation {
 
 .annotation div:first-of-type {
   border-top: none;
-}
-
-.annotation .source q {
-  padding-right: 0.8em;
 }
 
 .annotation .source q:before {
