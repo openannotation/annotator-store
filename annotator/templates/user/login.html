@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Login - Account{% endblock %}
+{% block title %}Login{% endblock %}
 
 {% block content %}
 {% from "_formhelpers.html" import render_field %}
@@ -7,8 +7,8 @@
     <form method="post" action="">
       {{ form.csrf }}
       <dl>
-        {{ render_field(form.email, placeholder="hello@annotateit.org") }}
-        {{ render_field(form.password, placeholder="********") }}
+        {{ render_field(form.email, placeholder="joe.bloggs@example.com") }}
+        {{ render_field(form.password, placeholder="••••••••") }}
       </dl>
       <div class="actions">
         <button type="submit">Login</button>
