@@ -489,7 +489,7 @@ ul.notification li {
   width: auto;
   line-height: 1em;
   font-size: 14px;
-  padding: 0.8em 1.5%; 
+  padding: 0.8em 1.5%;
   font-weight: bold;
   text-align: center;
   border-bottom: solid 1px #9f9f9f;
@@ -509,4 +509,19 @@ ul.notification li.error {
   background-color: #ffeae8;
   border-bottom-color: #ccc;
   color: #b50000;
+}
+
+ul.errors {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+ul.errors li {
+  line-height: 1em;
+  font-size: 14px;
+  font-weight: bold;
+  margin: none;
+  padding: 0.4em 0.8em 0.4em 0;
+  color: #c00;
 }

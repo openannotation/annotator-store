@@ -5,9 +5,12 @@ from flask import Blueprint, current_app
 from flask import g, redirect, request, url_for, render_template, session, flash
 from flaskext.wtf import *
 
-user = Blueprint('user', __name__)
+import sqlalchemy
 
+from annotator import db
 from annotator.model import User, Annotation
+
+user = Blueprint('user', __name__)
 
 def get_current_user():
     username = session.get('user')
@@ -66,20 +69,12 @@ def logout():
 @user.route('/signup', methods=['GET', 'POST'])
 def signup():
     form = SignupForm(request.form)
-    if request.method == 'POST' and form.validate():
-        user = User(username=form.username.data,
-                    email=form.email.data,
-                    password=form.password.data)
-        current_app.db.session.add(user)
-        current_app.db.session.commit()
-
-        flash('Thanks for signing up!', 'success')
+    if request.method == 'POST' and form.validate() and _add_user(form):
+        flash('Thank you for signing up!', 'success')
         return redirect(url_for('.login'))
-
-    if request.method == 'POST' and not form.validate():
+    else:
         flash('Errors found while attempting to sign up!')
-
-    return render_template('user/signup.html', form=form)
+        return render_template('user/signup.html', form=form)
 
 @user.route('/home')
 def home():
@@ -96,6 +91,24 @@ def home():
                            user=g.user,
                            bookmarklet=bookmarklet,
                            annotations=annotations)
+
+def _add_user(form):
+    user = User(username=form.username.data,
+                email=form.email.data,
+                password=form.password.data)
+    db.session.add(user)
+
+    try:
+        db.session.commit()
+    except sqlalchemy.exc.IntegrityError as e:
+        if 'email is not unique' in e.message:
+            form.email.errors.append("This email address is already registered: please use another.")
+        if 'username is not unique' in e.message:
+            form.username.errors.append("This username is taken: please use another.")
+        return False
+
+    # Fallthrough: all's gone well.
+    return True
 
 def _get_bookmarklet(user, store_api):
     config = render_template('user/bookmarklet.config.json',
