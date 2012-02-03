@@ -51,26 +51,28 @@
     <section>
         <h2 id="develop">Developers</h2>
         <div class="primary">
-          <p>Adding the Annotator to a webpage is easy. First you'll need to
-             <a href="">download the source code</a> and include it on your
-             page along with jQuery. Then simply add the following line to load
-             the annotator.</p>
-          <pre><code>jQuery('#content').annotator();</code></pre>
-          <p>
-            To save the Annotations to the Store you'll need to <a href="#">sign
-            up</a> for an AnnotateIt account. Then include the <a href="#">Store</a> and
-            <a href="#">Auth</a> plugins.
-          </p>
+          <p>Allowing your users to annotate a webpage is easy. First you'll need to
+             <a href="https://github.com/okfn/annotator/downloads">download the source code</a>
+             and include it on your page along with jQuery. Then simply add the following lines
+             to load the Annotator, allowing users with AnnotateIt accounts to start
+             annotating immediately:</p>
+          <pre><code>jQuery('#content').annotator()
+                  .annotator('setupPlugins');</code></pre>
         </div>
         <div class="secondary">
-          <p>Then sign in to AnnotateIt with the following code</p>
+          <p>If you want more control, or you don't want to your users (who might already
+             have accounts on your website) to need accounts here at AnnotateIt, we provide
+             support for <strong>delegated authentication</strong>: you control who gets
+             to annotate, and AnnotateIt will store annotations for you and your user.</p>
+
+          <p>Setting up delegated authentication is a little more involved, and you should
+             <a href="https://github.com/okfn/annotator/">go see the documentation</a>
+             for the full details. That said, once you've set up your token generator (see the docs)
+             the Javascript code is still pretty simple:
           <pre><code>jQuery('#content').annotator()
-    .annotator('addPlugin', 'Auth', {
-        tokenUrl: 'http://annotateit.org/api/token'
-    })
-    .annotator('addPlugin', 'Store', {
-        prefix: 'http://annotateit.org/api'
-    });</code></pre>
+                  .annotator('setupPlugins', {
+                      tokenUrl: 'http://example.com/getToken'
+                  });</code></pre>
       </div>
     </section>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
