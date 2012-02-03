@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Signup - Account{% endblock %}
+{% block title %}Sign up{% endblock %}
 
 {% block content %}
 {% from "_formhelpers.html" import render_field %}
@@ -7,13 +7,13 @@
     <form method="post" action="{{url_for('user.signup')}}">
       {{ form.csrf }}
       <dl>
-        {{ render_field(form.username, placeholder="myusername") }}
-        {{ render_field(form.email, placeholder="hello@annotateit.org") }}
-        {{ render_field(form.password, placeholder="********") }}
-        {{ render_field(form.confirm, placeholder="********") }}
+        {{ render_field(form.username, placeholder="joe.bloggs") }}
+        {{ render_field(form.email, placeholder="joe.bloggs@example.com") }}
+        {{ render_field(form.password, placeholder="••••••••") }}
+        {{ render_field(form.confirm, placeholder="••••••••") }}
       </dl>
       <div class="actions">
-        <button type="submit">Signup</button>
+        <button type="submit">Sign up</button>
       </div>
     </form>
   </div>

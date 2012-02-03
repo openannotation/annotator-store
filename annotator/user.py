@@ -3,7 +3,7 @@ import urllib
 
 from flask import Blueprint, current_app
 from flask import g, redirect, request, url_for, render_template, session, flash
-from flaskext.wtf import *
+from flaskext.wtf import Form, fields as f, validators as v
 
 import sqlalchemy
 
@@ -22,17 +22,23 @@ def get_current_user():
 ## WTForms classes
 
 class LoginForm(Form):
-    email = TextField('Email', [validators.Required()])
-    password = PasswordField('Password', [validators.Required()])
+    email    = f.TextField('Email',        [v.Required()])
+    password = f.PasswordField('Password', [v.Required()])
 
 class SignupForm(Form):
-    username = TextField('Username', [validators.Length(min=3, max=25)])
-    email = TextField('Email Address', [validators.Length(min=3, max=35)])
-    password = PasswordField('New Password', [
-        validators.Required(),
-        validators.EqualTo('confirm', message='Passwords must match')
+    username = f.TextField('Username', [
+        v.Length(min=3, max=128)
     ])
-    confirm = PasswordField('Repeat Password')
+    email = f.TextField('Email address', [
+        v.Length(min=3, max=128),
+        v.Email(message="This should be a valid email address.")
+    ])
+    password = f.PasswordField('Password', [
+        v.Required(),
+        v.Length(min=8, message="It's probably best if your password is longer than 8 characters."),
+        v.EqualTo('confirm', message="Passwords must match.")
+    ])
+    confirm = f.PasswordField('Confirm password')
 
 ## Routes
 
