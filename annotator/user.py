@@ -8,7 +8,7 @@ from flaskext.wtf import Form, fields as f, validators as v
 import sqlalchemy
 
 from annotator import db
-from annotator.model import User, Annotation
+from annotator.model import User, Consumer, Annotation
 
 user = Blueprint('user', __name__)
 
@@ -44,18 +44,18 @@ class SignupForm(Form):
 
 @user.route('/login', methods=['GET', 'POST'])
 def login():
+    if g.user:
+        return redirect(url_for('.home'))
+
     form = LoginForm(request.form)
 
     if request.method == 'POST' and form.validate():
-        password = form.password.data
-        email = form.email.data
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(email=form.email.data).first()
 
-        if user and user.check_password(password):
+        if user and user.check_password(form.password.data):
             session['user'] = user.username
             flash('Welcome back', 'success')
             return redirect(url_for('.home'))
-
         else:
             flash('Email/password combination not recognized', 'error')
 
@@ -75,18 +75,20 @@ def logout():
 @user.route('/signup', methods=['GET', 'POST'])
 def signup():
     form = SignupForm(request.form)
-    if request.method == 'POST' and form.validate() and _add_user(form):
-        flash('Thank you for signing up!', 'success')
-        return redirect(url_for('.login'))
-    else:
-        flash('Errors found while attempting to sign up!')
-        return render_template('user/signup.html', form=form)
+
+    if request.method == 'POST':
+        if form.validate() and _add_user(form):
+            flash('Thank you for signing up!', 'success')
+            session['user'] = form.username.data
+            return redirect(url_for('.home'))
+        else:
+            flash('Errors found while attempting to sign up!')
+
+    return render_template('user/signup.html', form=form)
 
 @user.route('/home')
 def home():
-    if not g.user:
-        flash('Please log in to see your profile!')
-        return redirect(url_for('.login'))
+    _require_user('to see your profile')
 
     store_api = 'http://' + request.headers.get('host') + current_app.config.get('MOUNTPOINT', '')
 
@@ -97,6 +99,31 @@ def home():
                            user=g.user,
                            bookmarklet=bookmarklet,
                            annotations=annotations)
+
+@user.route('/consumer/add')
+def add_consumer():
+    _require_user()
+
+    c = Consumer()
+    g.user.consumers.append(c)
+
+    db.session.commit()
+
+    return redirect(url_for('.home'))
+
+@user.route('/consumer/delete/<key>')
+def delete_consumer(key):
+    _require_user()
+
+    c = g.user.consumers.filter_by(key=key).first()
+
+    if not c:
+        flash("Couldn't delete consumer '{}' because I couldn't find it!".format(key), 'error')
+    else:
+        db.session.delete(c)
+        db.session.commit()
+
+    return redirect(url_for('.home'))
 
 def _add_user(form):
     user = User(username=form.username.data,
@@ -115,6 +142,11 @@ def _add_user(form):
 
     # Fallthrough: all's gone well.
     return True
+
+def _require_user(msg=''):
+    if not g.user:
+        flash('Please log in{}'.format(' ' + msg))
+        return redirect(url_for('.login'))
 
 def _get_bookmarklet(user, store_api):
     config = render_template('user/bookmarklet.config.json',

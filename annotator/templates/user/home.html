@@ -2,52 +2,90 @@
 {% block title %}View - Account{% endblock %}
 
 {% block content %}
-<h2>Hi there!</h2>
 
 <section>
-<p>Your account details are:</p>
+  <div class="primary">
+    <h2>Hi there!</h2>
 
-<dl>
-  <dt>Username</dt>
-  <dd><code>{{user.username}}</code></dd>
-  <dt>Email address</dt>
-  <dd>{{user.email}}</dd>
-  <dt>Registered since</dt>
-  <dd>{{user.created_at}}</dd>
-</dl>
+    <p>Your account details are:</p>
+
+    <dl>
+      <dt>Username</dt>
+      <dd><code>{{user.username}}</code></dd>
+      <dt>Email address</dt>
+      <dd>{{user.email}}</dd>
+      <dt>Registered since</dt>
+      <dd>{{user.created_at}}</dd>
+    </dl>
+  </div>
+  <div class="secondary">
+    <h2>Bookmarklet</h2>
+
+    <p>The hyperlink below is your personal AnnotateIt bookmarklet.  You should
+  install it in your bookmarks. You can then annotate any web page by activating
+  it (just click on the bookmark).</p>
+    <p>To install the bookmarklet drag this link into your bookmarks toolbar.</p>
+    
+    <p><a class=bookmarklet href="javascript:{{bookmarklet}}">AnnotateIt</a></p>
+  </div>
 </section>
 
 <section>
-  <h2>Bookmarklet</h2>
-  <p>The hyperlink below is your personal AnnotateIt bookmarklet.  You should
-install it in your bookmarks. You can then annotate any web page by activating
-it (just click on the bookmark).</p>
-  <p>To install the bookmarklet drag this link into your bookmarks toolbar.</p>
-  <p><a href="javascript:{{bookmarklet}}">AnnotateIt</a>.</p>
+  <h2>Consumer keys</h2>
+  {% if user.consumers.count() %}
+  <table>
+    <tr>
+      <th>key</th><th>secret</th><th>&nbsp;</th>
+    </tr>
+    {% for c in user.consumers %}
+      <tr>
+        <td><code>{{c.key}}</code></td>
+        <td><code>{{c.secret}}</code></td>
+        {% if c.key != 'annotateit' %}
+        <td>
+          <a onclick='confirm("Are you sure you want to delete this consumer key?")'
+             href='{{url_for('.delete_consumer', key=c.key)}}'>
+             &times; Delete
+          </a>
+        </td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p><em>No keys associated with this account.</em></p>
+  {% endif %}
+  <p>
+    <a href="{{ url_for('.add_consumer') }}">
+      Request
+      {% if user.consumers.count() %}another{% else %}a{% endif %}
+      key &raquo;
+    </a>
+  </p>
 </section>
 
 <section>
-<h2>Recent Annotations</h2>
+  <h2>Recent annotations</h2>
 
-<ul class="annotations">
-{% for anno in annotations %}
-  <li class="annotation">
-    <div class="text">{{anno.get('text') | truncate(100)}}</div>
-    <div class="source">
-      <q class="quote">{{anno.get('quote') | truncate(100)}}</q>
-      <a href="{{anno.get('uri', '#')}}">{{anno.get('uri', '[No URI]')}}</a>
-    </div>
-    <div class="meta">
-      <span class="user">{{anno.get('user', '[Unknown user]')}}</span> &ndash;
-      <span class="created">
-        {{anno.get('created', '[No created date]')}}
-      </span>
-    </div>
-  </li>
-{% else %}
-  <li><em>No recent annotations&hellip;</em></li>
-{% endfor %}
-</ul>
+  <ul class="annotations">
+  {% for anno in annotations %}
+    <li class="annotation">
+      <div class="text">{{anno.get('text') | truncate(100)}}</div>
+      <div class="source">
+        <q class="quote">{{anno.get('quote') | truncate(100)}}</q>
+        <a href="{{anno.get('uri', '#')}}">{{anno.get('uri', '[No URI]')}}</a>
+      </div>
+      <div class="meta">
+        <span class="user">{{anno.get('user', '[Unknown user]')}}</span> &ndash;
+        <span class="created">
+          {{anno.get('created', '[No created date]')}}
+        </span>
+      </div>
+    </li>
+  {% else %}
+    <li><em>No recent annotations&hellip;</em></li>
+  {% endfor %}
+  </ul>
 </section>
 
 {% endblock %}

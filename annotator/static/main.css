@@ -279,7 +279,8 @@ article p,
 article ul,
 article ol,
 article pre,
-article dl {
+article dl,
+article table {
 	font-size: 1.6em /* 16px */;
 	line-height: 1.25em /* 20px */;
 	margin-bottom: 1em;
@@ -293,6 +294,14 @@ article ol {
 
 article ul {
 	list-style-type: square;
+}
+
+article table th {
+  text-align: left;
+}
+
+article table td {
+  padding: 0 2em 0 0;
 }
 
 article .screenshot {
