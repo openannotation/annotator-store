@@ -26,7 +26,7 @@
           <img src="/static/images/thumb-add.png" alt="Highlight text to annotate" height="128" width="175" />
           <img src="/static/images/thumb-viewer.png" alt="View annotations by moving your mouse over highlights" height="128" width="175" />
         </div>
-        <p>The Annotator is a JavaScript tool that can be added to any webpage
+        <p>The Annotator is a Javascript tool that can be added to any webpage
         to allow annotation. Annotations can have comments, tags, users and
         more. See a <a href="http://okfn.github.com/annotator/">live
           demonstration</a> or more in the <a href="#develop">developers
@@ -60,15 +60,15 @@
                   .annotator('setupPlugins');</code></pre>
         </div>
         <div class="secondary">
-          <p>If you want more control, or you don't want to your users (who might already
+          <p>If you want more control, or you don't want your users (who might already
              have accounts on your website) to need accounts here at AnnotateIt, we provide
              support for <strong>delegated authentication</strong>: you control who gets
-             to annotate, and AnnotateIt will store annotations for you and your user.</p>
+             to annotate, and AnnotateIt will store annotations for you and your users.</p>
 
           <p>Setting up delegated authentication is a little more involved, and you should
              <a href="https://github.com/okfn/annotator/">go see the documentation</a>
              for the full details. That said, once you've set up your token generator (see the docs)
-             the Javascript code is still pretty simple:
+             the code is still pretty simple:
           <pre><code>jQuery('#content').annotator()
                   .annotator('setupPlugins', {
                       tokenUrl: 'http://example.com/getToken'
