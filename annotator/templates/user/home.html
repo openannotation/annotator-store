@@ -21,11 +21,18 @@
   <div class="secondary">
     <h2>Bookmarklet</h2>
 
-    <p>The hyperlink below is your personal AnnotateIt bookmarklet.  You should
-  install it in your bookmarks. You can then annotate any web page by activating
-  it (just click on the bookmark).</p>
-    <p>To install the bookmarklet drag this link into your bookmarks toolbar.</p>
-    
+    <p>
+      The link below is a bookmarklet. Drag it into your bookmarks/favourites bar,
+      and it&rsquo;ll allow you to annotate anything, anywhere on the web, with a single
+      click. All your annotations will be saved back to AnnotateIt.
+    </p>
+
+    <p>
+      <em><strong>NB:</strong> you&rsquo;ll need to be logged into AnnotateIt for the
+      bookmarklet to work!
+      </em>
+    </p>
+
     <p><a class=bookmarklet href="javascript:{{bookmarklet}}">AnnotateIt</a></p>
   </div>
 </section>
@@ -73,7 +80,10 @@
       <div class="text">{{anno.get('text') | truncate(100)}}</div>
       <div class="source">
         <q class="quote">{{anno.get('quote') | truncate(100)}}</q>
-        <a href="{{anno.get('uri', '#')}}">{{anno.get('uri', '[No URI]')}}</a>
+        {% if 'uri' in anno %}
+          at
+          <a href="{{anno['uri']}}">{{anno['uri'] | truncate(100)}}</a>
+        {% endif %}
       </div>
       <div class="meta">
         <span class="user">{{anno.get('user', '[Unknown user]')}}</span> &ndash;
@@ -83,7 +93,7 @@
       </div>
     </li>
   {% else %}
-    <li><em>No recent annotations&hellip;</em></li>
+    <li><em>No recent annotations.</em></li>
   {% endfor %}
   </ul>
 </section>
