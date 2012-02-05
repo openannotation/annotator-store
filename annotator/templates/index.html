@@ -56,8 +56,8 @@
              and include it on your page along with jQuery. Then simply add the following lines
              to load the Annotator, allowing users with AnnotateIt accounts to start
              annotating immediately:</p>
-          <pre><code>jQuery('#content').annotator()
-                  .annotator('setupPlugins');</code></pre>
+          <pre><code>$(<span class=string>'#content'</span>).annotator()
+             .annotator(<span class=string>'setupPlugins'</span>);</code></pre>
         </div>
         <div class="secondary">
           <p>If you want more control, or you don't want your users (who might already
@@ -69,10 +69,10 @@
              <a href="https://github.com/okfn/annotator/">go see the documentation</a>
              for the full details. That said, once you've set up your token generator (see the docs)
              the code is still pretty simple:
-          <pre><code>jQuery('#content').annotator()
-                  .annotator('setupPlugins', {
-                      tokenUrl: 'http://example.com/getToken'
-                  });</code></pre>
+          <pre><code>$(<span class=string>'#content'</span>).annotator()
+             .annotator(<span class=string>'setupPlugins'</span>, {
+                 tokenUrl: <span class=string>'http://example.com/getToken'</span>
+             });</code></pre>
       </div>
     </section>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>

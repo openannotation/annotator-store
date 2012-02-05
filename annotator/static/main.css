@@ -20,7 +20,7 @@ h1, h2, h3, h4, h5, h6, p, ul, ol {
 }
 
 h1, h2, h3, h4, h5, h6 {
-	font-family: Arvo-Bold;
+	font-family: 'Arvo Bold', Arvo-Bold, serif;
 	font-weight: normal;
 }
 
@@ -340,7 +340,7 @@ footer {
 	font-size: 1.4em;
 	background-color: #fafafa;
 	border: 1px solid #e6e6e6;
-	padding: 1em 0.5em;
+	padding: 1em 1em 0 1em;
   margin-top: 2em;
 	margin-bottom: 3em;
   line-height: 1.4;
