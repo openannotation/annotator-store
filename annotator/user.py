@@ -90,9 +90,7 @@ def signup():
 def home():
     _require_user('to see your profile')
 
-    store_api = 'http://' + request.headers.get('host') + current_app.config.get('MOUNTPOINT', '')
-
-    bookmarklet = render_template('bookmarklet.js')
+    bookmarklet = render_template('bookmarklet.js', root=current_app.config['ROOT_URL'])
     annotations = Annotation.search(user=g.user.username, limit=20)
 
     return render_template('user/home.html',

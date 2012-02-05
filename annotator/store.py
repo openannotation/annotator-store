@@ -1,4 +1,4 @@
-from flask import Flask, Blueprint
+from flask import Flask, Blueprint, current_app
 from flask import abort, redirect, request, g
 
 from annotator.model import Annotation
@@ -143,7 +143,8 @@ def auth_token():
     if user:
         return jsonify(auth.generate_token('annotateit', user.username))
     else:
-        return jsonify('Please go to http://annotateit.org to log in!', status=401)
+        root = current_app.config['ROOT_URL']
+        return jsonify('Please go to {} to log in!'.format(root), status=401)
 
 def _filter_input(obj):
     for field in ['updated', 'created']:
