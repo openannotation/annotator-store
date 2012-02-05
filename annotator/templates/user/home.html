@@ -50,7 +50,7 @@
         <td><code>{{c.secret}}</code></td>
         {% if c.key != 'annotateit' %}
         <td>
-          <a onclick='confirm("Are you sure you want to delete this consumer key?")'
+          <a onclick='return confirm("Are you sure you want to delete this consumer key?")'
              href='{{url_for('.delete_consumer', key=c.key)}}'>
              &times; Delete
           </a>
