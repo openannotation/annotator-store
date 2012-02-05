@@ -27,7 +27,7 @@
       <nav>
         <ul>
         {% if g.user %}
-          <li><a href="{{ url_for('user.home') }}">My Account</a></li>
+          <li><a href="{{ url_for('user.home') }}">My account</a></li>
           <li><a href="{{ url_for('user.logout') }}">Logout</a></li>
         {% else %}
           <li><a href="{{ url_for('user.signup') }}">Sign up</a></li>
