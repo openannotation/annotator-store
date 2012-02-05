@@ -22,7 +22,7 @@ def before_request():
 
     # Don't require authentication headers for auth token request
     # (expecting a session cookie instead)
-    if request.url.endswith('/token'):
+    if request.endpoint in ['store.root', 'store.auth_token']:
         return
 
     if not auth.verify_request(request):
@@ -46,7 +46,7 @@ def after_request(response):
 # ROOT
 @store.route('/')
 def root():
-    return jsonify("Annotation store API")
+    return jsonify("Annotator Store API")
 
 # INDEX
 @store.route('/annotations')
