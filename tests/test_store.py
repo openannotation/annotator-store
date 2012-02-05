@@ -80,6 +80,20 @@ class TestStore(TestCase):
 
         assert ann['updated'] != 'abc', "annotation 'updated' field should not be used by API"
 
+    def test_create_ignore_auth_in_payload(self):
+        payload = json.dumps({'user': 'jenny', 'consumer': 'myconsumer'})
+
+        response = self.app.post('/api/annotations',
+                                 data=payload,
+                                 content_type='application/json',
+                                 headers=self.headers)
+
+        data = json.loads(response.data)
+        ann = self._get_annotation(data['id'])
+
+        assert ann['user'] == 'test-user', "annotation 'user' field should not be used by API"
+        assert ann['consumer'] == 'test-consumer-key', "annotation 'consumer' field should not be used by API"
+
     def test_read(self):
         kwargs = dict(text=u"Foo", id='123')
         self._create_annotation(**kwargs)
@@ -162,6 +176,21 @@ class TestStore(TestCase):
         upd = self._get_annotation('123')
 
         assert upd['created'] != 'abc', "annotation 'updated' field should not be updated by API"
+
+    def test_update_ignore_auth_in_payload(self):
+        ann = self._create_annotation(text=u"Foo", id='123')
+
+        payload = json.dumps({'user': 'jenny', 'consumer': 'myconsumer'})
+
+        response = self.app.put('/api/annotations/123',
+                                 data=payload,
+                                 content_type='application/json',
+                                 headers=self.headers)
+
+        upd = self._get_annotation('123')
+
+        assert 'user' not in upd, "annotation 'user' field should not be used by API"
+        assert 'consumer' not in upd, "annotation 'consumer' field should not be used by API"
 
 
     def test_delete(self):

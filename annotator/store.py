@@ -147,7 +147,7 @@ def auth_token():
         return jsonify('Please go to {} to log in!'.format(root), status=401)
 
 def _filter_input(obj):
-    for field in ['updated', 'created']:
+    for field in ['updated', 'created', 'user', 'consumer']:
         if field in obj:
             del obj[field]
 
