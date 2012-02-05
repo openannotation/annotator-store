@@ -92,7 +92,7 @@ def home():
 
     store_api = 'http://' + request.headers.get('host') + current_app.config.get('MOUNTPOINT', '')
 
-    bookmarklet = _get_bookmarklet(g.user, store_api)
+    bookmarklet = render_template('bookmarklet.js')
     annotations = Annotation.search(user=g.user.username, limit=20)
 
     return render_template('user/home.html',
@@ -147,35 +147,3 @@ def _require_user(msg=''):
     if not g.user:
         flash('Please log in{}'.format(' ' + msg))
         return redirect(url_for('.login'))
-
-def _get_bookmarklet(user, store_api):
-    config = render_template('user/bookmarklet.config.json',
-                             user=user,
-                             store_api=store_api)
-
-    bookmarklet = render_template('user/bookmarklet.js', config=config)
-    bookmarklet = _compress(bookmarklet)
-
-    return bookmarklet
-
-def _compress(javascript):
-    '''Compress bookmarklet using closure compiler.'''
-
-    if current_app.config['DEBUG']:
-        return javascript
-
-    params = urllib.urlencode([
-        ('js_code', javascript),
-        ('compilation_level', 'WHITESPACE_ONLY'),
-        ('output_format', 'text'),
-        ('output_info', 'compiled_code'),
-    ])
-
-    headers = { "Content-Type": "application/x-www-form-urlencoded" }
-    conn = httplib.HTTPConnection('closure-compiler.appspot.com')
-    conn.request('POST', '/compile', params, headers)
-    response = conn.getresponse()
-    data = response.read()
-    conn.close
-    return data
-
