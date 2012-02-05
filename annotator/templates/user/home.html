@@ -77,12 +77,12 @@
   <ul class="annotations">
   {% for anno in annotations %}
     <li class="annotation">
-      <div class="text">{{anno.get('text') | truncate(100)}}</div>
+      <div class="text">{{anno.get('text') | truncate(50)}}</div>
       <div class="source">
-        <q class="quote">{{anno.get('quote') | truncate(100)}}</q>
+        <q class="quote">{{anno.get('quote') | truncate(50)}}</q>
         {% if 'uri' in anno %}
           at
-          <a href="{{anno['uri']}}">{{anno['uri'] | truncate(100)}}</a>
+          <a href="{{anno['uri']}}">{{anno['uri'] | truncate(50)}}</a>
         {% endif %}
       </div>
       <div class="meta">
