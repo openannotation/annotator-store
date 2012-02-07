@@ -5,9 +5,12 @@
 {% block content %}
     <section>
       <div class="primary">
-        <h2>Annotate Anything</h2>
-        <p>Now you can Annotate any web page simply by incorporating two lines
-        of javascript into your site or running our bookmarklet.</p>
+        <h2>Annotate anything</h2>
+        <p>
+          Now you can annotate anything, anywhere on the web, by
+          <a href="{{url_for('user.signup')}}">signing up</a> 
+          and installing our bookmarklet!
+        </p>
         <ul>
           <li>Annotate any webpage with the bookmarklet</li>
           <li>Add the Annotator to your own site in just two lines of code</li>
@@ -18,19 +21,21 @@
         <img class="screenshot" src="/static/images/annotator.png" alt="The Annotator" height="223" width="370" />
       </div>
     </section>
-    <section>
-      <div id="about">
+    <section id="about">
       <div id="annotator" class="primary">
         <h2>The Annotator</h2>
         <div class="thumbnails">
           <img src="/static/images/thumb-add.png" alt="Highlight text to annotate" height="128" width="175" />
           <img src="/static/images/thumb-viewer.png" alt="View annotations by moving your mouse over highlights" height="128" width="175" />
         </div>
-        <p>The Annotator is a Javascript tool that can be added to any webpage
-        to allow annotation. Annotations can have comments, tags, users and
-        more. See a <a href="http://okfn.github.com/annotator/">live
-          demonstration</a> or more in the <a href="#develop">developers
-          section</a> below.</p>
+        <p>
+          The Annotator is a Javascript tool that can be added to any webpage
+          to allow annotation. Annotations can have tags,
+          <a href="http://daringfireball.com/projects/markdown">Markdown</a> content, 
+          per-annotation permissions and more. See a 
+          <a href="http://okfn.github.com/annotator/">live demonstration</a> 
+          or learn more in the <a href="#develop">developers section</a> below.
+        </p>
       </div>
       <div class="secondary">
         <h2>The Bookmarklet</h2>
@@ -38,20 +43,23 @@
           <img src="/static/images/thumb-bookmarklet.png" alt="Add the annotator to any page with the bookmarklet" height="128" width="175" />
           <img src="/static/images/thumb-editor.png" alt="Save annotations to AnnotateIt" height="128" width="175" />
         </div>
-        <p>The Bookmarklet is a simple tool that allows you to add the
-        annotator to any webpage and save your annotations to AnnotateIt.
-        Check out the <a
-          href="http://okfn.github.com/annotator/bookmarklet">Bookmarklet
-          demo</a> or get your very own bookmarklet right now by <a
-          href="{{url_for('user.signup')}}">signing up</a> for an
-        account.</p>
-      </div>
+        <p>
+          The bookmarklet allows you to add Annotator to any 
+          web page and save your annotations to AnnotateIt.
+          Check out the 
+          <a href="http://okfn.github.com/annotator/bookmarklet">
+            Bookmarklet demo
+          </a> 
+          or get your own bookmarklet now by 
+          <a href="{{url_for('user.signup')}}">signing up</a> 
+          for an account.
+        </p>
       </div>
     </section>
     <section>
         <h2 id="develop">Developers</h2>
         <div class="primary">
-          <p>Allowing your users to annotate a webpage is easy. First you'll need to
+          <p>Allowing our users to annotate your webpage is easy. First you'll need to
              <a href="https://github.com/okfn/annotator/downloads">download the source code</a>
              and include it on your page along with jQuery. Then simply add the following lines
              to load the Annotator, allowing users with AnnotateIt accounts to start
