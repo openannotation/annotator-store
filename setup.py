@@ -1,9 +1,8 @@
 from setuptools import setup, find_packages
-from annotator import __version__, __license__, __author__
 
 setup(
     name = 'annotator',
-    version = __version__,
+    version = '0.6.0',
     packages = find_packages(),
 
     install_requires = [
@@ -18,13 +17,13 @@ setup(
     ],
 
     # metadata for upload to PyPI
-    author = __author__,
+    author = 'Rufus Pollock and Nick Stenning (Open Knowledge Foundation)',
     author_email = 'annotator@okfn.org',
     description = 'Inline web annotation application and middleware using javascript and WSGI',
     long_description = """Inline javascript-based web annotation library. \
 Package includeds a database-backed annotation store \
 with RESTFul (WSGI-powered) web-interface.""",
-    license = __license__,
+    license = 'MIT',
     keywords = 'annotation web javascript',
 
     url = 'http://okfnlabs.org/annotator/',

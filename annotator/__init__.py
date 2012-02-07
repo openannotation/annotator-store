@@ -3,9 +3,6 @@ Backend for web annotation.
 
 @copyright: (c) 2006-2012 Open Knowledge Foundation
 """
-__version__ = '0.6'
-__license__ = 'MIT'
-__author__ = 'Rufus Pollock and Nick Stenning (Open Knowledge Foundation)'
 
 __all__ = ['__version__', '__license__', '__author__',
            'create_app', 'create_db', 'drop_db',
