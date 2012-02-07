@@ -1,26 +1,22 @@
 # Annotator Store
 
-This is a backend store for the [Annotator][ann].
+This is a backend store for the [Annotator][1].
 
 ## Getting going
 
-You'll need a recent version of [python][1] (>=2.6) and couchdb (>=1.0)
-installed -- we use couchdb as our database backend.
+You'll need a recent version of [Python][2] (>=2.6) and [ElasticSearch][3]
+installed.
 
-[ann]: http://annotateit.org/annotator
-[1]: http://python.org
-[2]: http://flask.pocoo.org
+[1]: http://okfnlabs.org/annotator
+[2]: http://python.org
+[3]: http://elasticsearch.org
 
-The set of required python libraries is listed in the requirements file, which
-is designed for use by pip (see below)
+The quickest way to get going requires the `pip` and `virtualenv` tools
+(`easy_install virtualenv` will get them both). Run the following in
+the repository root:
 
-The quickest way to get going assumes you have the `pip` and `virtualenv` tools
-installed (protip: `easy_install virtualenv` will get them both). Run the
-following in the repository root:
-
-    pip -E pyenv install -r requirements
+    pip -E pyenv install -e .
     source pyenv/bin/activate
-    cp annotator.cfg.example annotator.cfg
     python run.py
 
 You should see something like:
@@ -28,75 +24,23 @@ You should see something like:
     * Running on http://127.0.0.1:5000/
     * Restarting with reloader...
 
+If you wish to customize the configuration of the Annotator Store, copy
+`instance/annotator.cfg.example` to `instance/annotator.cfg` and make your
+changes there.
+
 ## Store API
 
-The Store API is designed to be compatable with the [Annotator][ann].
+The Store API is designed to be compatible with the [Annotator][1]. The
+annotation store, a JSON-speaking REST API, will be mounted at `/api` by
+default. See the [Annotator documentation][4] for details.
 
-### REST API
-
-The annotation store, a JSON-speaking REST API, will be mounted at
-`http://localhost:5000/annotations`. You can test this by running:
-
-    $ curl -i http://localhost:5000/annotations
-    HTTP/1.0 200 OK
-    Content-Type: application/json
-    Access-Control-Allow-Origin: *
-    Access-Control-Expose-Headers: Location
-    Access-Control-Allow-Methods: GET, POST, PUT, DELETE
-    Access-Control-Max-Age: 86400
-    Content-Length: 2
-    Server: Werkzeug/0.6.2 Python/2.6.1
-    Date: Fri, 10 Dec 2010 11:44:33 GMT
-
-    []
-
-The "[]" at the end indicates the empty list for your annotations. There are no
-annotations currently in the store. See the [Annotator repository][ann] for
-details on getting an annotator talking to this backend.
-
-Here's an example of putting an annotation in the store::
-
-    $ curl -X POST http://localhost:5000/annotations -H "Content-Type: application/json" -d '{"text": "abc"}'
-    {
-      ...
-      "text": "abc", 
-      "id": MY-ID
-      ...
-    }
-
-And then we could retrieve this with the command:
-
-    $ curl http://localhost:5000/annotations/MY-ID
-
-where MY-ID is the id field from the response above 
-
-### Search
-
-You can search annotations in the store via the search api mounted at
-`http://localhost:5000/search`. You can test this by running:
-
-    $ curl -i http://localhost:5000/search
-
-The search supports search and offset parameters:
-
-    $ curl -i http://localhost:5000/search?limit=5&offset=2
-
-You can filter on any attribute of an annotation:
-
-    $ curl -i http://localhost:5000/search?uri=myuri
-
-And you can combine filters:
-
-    $ curl -i http://localhost:5000/search?uri=myuri&user=myuser
-
+[4]: https://github.com/okfn/annotator/wiki/Storage
 
 ## Running tests
 
-Running `pip -E pyenv install -r requirements` or similar, as described above,
-should have installed `nose` for you. In the virtualenv, you should be able to
-run the tests as follows:
+Simply run `python run_tests.py` to run the test suite
 
-    $ nosetests
+    $ python run_tests.py
     .....................
     ----------------------------------------------------------------------
     Ran 21 tests in 0.502s

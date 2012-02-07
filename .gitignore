@@ -1,4 +1,6 @@
-/db/*.sqlite
 /pyenv
-/annotator.cfg
+/annotator.egg-info
+/instance/*.db
+/instance/*.db-journal
+/instance/annotator.cfg
 *.pyc

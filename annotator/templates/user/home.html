@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}View - Account{% endblock %}
+
+{% block content %}
+
+<section>
+  <div class="primary">
+    <h2>Hi there!</h2>
+
+    <p>Your account details are:</p>
+
+    <dl>
+      <dt>Username</dt>
+      <dd><code>{{user.username}}</code></dd>
+      <dt>Email address</dt>
+      <dd>{{user.email}}</dd>
+      <dt>Registered since</dt>
+      <dd>{{user.created_at}}</dd>
+    </dl>
+  </div>
+  <div class="secondary">
+    <h2>Bookmarklet</h2>
+
+    <p>
+      The link below is a bookmarklet. Drag it into your bookmarks/favourites bar,
+      and it&rsquo;ll allow you to annotate anything, anywhere on the web, with a single
+      click. All your annotations will be saved back to AnnotateIt.
+    </p>
+
+    <p>
+      <em><strong>NB:</strong> you&rsquo;ll need to be logged into AnnotateIt for the
+      bookmarklet to work!
+      </em>
+    </p>
+
+    <p><a class=bookmarklet href="javascript:{{bookmarklet}}">AnnotateIt</a></p>
+  </div>
+</section>
+
+<section>
+  <h2>Consumer keys</h2>
+  <p>
+    Consumer key/secret pairs are AnnotateIt's API keys, and allow you to build applications that 
+    use AnnotateIt for annotation storage, while retaining control over the authentication of your 
+    users. See <a href="https://github.com/okfn/annotator/wiki/Authentication">the documentation</a>
+    for a more detailed explanation.
+  </p>
+  {% if user.consumers.count() %}
+  <table>
+    <tr>
+      <th>key</th><th>secret</th><th>&nbsp;</th>
+    </tr>
+    {% for c in user.consumers %}
+      <tr>
+        <td><code>{{c.key}}</code></td>
+        <td><code>{{c.secret}}</code></td>
+        {% if c.key != 'annotateit' %}
+        <td>
+          <a onclick='return confirm("Are you sure you want to delete this consumer key?")'
+             href='{{url_for('.delete_consumer', key=c.key)}}'
+             rel=nofollow>
+             &times; Delete
+          </a>
+        </td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p><em>No keys associated with this account.</em></p>
+  {% endif %}
+  <p>
+    <a href="{{ url_for('.add_consumer') }}" rel=nofollow>
+      Request
+      {% if user.consumers.count() %}another{% else %}a{% endif %}
+      key &raquo;
+    </a>
+  </p>
+</section>
+
+<section>
+  <h2>Recent annotations</h2>
+
+  <ul class="annotations">
+  {% for anno in annotations %}
+    <li class="annotation">
+      <div class="text">{{anno.get('text') | truncate(50)}}</div>
+      <div class="source">
+        <q class="quote">{{anno.get('quote') | truncate(50)}}</q>
+        {% if 'uri' in anno %}
+          at
+          <a href="{{anno['uri']}}">{{anno['uri'] | truncate(50)}}</a>
+        {% endif %}
+      </div>
+      <div class="meta">
+        <span class="user">{{anno.get('user', '[Unknown user]')}}</span> &ndash;
+        <span class="created">
+          {{anno.get('created', '[No created date]')}}
+        </span>
+      </div>
+    </li>
+  {% else %}
+    <li><em>No recent annotations.</em></li>
+  {% endfor %}
+  </ul>
+</section>
+
+{% endblock %}

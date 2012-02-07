@@ -11,8 +11,7 @@
   <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
   <![endif]-->
 
-  <link href='http://fonts.googleapis.com/css?family=Arvo:regular,bold&amp;subset=latin' rel='stylesheet' />
-  <link href='http://fonts.googleapis.com/css?family=Inconsolata&amp;subset=latin' rel='stylesheet' />
+  <link href='http://fonts.googleapis.com/css?family=Arvo:400,700|Inconsolata' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" href="/static/main.css">
   {% endblock %}
 </head>
@@ -21,27 +20,22 @@
     <header>
       {% block masthead %}
       <h1>
-        <a href="{{url_for('.home')}}" title="The AnnotateIt Homepage">
-          AnnotateIt</a>
+        <a href="{{url_for('home.index')}}" title="The AnnotateIt Homepage">
+          AnnotateIt
+        </a>
       </h1>
-      <!--
-      <h2>The <span id="role">copy-editor</span> of the web</h2>
-      -->
       <nav>
         <ul>
-        {% if g.account_id %}
-          <li><a href="{{ url_for('account.view', id=g.account_id)}}">My Account</a></li>
-          <li><a href="{{ url_for('account.logout') }}">Logout</a></li>
+        {% if g.user %}
+          <li><a href="{{ url_for('user.home') }}">My account</a></li>
+          <li><a href="{{ url_for('user.logout') }}">Logout</a></li>
         {% else %}
-          <li><a href="{{url_for('account.signup')}}">Sign Up</a></li>
-          <li><a href="{{url_for('account.login')}}">Log In</a></li>
+          <li><a href="{{ url_for('user.signup') }}">Sign up</a></li>
+          <li><a href="{{ url_for('user.login') }}">Log in</a></li>
         {% endif %}
-          <li><a href="{{url_for('.home')}}#annotator">Annotator</a></li>
-          <li><a href="{{url_for('.home')}}#about">About</a></li>
+          <li><a href="{{ url_for('home.index') }}#annotator">Annotator</a></li>
+          <li><a href="{{ url_for('home.index') }}#about">About</a></li>
         </ul>
-
-      <div id="account">
-      </div>
       </nav>
       {% endblock %}
     </header>
@@ -62,13 +56,16 @@
 
     <footer>
       {% block footer %}
-      <p>Annotator was developed by the
-        <img src="http://assets.okfn.org/images/logo/okf_logo_white_and_green_tiny.png" id="footer-okf-logo" />
-        <a href="http://okfn.org">Open
-        Knowledge Foundation</a> with support from the <a
-        href="http://www.shuttleworthfoundation.org/">Shuttleworth
-        Foundation</a>. Go see what other cool stuff we're doing at the
-      moment!</p>
+      <p>
+        Annotator is developed by the
+        <img src="http://assets.okfn.org/images/logo/okf_logo_white_and_green_tiny.png" 
+             id="footer-okf-logo" />
+        <a href="http://okfn.org">Open Knowledge Foundation</a> 
+        with support from the 
+        <a href="http://www.shuttleworthfoundation.org/">Shuttleworth Foundation</a>.
+        Go see what other cool stuff we're doing at the moment!
+      </p>
+      
       <div class="widget-area">
         <ul class="xoxo">
           <li class="widget-container widget_text">
@@ -86,7 +83,7 @@
               <li>
                 <a href="http://opendefinition.org/ossd/" class="img">
                 <img alt="This Content and Data is Open"
-                  src="http://assets.okfn.org/images/ok_buttons/os_80x15_orange_grey.png" class="button" />
+                  src="http://assets.okfn.org/images/ok_buttons/os_80x15_blue.png" class="button" />
                 </a>
               </li>
             </ul>
@@ -99,13 +96,13 @@
           <div class="textwidget">
             <ul>
               <li>
-                <a href="http://okfn.org/projects/annotator/">Project Home Page</a>
+                <a href="https://github.com/okfn/annotator/">Annotator on Github</a>
               </li>
               <li>
-              <a href="{{url_for('store.home')}}">API</a>
+              <a href="{{url_for('store.root')}}">API</a>
               </li>
               <li>
-                <a href="http://github.com/okfn/annotator-store/">API Docs</a>
+                <a href="http://github.com/okfn/annotator/wiki/Storage">API Docs</a>
               </li>
               <li>
                 <a href="http://okfn.org/contact/">Contact Us</a>
