@@ -48,27 +48,28 @@ class Annotation(dict):
         return Annotation(doc['_source'], id=id)
 
     @classmethod
-    def _build_query(cls, offset=0, limit=20, **kwargs):
+    def _build_query(cls, offset=0, limit=20, _user_id=None, **kwargs):
+        # Base query is a filtered match_all
         f = {'and': []}
         q = {'filtered': {'query': {'match_all': {}}, 'filter': f}}
 
-        uid = kwargs.pop('_user_id', None)
-
+        # Add a term query for each kwarg that isn't otherwise accounted for
         for k, v in kwargs.iteritems():
             q['filtered']['filter']['and'].append({'term': {k: v}})
 
         # Append permissions filter
-        uidq = {'missing': {'field': 'permissions.read'}}
+        user_q = {'missing': {'field': 'permissions.read'}}
 
-        if uid:
-            user_readable = {'term': {'permissions.read': uid}}
-            uidq = {'or': [uidq, user_readable]}
+        # We match annotations which *either* lack the 'permissions.read'
+        # field, *or* which contain the current user in said field.
+        if _user_id:
+            user_readable = {'term': {'permissions.read': _user_id}}
+            user_q = {'or': [user_q, user_readable]}
 
-        q['filtered']['filter']['and'].append(uidq)
+        q['filtered']['filter']['and'].append(user_q)
 
         return {
-            # Sort most recent first
-            'sort': [{'updated': {'order': 'desc'}}],
+            'sort': [{'updated': {'order': 'desc'}}], # Sort most recent first
             'from': offset,
             'size': limit,
             'query': q
