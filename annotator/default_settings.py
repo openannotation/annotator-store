@@ -1,5 +1,3 @@
-from flask import Flask
-
 DEBUG = False
 
 ROOT_URL = 'http://annotateit.org'
