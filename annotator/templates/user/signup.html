@@ -3,18 +3,19 @@
 
 {% block content %}
 {% from "_formhelpers.html" import render_field %}
-  <div class="primary">
-    <form method="post" action="{{url_for('user.signup')}}">
-      {{ form.csrf }}
-      <dl>
-        {{ render_field(form.username, placeholder="joe.bloggs") }}
-        {{ render_field(form.email, placeholder="joe.bloggs@example.com") }}
-        {{ render_field(form.password, placeholder="••••••••") }}
-        {{ render_field(form.confirm, placeholder="••••••••") }}
-      </dl>
-      <div class="actions">
-        <button type="submit">Sign up</button>
-      </div>
-    </form>
+  <form method="post" action="{{url_for('user.signup')}}">
+    {{ form.hidden_tag() }}
+    <dl>
+      {{ render_field(form.username, placeholder="joe.bloggs") }}
+      {{ render_field(form.email, placeholder="joe.bloggs@example.com") }}
+      {{ render_field(form.password, placeholder="••••••••") }}
+      {{ render_field(form.confirm, placeholder="••••••••") }}
+      {% if captcha %}
+        {{ render_field(form.captcha) }}
+      {% endif %}
+    </dl>
+    <div class="actions">
+      <button type="submit">Sign up</button>
+    </div>
   </div>
 {% endblock %}

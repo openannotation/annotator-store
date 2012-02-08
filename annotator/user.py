@@ -3,7 +3,7 @@ import urllib
 
 from flask import Blueprint, current_app
 from flask import g, redirect, request, url_for, render_template, session, flash
-from flaskext.wtf import Form, fields as f, validators as v
+from flaskext.wtf import Form, fields as f, validators as v, html5
 
 import sqlalchemy
 
@@ -22,14 +22,15 @@ def get_current_user():
 ## WTForms classes
 
 class LoginForm(Form):
-    email    = f.TextField('Email',        [v.Required()])
-    password = f.PasswordField('Password', [v.Required()])
+    login    = f.TextField('Username/email', [v.Required()])
+    password = f.PasswordField('Password',   [v.Required()])
 
 class SignupForm(Form):
     username = f.TextField('Username', [
-        v.Length(min=3, max=128)
+        v.Length(min=3, max=128),
+        v.Regexp(r'^[^@]*$', message="Username shouldn't be an email address")
     ])
-    email = f.TextField('Email address', [
+    email = html5.EmailField('Email address', [
         v.Length(min=3, max=128),
         v.Email(message="This should be a valid email address.")
     ])
@@ -40,6 +41,10 @@ class SignupForm(Form):
     ])
     confirm = f.PasswordField('Confirm password')
 
+    # Will only work if set up in config (see http://packages.python.org/Flask-WTF/)
+    captcha = f.RecaptchaField('Captcha')
+
+
 ## Routes
 
 @user.route('/login', methods=['GET', 'POST'])
@@ -47,10 +52,13 @@ def login():
     if g.user:
         return redirect(url_for('.home'))
 
-    form = LoginForm(request.form)
+    form = LoginForm()
 
-    if request.method == 'POST' and form.validate():
-        user = User.query.filter_by(email=form.email.data).first()
+    if form.validate_on_submit():
+        if '@' in form.login.data:
+            user = User.query.filter_by(email=form.login.data).first()
+        else:
+            user = User.query.filter_by(username=form.login.data).first()
 
         if user and user.check_password(form.password.data):
             session['user'] = user.username
@@ -58,9 +66,6 @@ def login():
             return redirect(url_for('.home'))
         else:
             flash('Email/password combination not recognized', 'error')
-
-    if request.method == 'POST' and not form.validate():
-        flash('Invalid form', 'error')
 
     return render_template('user/login.html', form=form)
 
@@ -74,17 +79,19 @@ def logout():
 
 @user.route('/signup', methods=['GET', 'POST'])
 def signup():
-    form = SignupForm(request.form)
+    form = SignupForm()
+
+    if form.validate_on_submit() and _add_user(form):
+        flash('Thank you for signing up!', 'success')
+        session['user'] = form.username.data
+        return redirect(url_for('.home'))
 
     if request.method == 'POST':
-        if form.validate() and _add_user(form):
-            flash('Thank you for signing up!', 'success')
-            session['user'] = form.username.data
-            return redirect(url_for('.home'))
-        else:
-            flash('Errors found while attempting to sign up!')
+        flash('Errors found while attempting to sign up!')
 
-    return render_template('user/signup.html', form=form)
+    captcha = 'RECAPTCHA_PUBLIC_KEY' in current_app.config
+
+    return render_template('user/signup.html', form=form, captcha=captcha)
 
 @user.route('/home')
 def home():

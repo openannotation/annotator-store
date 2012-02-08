@@ -3,16 +3,14 @@
 
 {% block content %}
 {% from "_formhelpers.html" import render_field %}
-  <div class="primary">
-    <form method="post" action="">
-      {{ form.csrf }}
-      <dl>
-        {{ render_field(form.email, placeholder="joe.bloggs@example.com") }}
-        {{ render_field(form.password, placeholder="••••••••") }}
-      </dl>
-      <div class="actions">
-        <button type="submit">Log in</button>
-      </div>
-    </form>
-  </div>
+  <form method="post" action="">
+    {{ form.hidden_tag() }}
+    <dl>
+      {{ render_field(form.login, placeholder="joe.bloggs") }}
+      {{ render_field(form.password, placeholder="••••••••") }}
+    </dl>
+    <div class="actions">
+      <button type="submit">Log in</button>
+    </div>
+  </form>
 {% endblock %}
