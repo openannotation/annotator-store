@@ -43,12 +43,18 @@ class TestStore(TestCase):
                                  content_type='application/json',
                                  headers=self.headers)
 
-        # import re
-        # See http://bit.ly/gxJBHo for details of this change.
-        # assert response.status_code == 303, "response should be 303 SEE OTHER"
-        # assert re.match(r"http://localhost/store/\d+", response.headers['Location']), "response should redirect to read_annotation url"
+        assert response.status_code == 303, "response should be 303 SEE OTHER"
+
+    def test_create_result(self):
+        payload = json.dumps({'name': 'Foo'})
+        response = self.app.post('/api/annotations',
+                                 data=payload,
+                                 content_type='application/json',
+                                 headers=self.headers,
+                                 follow_redirects=True)
 
         assert response.status_code == 200, "response should be 200 OK"
+
         data = json.loads(response.data)
         assert 'id' in data, "annotation id should be returned in response"
         assert data['user'] == self.user
@@ -60,7 +66,8 @@ class TestStore(TestCase):
         response = self.app.post('/api/annotations',
                                  data=payload,
                                  content_type='application/json',
-                                 headers=self.headers)
+                                 headers=self.headers,
+                                 follow_redirects=True)
 
         data = json.loads(response.data)
         ann = self._get_annotation(data['id'])
@@ -73,7 +80,8 @@ class TestStore(TestCase):
         response = self.app.post('/api/annotations',
                                  data=payload,
                                  content_type='application/json',
-                                 headers=self.headers)
+                                 headers=self.headers,
+                                 follow_redirects=True)
 
         data = json.loads(response.data)
         ann = self._get_annotation(data['id'])
@@ -86,7 +94,8 @@ class TestStore(TestCase):
         response = self.app.post('/api/annotations',
                                  data=payload,
                                  content_type='application/json',
-                                 headers=self.headers)
+                                 headers=self.headers,
+                                 follow_redirects=True)
 
         data = json.loads(response.data)
         ann = self._get_annotation(data['id'])
@@ -106,6 +115,7 @@ class TestStore(TestCase):
         response = self.app.get('/api/annotations/123', headers=self.headers)
         assert response.status_code == 404, "response should be 404 NOT FOUND"
 
+
     def test_update(self):
         self._create_annotation(text=u"Foo", id='123', created='2010-12-10')
 
@@ -114,6 +124,19 @@ class TestStore(TestCase):
                                 data=payload,
                                 content_type='application/json',
                                 headers=self.headers)
+
+        assert response.status_code == 303, "response should be 303 SEE OTHER"
+
+
+    def test_update_result(self):
+        self._create_annotation(text=u"Foo", id='123', created='2010-12-10')
+
+        payload = json.dumps({'id': '123', 'text': 'Bar'})
+        response = self.app.put('/api/annotations/123',
+                                data=payload,
+                                content_type='application/json',
+                                headers=self.headers,
+                                follow_redirects=True)
 
         ann = self._get_annotation('123')
         assert ann['text'] == "Bar", "annotation wasn't updated in db"
@@ -128,7 +151,8 @@ class TestStore(TestCase):
         response = self.app.put('/api/annotations/123',
                                 data=payload,
                                 content_type='application/json',
-                                headers=self.headers)
+                                headers=self.headers,
+                                follow_redirects=True)
 
         ann = self._get_annotation('123')
         assert ann['text'] == "Bar", "annotation wasn't updated in db"
@@ -137,10 +161,12 @@ class TestStore(TestCase):
         self._create_annotation(text=u"Foo", id='123')
 
         payload = json.dumps({'text': 'Bar', 'id': 'abc'})
-        response = self.app.put('/api/annotations/123',
-                                data=payload,
-                                content_type='application/json',
-                                headers=self.headers)
+
+        self.app.put('/api/annotations/123',
+                     data=payload,
+                     content_type='application/json',
+                     headers=self.headers,
+                     follow_redirects=True)
 
         ann = self._get_annotation('123')
         assert ann['text'] == "Bar", "annotation wasn't updated in db"
@@ -154,10 +180,10 @@ class TestStore(TestCase):
 
         payload = json.dumps({'created': 'abc'})
 
-        response = self.app.put('/api/annotations/123',
-                                data=payload,
-                                content_type='application/json',
-                                headers=self.headers)
+        self.app.put('/api/annotations/123',
+                     data=payload,
+                     content_type='application/json',
+                     headers=self.headers)
 
         upd = self._get_annotation('123')
 
@@ -168,10 +194,10 @@ class TestStore(TestCase):
 
         payload = json.dumps({'updated': 'abc'})
 
-        response = self.app.put('/api/annotations/123',
-                                data=payload,
-                                content_type='application/json',
-                                headers=self.headers)
+        self.app.put('/api/annotations/123',
+                     data=payload,
+                     content_type='application/json',
+                     headers=self.headers)
 
         upd = self._get_annotation('123')
 
@@ -182,10 +208,10 @@ class TestStore(TestCase):
 
         payload = json.dumps({'user': 'jenny', 'consumer': 'myconsumer'})
 
-        response = self.app.put('/api/annotations/123',
-                                 data=payload,
-                                 content_type='application/json',
-                                 headers=self.headers)
+        self.app.put('/api/annotations/123',
+                      data=payload,
+                      content_type='application/json',
+                      headers=self.headers)
 
         upd = self._get_annotation('123')
 
@@ -314,7 +340,8 @@ class TestStoreAuthz(TestCase):
                                 data=payload,
                                 content_type='application/json',
                                 headers=self.charlie_headers)
-        assert response.status_code == 200, "response should be 200 OK"
+
+        assert response.status_code == 303, "response should be 303 SEE OTHER"
 
     def test_update_change_permissions_not_allowed(self):
         self.permissions['read'] = ['alice', 'charlie']
@@ -340,7 +367,7 @@ class TestStoreAuthz(TestCase):
                                 data=payload,
                                 content_type='application/json',
                                 headers=self.alice_headers)
-        assert response.status_code == 200, "response should be 200 OK"
+        assert response.status_code == 303, "response should be 303 SEE OTHER"
 
     def test_update_other_users_annotation(self):
         ann = Annotation(id=123,
@@ -357,5 +384,5 @@ class TestStoreAuthz(TestCase):
                                 data=payload,
                                 content_type='application/json',
                                 headers=self.bob_headers)
-        assert response.status_code == 200, "response should be 200 OK"
+        assert response.status_code == 303, "response should be 303 SEE OTHER"
 

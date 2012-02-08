@@ -1,5 +1,5 @@
 from flask import Flask, Blueprint, current_app
-from flask import abort, redirect, request, g
+from flask import abort, redirect, request, g, url_for
 
 from annotator.model import Annotation
 from annotator.util import jsonify
@@ -30,7 +30,10 @@ def after_request(response):
 # ROOT
 @store.route('/')
 def root():
-    return jsonify("Annotator Store API")
+    return jsonify({
+        'name': 'Annotator Store API',
+        'version': '2.0.0'
+    })
 
 # INDEX
 @store.route('/annotations')
@@ -61,7 +64,7 @@ def create_annotation():
 
         annotation.save()
 
-        return jsonify(annotation)
+        return redirect(url_for('.read_annotation', id=annotation.id), 303)
     else:
         return jsonify('No JSON payload sent. Annotation not created.', status=400)
 
@@ -79,7 +82,7 @@ def read_annotation(id):
     return jsonify(annotation)
 
 # UPDATE
-@store.route('/annotations/<id>', methods=['POST', 'PUT'])
+@store.route('/annotations/<id>', methods=['PUT'])
 def update_annotation(id):
     annotation = Annotation.fetch(id)
     if not annotation:
@@ -100,7 +103,7 @@ def update_annotation(id):
         annotation.update(updated)
         annotation.save()
 
-    return jsonify(annotation)
+    return redirect(url_for('.read_annotation', id=annotation.id), 303)
 
 # DELETE
 @store.route('/annotations/<id>', methods=['DELETE'])
