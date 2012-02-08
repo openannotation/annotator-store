@@ -15,7 +15,7 @@ class TestAuthorization(object):
 
     def test_authorize_update_nouser(self):
         ann = Annotation()
-        assert authorize(ann, 'update')
+        assert not authorize(ann, 'update')
         assert authorize(ann, 'update', 'bob')
 
     def test_authorize_update_user(self):
@@ -25,7 +25,7 @@ class TestAuthorization(object):
 
     def test_authorize_delete_nouser(self):
         ann = Annotation()
-        assert authorize(ann, 'delete')
+        assert not authorize(ann, 'delete')
         assert authorize(ann, 'delete', 'bob')
 
     def test_authorize_delete_user(self):
@@ -35,7 +35,7 @@ class TestAuthorization(object):
 
     def test_authorize_admin_nouser(self):
         ann = Annotation()
-        assert authorize(ann, 'admin')
+        assert not authorize(ann, 'admin')
         assert authorize(ann, 'admin', 'bob')
 
     def test_authorize_admin_user(self):

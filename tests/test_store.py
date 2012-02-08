@@ -217,7 +217,7 @@ class TestStore(TestCase):
         annoid = anno.id
         anno2id = anno2.id
 
-        annotator.es.refresh()
+        annotator.es.refresh(timesleep=0.01)
 
         url = '/api/search'
         res = self.app.get(url, headers=self.headers)
@@ -334,7 +334,7 @@ class TestStoreAuthz(TestCase):
                                 content_type='application/json',
                                 headers=self.charlie_headers)
         assert response.status_code == 401, "response should be 401 NOT AUTHORIZED"
-        assert '(permissions change)' in response.data
+        assert 'permissions update' in response.data
 
         response = self.app.put('/api/annotations/123',
                                 data=payload,

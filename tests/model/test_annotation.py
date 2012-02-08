@@ -56,7 +56,7 @@ class TestAnnotation(TestCase):
         anno2.save()
         anno3.save()
 
-        annotator.es.refresh()
+        annotator.es.refresh(timesleep=0.01)
 
         res = Annotation.search()
         h.assert_equal(len(res), 3)
@@ -90,3 +90,28 @@ class TestAnnotation(TestCase):
         res = Annotation.count(user=user1, uri=uri2)
         h.assert_equal(res, 1)
 
+    def test_search_permissions(self):
+        anno = Annotation(text='Foobar', permissions={'read': []})
+        anno.save()
+
+        annotator.es.refresh(timesleep=0.01)
+
+        res = Annotation.search()
+        h.assert_equal(len(res), 1)
+
+        res = Annotation.search(_user_id='bob')
+        h.assert_equal(len(res), 1)
+
+        anno = Annotation(text='Foobar', permissions={'read': ['bob']})
+        anno.save()
+
+        annotator.es.refresh(timesleep=0.01)
+
+        res = Annotation.search()
+        h.assert_equal(len(res), 1)
+
+        res = Annotation.search(_user_id='alice')
+        h.assert_equal(len(res), 1)
+
+        res = Annotation.search(_user_id='bob')
+        h.assert_equal(len(res), 2)

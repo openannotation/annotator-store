@@ -2,31 +2,15 @@ from flask import Flask, Blueprint, current_app
 from flask import abort, redirect, request, g
 
 from annotator.model import Annotation
-from annotator.authz import authorize
 from annotator.util import jsonify
-from annotator.user import get_current_user
-from annotator import auth
+from annotator import auth, authz
 
 __all__ = ["store"]
 
 store = Blueprint('store', __name__)
 
-def get_current_userid():
+def current_user_id():
     return auth.get_request_userid(request)
-
-@store.before_request
-def before_request():
-    # Don't require authentication headers with OPTIONS request
-    if request.method == 'OPTIONS':
-        return
-
-    # Don't require authentication headers for auth token request
-    # (expecting a session cookie instead)
-    if request.endpoint in ['store.root', 'store.auth_token']:
-        return
-
-    if not auth.verify_request(request):
-        return jsonify("Cannot authorise request. Perhaps you didn't send the x-annotator headers?", status=401)
 
 @store.after_request
 def after_request(response):
@@ -51,62 +35,72 @@ def root():
 # INDEX
 @store.route('/annotations')
 def index():
-    annotations = [anno for anno in Annotation.search() if authorize(anno, 'read', get_current_userid())]
+    uid = current_user_id()
+
+    if uid:
+        if not auth.verify_request(request):
+            return _failed_auth_response()
+        annotations = Annotation.search(_user_id=uid)
+    else:
+        annotations = Annotation.search()
+
     return jsonify(annotations)
 
 # CREATE
 @store.route('/annotations', methods=['POST'])
 def create_annotation():
-    consumer_key = request.headers.get('x-annotator-consumer-key')
-    user_id = request.headers.get('x-annotator-user-id')
+    # Only registered users can create annotations
+    if not auth.verify_request(request):
+        return _failed_auth_response()
 
     if request.json:
         annotation = Annotation(_filter_input(request.json))
 
-        if consumer_key:
-            annotation['consumer'] = consumer_key
-        if user_id:
-            annotation['user'] = user_id
+        annotation['consumer'] = request.headers[auth.HEADER_PREFIX + 'consumer-key']
+        annotation['user'] = request.headers[auth.HEADER_PREFIX + 'user-id']
 
         annotation.save()
+
         return jsonify(annotation)
     else:
-        return jsonify('No parameters given. Annotation not created.', status=400)
+        return jsonify('No JSON payload sent. Annotation not created.', status=400)
 
 # READ
 @store.route('/annotations/<id>')
 def read_annotation(id):
     annotation = Annotation.fetch(id)
-
     if not annotation:
-        return jsonify('Annotation not found.', status=404)
-    elif authorize(annotation, 'read', get_current_userid()):
-        return jsonify(annotation)
-    else:
-        return jsonify('Could not authorise request. Read not allowed', status=401)
+        return jsonify('Annotation not found!', status=404)
+
+    failure = _check_action(annotation, 'read', current_user_id())
+    if failure:
+        return failure
+
+    return jsonify(annotation)
 
 # UPDATE
 @store.route('/annotations/<id>', methods=['POST', 'PUT'])
 def update_annotation(id):
     annotation = Annotation.fetch(id)
-
     if not annotation:
-        return jsonify('Annotation not found. No update performed.', status=404)
+        return jsonify('Annotation not found! No update performed.', status=404)
 
-    elif request.json and authorize(annotation, 'update', get_current_userid()):
+    failure = _check_action(annotation, 'update', current_user_id())
+    if failure:
+        return failure
+
+    if request.json:
         updated = _filter_input(request.json)
-        updated['id'] = id # use id from URL, regardless of what arrives in payload json
+        updated['id'] = id # use id from URL, regardless of what arrives in JSON payload
 
-        if 'permissions' in updated and updated.get('permissions') != annotation.get('permissions', {}):
-            if not authorize(annotation, 'admin', get_current_userid()):
-                return jsonify('Could not authorise request (permissions change). No update performed', status=401)
+        if 'permissions' in updated and updated['permissions'] != annotation.get('permissions', {}):
+            if not authz.authorize(annotation, 'admin', current_user_id()):
+                return _failed_authz_response('permissions update')
 
         annotation.update(updated)
         annotation.save()
 
-        return jsonify(annotation)
-    else:
-        return jsonify('Could not authorise request. No update performed', status=401)
+    return jsonify(annotation)
 
 # DELETE
 @store.route('/annotations/<id>', methods=['DELETE'])
@@ -116,32 +110,37 @@ def delete_annotation(id):
     if not annotation:
         return jsonify('Annotation not found. No delete performed.', status=404)
 
-    elif authorize(annotation, 'delete', get_current_userid()):
-        annotation.delete()
-        return None, 204
+    failure = _check_action(annotation, 'delete', current_user_id())
+    if failure:
+        return failure
 
-    else:
-        return jsonify('Could not authorise request. No update performed', status=401)
+    annotation.delete()
+    return None, 204
 
 # SEARCH
 @store.route('/search')
 def search_annotations():
     kwargs = dict(request.args.items())
-    results = [anno for anno in Annotation.search(**kwargs) if authorize(anno, 'read', get_current_userid())]
+    uid = current_user_id()
+
+    if uid:
+        if not auth.verify_request(request):
+            return _failed_auth_response()
+
+        kwargs['_user_id'] = uid
+
+    results = Annotation.search(**kwargs)
     total = Annotation.count(**kwargs)
-    qrows = {
+    return jsonify({
         'total': total,
         'rows': results,
-    }
-    return jsonify(qrows)
+    })
 
 # AUTH TOKEN
 @store.route('/token')
 def auth_token():
-    user = get_current_user()
-
-    if user:
-        return jsonify(auth.generate_token('annotateit', user.username))
+    if g.user:
+        return jsonify(auth.generate_token('annotateit', g.user.username))
     else:
         root = current_app.config['ROOT_URL']
         return jsonify('Please go to {0} to log in!'.format(root), status=401)
@@ -152,3 +151,20 @@ def _filter_input(obj):
             del obj[field]
 
     return obj
+
+def _check_action(annotation, action, uid):
+    if not authz.authorize(annotation, action, uid):
+        return _failed_authz_response()
+
+    if uid and not auth.verify_request(request):
+        return _failed_auth_response()
+
+def _failed_authz_response(msg=''):
+    return jsonify("Cannot authorize request{0}. Perhaps you're not logged in as "
+                   "a user with appropriate permissions on this annotation?".format(' (' + msg + ')'),
+                   status=401)
+
+def _failed_auth_response():
+    return jsonify("Cannot authenticate request. Perhaps you didn't send the "
+                   "X-Annotator-* headers?",
+                   status=401)

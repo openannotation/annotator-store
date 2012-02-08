@@ -48,23 +48,35 @@ class Annotation(dict):
         return Annotation(doc['_source'], id=id)
 
     @classmethod
-    def _build_query(cls, limit=20, **kwargs):
-        q = {'match_all': {}}
+    def _build_query(cls, offset=0, limit=20, **kwargs):
+        f = {'and': []}
+        q = {'filtered': {'query': {'match_all': {}}, 'filter': f}}
 
-        if kwargs:
-            f = {'and': [{'term': {k: v}} for k, v in kwargs.iteritems()]}
-            q = {'filtered': {'query': q, 'filter': f}}
+        uid = kwargs.pop('_user_id', None)
+
+        for k, v in kwargs.iteritems():
+            q['filtered']['filter']['and'].append({'term': {k: v}})
+
+        # Append permissions filter
+        uidq = {'missing': {'field': 'permissions.read'}}
+
+        if uid:
+            user_readable = {'term': {'permissions.read': uid}}
+            uidq = {'or': [uidq, user_readable]}
+
+        q['filtered']['filter']['and'].append(uidq)
 
         return {
             # Sort most recent first
             'sort': [{'updated': {'order': 'desc'}}],
+            'from': offset,
             'size': limit,
             'query': q
         }
 
     @classmethod
-    def search(cls, limit=20, **kwargs):
-        q = cls._build_query(limit, **kwargs)
+    def search(cls, **kwargs):
+        q = cls._build_query(**kwargs)
         res = conn.search(q, index, TYPE)
         docs = res['hits']['hits']
         return [cls(d['_source'], id=d['_id']) for d in docs]
