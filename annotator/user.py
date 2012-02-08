@@ -116,7 +116,7 @@ def delete_consumer(key):
     c = g.user.consumers.filter_by(key=key).first()
 
     if not c:
-        flash("Couldn't delete consumer '{}' because I couldn't find it!".format(key), 'error')
+        flash("Couldn't delete consumer '{0}' because I couldn't find it!".format(key), 'error')
     else:
         db.session.delete(c)
         db.session.commit()
@@ -143,5 +143,5 @@ def _add_user(form):
 
 def _require_user(msg=''):
     if not g.user:
-        flash('Please log in{}'.format(' ' + msg))
+        flash('Please log in{0}'.format(' ' + msg))
         return redirect(url_for('.login'))

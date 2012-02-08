@@ -144,7 +144,7 @@ def auth_token():
         return jsonify(auth.generate_token('annotateit', user.username))
     else:
         root = current_app.config['ROOT_URL']
-        return jsonify('Please go to {} to log in!'.format(root), status=401)
+        return jsonify('Please go to {0} to log in!'.format(root), status=401)
 
 def _filter_input(obj):
     for field in ['updated', 'created', 'user', 'consumer']:
