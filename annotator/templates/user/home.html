@@ -89,7 +89,7 @@
         <q class="quote">{{anno.get('quote') | truncate(50)}}</q>
         {% if 'uri' in anno %}
           at
-          <a href="{{anno['uri']}}">{{anno['uri'] | truncate(50)}}</a>
+          <a href="{{anno['uri']}}">{{anno['uri'] | truncate(50, killwords=True)}}</a>
         {% endif %}
       </div>
       <div class="meta">
