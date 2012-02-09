@@ -18,10 +18,10 @@ def after_request(response):
 
     response.headers[ac + 'Allow-Origin']      = request.headers.get('origin', '*')
     response.headers[ac + 'Allow-Credentials'] = 'true'
+    response.headers[ac + 'Expose-Headers']    = 'Location'
 
     if request.method == 'OPTIONS':
         response.headers[ac + 'Allow-Headers']  = 'X-Requested-With, Content-Type, X-Annotator-Consumer-Key, X-Annotator-User-Id, X-Annotator-Auth-Token-Issue-Time, X-Annotator-Auth-Token-TTL, X-Annotator-Auth-Token'
-        response.headers[ac + 'Expose-Headers'] = 'Location'
         response.headers[ac + 'Allow-Methods']  = 'GET, POST, PUT, DELETE, OPTIONS'
         response.headers[ac + 'Max-Age']        = '86400'
 
