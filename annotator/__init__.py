@@ -9,17 +9,13 @@ __all__ = ['__version__', '__license__', '__author__',
            'create_indices', 'drop_indices',
            'create_all', 'drop_all']
 
-from flask import Flask, g
+from flask import Flask, g, current_app
 from flaskext.sqlalchemy import SQLAlchemy
 import pyes
 
-app = None
 db = SQLAlchemy()
-es = None
 
 def create_app():
-    global app, db, es
-
     app = Flask(__name__, instance_relative_config=True)
 
     app.config.from_object('annotator.default_settings')
@@ -33,8 +29,7 @@ def create_app():
 
     # Configure ES
     from . import model
-    es = pyes.ES(app.config['ELASTICSEARCH_HOST'])
-    model.annotation.configure(es, app.config)
+    app.extensions['pyes'] = pyes.ES(app.config['ELASTICSEARCH_HOST'])
 
     # Mount controllers
     from annotator import store, user, home
@@ -48,35 +43,42 @@ def create_app():
 
     @app.before_request
     def before_request():
+        g.db = current_app.extensions['sqlalchemy'].db
+        g.es = current_app.extensions['pyes']
         g.user = user.get_current_user()
 
     return app
 
-def create_indices():
+def create_indices(app):
+    es = app.extensions['pyes']
+    index = app.config['ELASTICSEARCH_INDEX']
+
     with app.test_request_context():
-        from .model.annotation import index, TYPE, MAPPING
+        from .model.annotation import TYPE, MAPPING
         es.create_index(index)
         es.put_mapping(TYPE, {'properties': MAPPING}, index)
 
-def drop_indices():
+def drop_indices(app):
+    es = app.extensions['pyes']
+    index = app.config['ELASTICSEARCH_INDEX']
+
     with app.test_request_context():
-        from .model.annotation import index
         es.delete_index(index)
 
-def create_db():
+def create_db(app):
     from . import model
     with app.test_request_context():
         db.create_all()
 
-def drop_db():
+def drop_db(app):
     from . import model
     with app.test_request_context():
         db.drop_all()
 
-def create_all():
-    create_indices()
-    create_db()
+def create_all(app):
+    create_indices(app)
+    create_db(app)
 
-def drop_all():
-    drop_indices()
-    drop_db()
+def drop_all(app):
+    drop_indices(app)
+    drop_db(app)

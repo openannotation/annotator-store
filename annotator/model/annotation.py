@@ -1,8 +1,6 @@
 from datetime import datetime
+from flask import g, current_app
 import pyes
-
-conn = None
-index = None
 
 TYPE = 'annotation'
 MAPPING = {
@@ -25,20 +23,23 @@ MAPPING = {
     }
 }
 
-def configure(c, config):
-    global conn, index
-    conn = c
-    index = config['ELASTICSEARCH_INDEX']
-
 class ValidationError(Exception):
     pass
 
 class Annotation(dict):
 
+    def __init__(self, *args, **kwargs):
+        conn, index = _get_pyes_details()
+        self.conn = conn
+        self.index = index
+        super(Annotation, self).__init__(*args, **kwargs)
+
     # It would be lovely if this were called 'get', but the dict semantics
     # already define that method name.
     @classmethod
     def fetch(cls, id):
+        conn, index = _get_pyes_details()
+
         try:
             doc = conn.get(index, TYPE, id)
         # We should be more specific than this, but pyes doesn't raise the
@@ -77,6 +78,8 @@ class Annotation(dict):
 
     @classmethod
     def search(cls, **kwargs):
+        conn, index = _get_pyes_details()
+
         q = cls._build_query(**kwargs)
         res = conn.search(q, index, TYPE)
         docs = res['hits']['hits']
@@ -84,6 +87,8 @@ class Annotation(dict):
 
     @classmethod
     def count(cls, **kwargs):
+        conn, index = _get_pyes_details()
+
         q = cls._build_query(**kwargs)
         res = conn.count(q['query'], index, TYPE)
         return res['count']
@@ -100,12 +105,12 @@ class Annotation(dict):
         _add_created(self)
         _add_updated(self)
 
-        res = conn.index(self, index, TYPE, self.id)
+        res = self.conn.index(self, self.index, TYPE, self.id)
         self.id = res['_id']
 
     def delete(self):
         if self.id:
-            conn.delete(index, TYPE, self.id)
+            self.conn.delete(self.index, TYPE, self.id)
 
 def _add_created(ann):
     if 'created' not in ann:
@@ -113,3 +118,8 @@ def _add_created(ann):
 
 def _add_updated(ann):
     ann['updated'] = datetime.now().isoformat()
+
+def _get_pyes_details():
+    conn = current_app.extensions['pyes']
+    index = current_app.config['ELASTICSEARCH_INDEX']
+    return conn, index

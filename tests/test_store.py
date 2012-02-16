@@ -1,22 +1,18 @@
-from . import TestCase
+from . import TestCase, helpers as h
 
 from flask import json, url_for
 
 import annotator
-from annotator import auth, db
+from annotator import auth
 from annotator.model import Annotation, Consumer
-
-def save(x):
-    annotator.db.session.add(x)
-    annotator.db.session.commit()
 
 class TestStore(TestCase):
     def setup(self):
         super(TestStore, self).setup()
 
-        self.app = annotator.app.test_client()
+        self.cli = self.app.test_client()
         self.consumer = Consumer('test-consumer-key')
-        save(self.consumer)
+        h.db_save(self.consumer)
 
         self.user = 'test-user'
 
@@ -33,12 +29,12 @@ class TestStore(TestCase):
         return Annotation.fetch(id_)
 
     def test_index(self):
-        response = self.app.get('/api/annotations', headers=self.headers)
+        response = self.cli.get('/api/annotations', headers=self.headers)
         assert response.data == "[]", "response should be empty list"
 
     def test_create(self):
         payload = json.dumps({'name': 'Foo'})
-        response = self.app.post('/api/annotations',
+        response = self.cli.post('/api/annotations',
                                  data=payload,
                                  content_type='application/json',
                                  headers=self.headers)
@@ -57,7 +53,7 @@ class TestStore(TestCase):
     def test_create_ignore_created(self):
         payload = json.dumps({'created': 'abc'})
 
-        response = self.app.post('/api/annotations',
+        response = self.cli.post('/api/annotations',
                                  data=payload,
                                  content_type='application/json',
                                  headers=self.headers)
@@ -70,7 +66,7 @@ class TestStore(TestCase):
     def test_create_ignore_updated(self):
         payload = json.dumps({'updated': 'abc'})
 
-        response = self.app.post('/api/annotations',
+        response = self.cli.post('/api/annotations',
                                  data=payload,
                                  content_type='application/json',
                                  headers=self.headers)
@@ -83,7 +79,7 @@ class TestStore(TestCase):
     def test_create_ignore_auth_in_payload(self):
         payload = json.dumps({'user': 'jenny', 'consumer': 'myconsumer'})
 
-        response = self.app.post('/api/annotations',
+        response = self.cli.post('/api/annotations',
                                  data=payload,
                                  content_type='application/json',
                                  headers=self.headers)
@@ -97,20 +93,20 @@ class TestStore(TestCase):
     def test_read(self):
         kwargs = dict(text=u"Foo", id='123')
         self._create_annotation(**kwargs)
-        response = self.app.get('/api/annotations/123', headers=self.headers)
+        response = self.cli.get('/api/annotations/123', headers=self.headers)
         data = json.loads(response.data)
         assert data['id'] == '123', "annotation id should be returned in response"
         assert data['text'] == "Foo", "annotation text should be returned in response"
 
     def test_read_notfound(self):
-        response = self.app.get('/api/annotations/123', headers=self.headers)
+        response = self.cli.get('/api/annotations/123', headers=self.headers)
         assert response.status_code == 404, "response should be 404 NOT FOUND"
 
     def test_update(self):
         self._create_annotation(text=u"Foo", id='123', created='2010-12-10')
 
         payload = json.dumps({'id': '123', 'text': 'Bar'})
-        response = self.app.put('/api/annotations/123',
+        response = self.cli.put('/api/annotations/123',
                                 data=payload,
                                 content_type='application/json',
                                 headers=self.headers)
@@ -125,7 +121,7 @@ class TestStore(TestCase):
         self._create_annotation(text=u"Foo", id='123')
 
         payload = json.dumps({'text': 'Bar'})
-        response = self.app.put('/api/annotations/123',
+        response = self.cli.put('/api/annotations/123',
                                 data=payload,
                                 content_type='application/json',
                                 headers=self.headers)
@@ -137,7 +133,7 @@ class TestStore(TestCase):
         self._create_annotation(text=u"Foo", id='123')
 
         payload = json.dumps({'text': 'Bar', 'id': 'abc'})
-        response = self.app.put('/api/annotations/123',
+        response = self.cli.put('/api/annotations/123',
                                 data=payload,
                                 content_type='application/json',
                                 headers=self.headers)
@@ -146,7 +142,7 @@ class TestStore(TestCase):
         assert ann['text'] == "Bar", "annotation wasn't updated in db"
 
     def test_update_notfound(self):
-        response = self.app.put('/api/annotations/123', headers=self.headers)
+        response = self.cli.put('/api/annotations/123', headers=self.headers)
         assert response.status_code == 404, "response should be 404 NOT FOUND"
 
     def test_update_ignore_created(self):
@@ -154,7 +150,7 @@ class TestStore(TestCase):
 
         payload = json.dumps({'created': 'abc'})
 
-        response = self.app.put('/api/annotations/123',
+        response = self.cli.put('/api/annotations/123',
                                 data=payload,
                                 content_type='application/json',
                                 headers=self.headers)
@@ -168,7 +164,7 @@ class TestStore(TestCase):
 
         payload = json.dumps({'updated': 'abc'})
 
-        response = self.app.put('/api/annotations/123',
+        response = self.cli.put('/api/annotations/123',
                                 data=payload,
                                 content_type='application/json',
                                 headers=self.headers)
@@ -182,7 +178,7 @@ class TestStore(TestCase):
 
         payload = json.dumps({'user': 'jenny', 'consumer': 'myconsumer'})
 
-        response = self.app.put('/api/annotations/123',
+        response = self.cli.put('/api/annotations/123',
                                  data=payload,
                                  content_type='application/json',
                                  headers=self.headers)
@@ -197,13 +193,13 @@ class TestStore(TestCase):
         kwargs = dict(text=u"Bar", id='456')
         ann = self._create_annotation(**kwargs)
 
-        response = self.app.delete('/api/annotations/456', headers=self.headers)
+        response = self.cli.delete('/api/annotations/456', headers=self.headers)
         assert response.status_code == 204, "response should be 204 NO CONTENT"
 
         assert self._get_annotation('456') == None, "annotation wasn't deleted in db"
 
     def test_delete_notfound(self):
-        response = self.app.delete('/api/annotations/123', headers=self.headers)
+        response = self.cli.delete('/api/annotations/123', headers=self.headers)
         assert response.status_code == 404, "response should be 404 NOT FOUND"
 
     def test_search(self):
@@ -217,21 +213,21 @@ class TestStore(TestCase):
         annoid = anno.id
         anno2id = anno2.id
 
-        annotator.es.refresh(timesleep=0.01)
+        self.es.refresh(timesleep=0.01)
 
         url = '/api/search'
-        res = self.app.get(url, headers=self.headers)
+        res = self.cli.get(url, headers=self.headers)
         body = json.loads(res.data)
         assert body['total'] == 3, body
 
         url = '/api/search?limit=1'
-        res = self.app.get(url, headers=self.headers)
+        res = self.cli.get(url, headers=self.headers)
         body = json.loads(res.data)
         assert body['total'] == 3, body
         assert len(body['rows']) == 1
 
         url = '/api/search?uri=' + uri1
-        res = self.app.get(url, headers=self.headers)
+        res = self.cli.get(url, headers=self.headers)
         body = json.loads(res.data)
         assert body['total'] == 2, body
         out = body['rows']
@@ -240,12 +236,12 @@ class TestStore(TestCase):
         assert out[0]['id'] in [ annoid, anno2id ]
 
         url = '/api/search'
-        res = self.app.get(url, headers=self.headers)
+        res = self.cli.get(url, headers=self.headers)
         body = json.loads(res.data)
         assert len(body['rows']) == 3, body
 
     def test_cors_preflight(self):
-        response = self.app.open('/api/annotations', method="OPTIONS")
+        response = self.cli.open('/api/annotations', method="OPTIONS")
 
         headers = dict(response.headers)
 
@@ -262,7 +258,7 @@ class TestStoreAuthz(TestCase):
 
     def setup(self):
         super(TestStoreAuthz, self).setup()
-        self.app = annotator.app.test_client()
+        self.cli = self.app.test_client()
 
         self.anno_id = '123'
         self.permissions = {
@@ -278,7 +274,7 @@ class TestStoreAuthz(TestCase):
         ann.save()
 
         self.consumer = Consumer('test-consumer-key')
-        save(self.consumer)
+        h.db_save(self.consumer)
 
         self.user = 'test-user'
 
@@ -287,13 +283,13 @@ class TestStoreAuthz(TestCase):
             setattr(self, '%s_headers' % u, auth.headers_for_token(token))
 
     def test_read(self):
-        response = self.app.get('/api/annotations/123')
+        response = self.cli.get('/api/annotations/123')
         assert response.status_code == 401, "response should be 401 NOT AUTHORIZED"
 
-        response = self.app.get('/api/annotations/123', headers=self.charlie_headers)
+        response = self.cli.get('/api/annotations/123', headers=self.charlie_headers)
         assert response.status_code == 401, "response should be 401 NOT AUTHORIZED"
 
-        response = self.app.get('/api/annotations/123', headers=self.alice_headers)
+        response = self.cli.get('/api/annotations/123', headers=self.alice_headers)
         assert response.status_code == 200, "response should be 200 OK"
         data = json.loads(response.data)
         assert data['text'] == 'Foobar'
@@ -301,16 +297,16 @@ class TestStoreAuthz(TestCase):
     def test_update(self):
         payload = json.dumps({'id': self.anno_id, 'text': 'Bar'})
 
-        response = self.app.put('/api/annotations/123', data=payload, content_type='application/json')
+        response = self.cli.put('/api/annotations/123', data=payload, content_type='application/json')
         assert response.status_code == 401, "response should be 401 NOT AUTHORIZED"
 
-        response = self.app.put('/api/annotations/123',
+        response = self.cli.put('/api/annotations/123',
                                 data=payload,
                                 content_type='application/json',
                                 headers=self.bob_headers)
         assert response.status_code == 401, "response should be 401 NOT AUTHORIZED"
 
-        response = self.app.put('/api/annotations/123',
+        response = self.cli.put('/api/annotations/123',
                                 data=payload,
                                 content_type='application/json',
                                 headers=self.charlie_headers)
@@ -324,19 +320,19 @@ class TestStoreAuthz(TestCase):
             'permissions': self.permissions
         })
 
-        response = self.app.put('/api/annotations/123',
+        response = self.cli.put('/api/annotations/123',
                                 data=payload,
                                 content_type='application/json')
         assert response.status_code == 401, "response should be 401 NOT AUTHORIZED"
 
-        response = self.app.put('/api/annotations/123',
+        response = self.cli.put('/api/annotations/123',
                                 data=payload,
                                 content_type='application/json',
                                 headers=self.charlie_headers)
         assert response.status_code == 401, "response should be 401 NOT AUTHORIZED"
         assert 'permissions update' in response.data
 
-        response = self.app.put('/api/annotations/123',
+        response = self.cli.put('/api/annotations/123',
                                 data=payload,
                                 content_type='application/json',
                                 headers=self.alice_headers)
@@ -353,7 +349,7 @@ class TestStoreAuthz(TestCase):
             'text': 'Foo'
         })
 
-        response = self.app.put('/api/annotations/123',
+        response = self.cli.put('/api/annotations/123',
                                 data=payload,
                                 content_type='application/json',
                                 headers=self.bob_headers)

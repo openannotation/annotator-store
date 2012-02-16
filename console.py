@@ -2,9 +2,12 @@ from IPython import embed
 
 import annotator
 
-annotator.create_app()
-annotator.app.test_request_context().push()
+app = annotator.create_app()
+app.test_request_context().push()
 
-from annotator import app, db, es, model
+from annotator import model
+
+db = app.extensions['sqlalchemy'].db
+es = app.extensions['pyes']
 
 embed(display_banner=False)

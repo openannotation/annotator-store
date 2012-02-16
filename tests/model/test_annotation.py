@@ -56,7 +56,7 @@ class TestAnnotation(TestCase):
         anno2.save()
         anno3.save()
 
-        annotator.es.refresh(timesleep=0.01)
+        self.es.refresh(timesleep=0.01)
 
         res = Annotation.search()
         h.assert_equal(len(res), 3)
@@ -94,7 +94,7 @@ class TestAnnotation(TestCase):
         anno = Annotation(text='Foobar', permissions={'read': []})
         anno.save()
 
-        annotator.es.refresh(timesleep=0.01)
+        self.es.refresh(timesleep=0.01)
 
         res = Annotation.search()
         h.assert_equal(len(res), 1)
@@ -105,7 +105,7 @@ class TestAnnotation(TestCase):
         anno = Annotation(text='Foobar', permissions={'read': ['bob']})
         anno.save()
 
-        annotator.es.refresh(timesleep=0.01)
+        self.es.refresh(timesleep=0.01)
 
         res = Annotation.search()
         h.assert_equal(len(res), 1)
