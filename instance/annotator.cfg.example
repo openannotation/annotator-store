@@ -12,3 +12,8 @@ DEBUG = False
 # MOUNT_HOME = '/'
 
 # SECRET_KEY = 'IMPORTANT-set-me-to-a-random-string'
+
+## Sign up at http://recaptcha.net
+## NB: the recaptcha keys *must* be configured at the moment. This will change.
+# RECAPTCHA_PUBLIC_KEY = '6LfIXs0SAAAAABJSJPtu-zNzYzMDU5Mzc2MTM0Zj'
+# RECAPTCHA_PRIVATE_KEY = '6LfIXs0SAAAAAJM9FEwhA1OGNjMzM3MjQ3Yzk3OG'
