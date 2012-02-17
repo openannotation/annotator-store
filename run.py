@@ -15,5 +15,5 @@ def _configure_logger(app):
         app.logger.addHandler(handler)
 
 if __name__ == '__main__':
-    annotator.create_app()
-    annotator.app.run()
+    app = annotator.create_app()
+    app.run()

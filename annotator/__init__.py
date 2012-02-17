@@ -11,9 +11,11 @@ __all__ = ['__version__', '__license__', '__author__',
 
 from flask import Flask, g, current_app
 from flaskext.sqlalchemy import SQLAlchemy
+from flaskext.mail import Mail
 import pyes
 
 db = SQLAlchemy()
+mail = Mail()
 
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
@@ -26,6 +28,10 @@ def create_app():
 
     # Configure database
     db.init_app(app)
+
+    # Configure mailer
+    mail.init_app(app)
+    app.extensions['mail'] = mail
 
     # Configure ES
     from . import model
@@ -45,6 +51,7 @@ def create_app():
     def before_request():
         g.db = current_app.extensions['sqlalchemy'].db
         g.es = current_app.extensions['pyes']
+        g.mail = current_app.extensions['mail']
         g.user = user.get_current_user()
 
     return app
