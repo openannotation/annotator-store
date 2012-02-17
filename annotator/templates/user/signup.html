@@ -2,6 +2,7 @@
 {% block title %}Sign up{% endblock %}
 
 {% block content %}
+<h2>Sign up</h2>
 {% from "_formhelpers.html" import render_field %}
   <form method="post" action="{{url_for('user.signup')}}">
     {{ form.hidden_tag() }}

@@ -147,6 +147,11 @@ form .actions button {
 	font-size: 1.3em;
 }
 
+form .actions p {
+  margin: 0.3em 0;
+  font-size: 1.3em;
+}
+
 /**************************************
   * Header
   *************************************/
