@@ -42,3 +42,16 @@ class TestAuthorization(object):
         assert authorize(ann, 'admin', 'bob')
         assert not authorize(ann, 'admin', 'alice')
 
+    def test_authorize_read_annotation_user(self):
+        # The annotation-owning user can do anything:
+        ann = dict(user='bob', permissions={'read': ['alice', 'charlie']})
+        assert authorize(ann, 'read', 'bob')
+        assert not authorize(ann, 'read', 'sally')
+
+    def test_authorize_read_annotation_user_dict(self):
+        # The annotation-owning user can do anything:
+        ann = dict(user={'id': 'bob'}, permissions={'read': ['alice', 'charlie']})
+        assert authorize(ann, 'read', 'bob')
+        assert not authorize(ann, 'read', 'sally')
+
+
