@@ -1,12 +1,13 @@
 from datetime import datetime
-from flask import current_app
+from flask import current_app, request
 import pyes
 
+from annotator import auth
 from annotator import authz
 
 TYPE = 'annotation'
 MAPPING = {
-    'annotator_schema_version': {'type': 'string', 'null_value': 'v1.0'},
+    'annotator_schema_version': {'type': 'string'},
     'created': {'type': 'date'},
     'updated': {'type': 'date'},
     'quote': {'type': 'string'},
@@ -105,7 +106,13 @@ class Annotation(dict):
     id = property(_get_id, _set_id)
 
     def save(self):
-        _add_created(self)
+        # For brand new annotations
+        if not self.id:
+            _add_created(self)
+            _add_default_permissions(self)
+            _add_default_auth(self)
+
+        # For all annotations about to be saved
         _add_updated(self)
 
         res = self.conn.index(self, self.index, TYPE, self.id)
@@ -116,11 +123,20 @@ class Annotation(dict):
             self.conn.delete(self.index, TYPE, self.id)
 
 def _add_created(ann):
-    if 'created' not in ann:
-        ann['created'] = datetime.now().isoformat()
+    ann['created'] = datetime.now().isoformat()
 
 def _add_updated(ann):
     ann['updated'] = datetime.now().isoformat()
+
+def _add_default_permissions(ann):
+    if 'permissions' not in ann:
+        ann['permissions'] = {'read': [authz.GROUP_CONSUMER]}
+
+def _add_default_auth(ann):
+    if 'user' not in ann:
+        ann['user'] = auth.get_request_user_id(request)
+    if 'consumer' not in ann:
+        ann['consumer'] = auth.get_request_consumer_key(request)
 
 def _get_pyes_details():
     conn = current_app.extensions['pyes']

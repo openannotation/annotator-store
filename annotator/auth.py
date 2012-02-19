@@ -3,8 +3,6 @@ import hashlib
 
 import iso8601
 
-from annotator.model import Consumer
-
 HEADER_PREFIX = 'x-annotator-'
 
 # Yoinked from python docs
@@ -23,6 +21,7 @@ UTC = Utc()
 # Main auth routines
 
 def generate_token(key, user_id):
+    from annotator.model import Consumer
     consumer = Consumer.fetch(key)
 
     if consumer is None:
@@ -40,6 +39,7 @@ def generate_token(key, user_id):
     )
 
 def verify_token(token, key, user_id, issue_time):
+    from annotator.model import Consumer
     consumer = Consumer.fetch(key)
 
     if consumer is None:
