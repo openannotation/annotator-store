@@ -9,8 +9,11 @@ __all__ = ["store"]
 
 store = Blueprint('store', __name__)
 
-def current_user_id():
-    return auth.get_request_userid(request)
+CREATE_FILTER_FIELDS = ('updated', 'created', 'consumer')
+UPDATE_FILTER_FIELDS = ('updated', 'created', 'user', 'consumer')
+
+def current_user():
+    return (auth.get_request_user_id(request), auth.get_request_consumer_key(request))
 
 @store.after_request
 def after_request(response):
@@ -35,12 +38,13 @@ def root():
 # INDEX
 @store.route('/annotations')
 def index():
-    uid = current_user_id()
+    uid, ckey = current_user()
 
-    if uid:
+    if ckey and uid:
         if not auth.verify_request(request):
             return _failed_auth_response()
-        annotations = Annotation.search(_user_id=uid)
+
+        annotations = Annotation.search(_user_id=uid, _consumer_key=ckey)
     else:
         annotations = Annotation.search()
 
@@ -54,10 +58,12 @@ def create_annotation():
         return _failed_auth_response()
 
     if request.json:
-        annotation = Annotation(_filter_input(request.json))
+        annotation = Annotation(_filter_input(request.json, CREATE_FILTER_FIELDS))
 
-        annotation['consumer'] = request.headers[auth.HEADER_PREFIX + 'consumer-key']
-        annotation['user'] = request.headers[auth.HEADER_PREFIX + 'user-id']
+        uid, ckey = current_user()
+        annotation['consumer'] = ckey
+        if _get_annotation_user(annotation) != uid:
+            annotation['user'] = uid
 
         annotation.save()
 
@@ -72,7 +78,7 @@ def read_annotation(id):
     if not annotation:
         return jsonify('Annotation not found!', status=404)
 
-    failure = _check_action(annotation, 'read', current_user_id())
+    failure = _check_action(annotation, 'read', *current_user())
     if failure:
         return failure
 
@@ -85,16 +91,16 @@ def update_annotation(id):
     if not annotation:
         return jsonify('Annotation not found! No update performed.', status=404)
 
-    failure = _check_action(annotation, 'update', current_user_id())
+    failure = _check_action(annotation, 'update', *current_user())
     if failure:
         return failure
 
     if request.json:
-        updated = _filter_input(request.json)
+        updated = _filter_input(request.json, UPDATE_FILTER_FIELDS)
         updated['id'] = id # use id from URL, regardless of what arrives in JSON payload
 
         if 'permissions' in updated and updated['permissions'] != annotation.get('permissions', {}):
-            if not authz.authorize(annotation, 'admin', current_user_id()):
+            if not authz.authorize(annotation, 'admin', *current_user()):
                 return _failed_authz_response('permissions update')
 
         annotation.update(updated)
@@ -110,7 +116,7 @@ def delete_annotation(id):
     if not annotation:
         return jsonify('Annotation not found. No delete performed.', status=404)
 
-    failure = _check_action(annotation, 'delete', current_user_id())
+    failure = _check_action(annotation, 'delete', *current_user())
     if failure:
         return failure
 
@@ -121,13 +127,18 @@ def delete_annotation(id):
 @store.route('/search')
 def search_annotations():
     kwargs = dict(request.args.items())
-    uid = current_user_id()
+    uid, ckey = current_user()
 
-    if uid:
+    if ckey and uid:
         if not auth.verify_request(request):
             return _failed_auth_response()
 
+        kwargs['_consumer_key'] = ckey
         kwargs['_user_id'] = uid
+    else:
+        # Prevent request forgery
+        kwargs.pop('_consumer_key', None)
+        kwargs.pop('_user_id', None)
 
     results = Annotation.search(**kwargs)
     total = Annotation.count(**kwargs)
@@ -145,15 +156,26 @@ def auth_token():
         root = current_app.config['ROOT_URL']
         return jsonify('Please go to {0} to log in!'.format(root), status=401)
 
-def _filter_input(obj):
-    for field in ['updated', 'created', 'user', 'consumer']:
-        if field in obj:
-            del obj[field]
+def _filter_input(obj, fields):
+    for field in fields:
+        obj.pop(field, None)
 
     return obj
 
-def _check_action(annotation, action, uid):
-    if not authz.authorize(annotation, action, uid):
+def _get_annotation_user(ann):
+    """Returns the best guess at this annotation's owner user id"""
+    user = ann.get('user')
+
+    if not user:
+        return None
+
+    try:
+        return user.get('id', None)
+    except AttributeError:
+        return user
+
+def _check_action(annotation, action, uid, ckey):
+    if not authz.authorize(annotation, action, uid, ckey):
         return _failed_authz_response()
 
     if uid and not auth.verify_request(request):

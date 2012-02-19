@@ -21,7 +21,15 @@ class TestStore(TestCase):
 
 
     def _create_annotation(self, **kwargs):
-        ann = Annotation(**kwargs)
+        opts = {
+            'user': 'test-user',
+            'consumer': 'test-consumer-key',
+            'permissions': {
+                'read': ['group:__consumer__']
+            }
+        }
+        opts.update(kwargs)
+        ann = Annotation(**opts)
         ann.save()
         return ann
 
@@ -87,7 +95,7 @@ class TestStore(TestCase):
         data = json.loads(response.data)
         ann = self._get_annotation(data['id'])
 
-        assert ann['user'] == 'test-user', "annotation 'user' field should not be used by API"
+        assert ann['user'] == 'test-user', "annotation 'user' field should not be futzable by API"
         assert ann['consumer'] == 'test-consumer-key', "annotation 'consumer' field should not be used by API"
 
     def test_read(self):
@@ -185,8 +193,8 @@ class TestStore(TestCase):
 
         upd = self._get_annotation('123')
 
-        assert 'user' not in upd, "annotation 'user' field should not be used by API"
-        assert 'consumer' not in upd, "annotation 'consumer' field should not be used by API"
+        h.assert_equal(upd['user'], 'test-user', "annotation 'user' field should not be futzable by API")
+        h.assert_equal(upd['consumer'], 'test-consumer-key', "annotation 'consumer' field should not be futzable by API")
 
 
     def test_delete(self):
@@ -269,6 +277,7 @@ class TestStoreAuthz(TestCase):
 
         ann = Annotation(id=self.anno_id,
                          user='alice',
+                         consumer='test-consumer-key',
                          text='Foobar',
                          permissions=self.permissions)
         ann.save()
@@ -341,7 +350,8 @@ class TestStoreAuthz(TestCase):
     def test_update_other_users_annotation(self):
         ann = Annotation(id=123,
                          user='foo',
-                         permissions={'update': []})
+                         consumer='test-consumer-key',
+                         permissions={'update': ['group:__consumer__']})
         ann.save()
 
         payload = json.dumps({

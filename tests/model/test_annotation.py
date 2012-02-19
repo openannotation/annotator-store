@@ -45,13 +45,14 @@ class TestAnnotation(TestCase):
         h.assert_equal(len(ann['ranges']), 2)
 
     def test_search(self):
+        perms = {'read': ['group:__world__']}
         uri1 = u'http://xyz.com'
         uri2 = u'urn:uuid:xxxxx'
         user1 = u'levin'
         user2 = u'anna'
-        anno1 = Annotation(uri=uri1, text=uri1, user=user1)
-        anno2 = Annotation(uri=uri1, text=uri1 + uri1, user=user2)
-        anno3 = Annotation(uri=uri2, text=uri2, user=user1)
+        anno1 = Annotation(uri=uri1, text=uri1, user=user1, permissions=perms)
+        anno2 = Annotation(uri=uri1, text=uri1 + uri1, user=user2, permissions=perms)
+        anno3 = Annotation(uri=uri2, text=uri2, user=user1, permissions=perms)
         anno1.save()
         anno2.save()
         anno3.save()
@@ -90,8 +91,42 @@ class TestAnnotation(TestCase):
         res = Annotation.count(user=user1, uri=uri2)
         h.assert_equal(res, 1)
 
-    def test_search_permissions(self):
-        anno = Annotation(text='Foobar', permissions={'read': []})
+    def test_search_permissions_null(self):
+        anno = Annotation(text='Foobar')
+        anno.save()
+
+        self.es.refresh(timesleep=0.01)
+
+        res = Annotation.search()
+        h.assert_equal(len(res), 0)
+
+        res = Annotation.search(_user_id='bob')
+        h.assert_equal(len(res), 0)
+
+    def test_search_permissions_simple(self):
+        anno = Annotation(text='Foobar',
+                          consumer='testconsumer',
+                          permissions={'read': ['bob']})
+        anno.save()
+
+        self.es.refresh(timesleep=0.01)
+
+        res = Annotation.search()
+        h.assert_equal(len(res), 0)
+
+        res = Annotation.search(_user_id='alice', _consumer_key='testconsumer')
+        h.assert_equal(len(res), 0)
+
+        res = Annotation.search(_user_id='bob')
+        h.assert_equal(len(res), 0)
+
+        res = Annotation.search(_user_id='bob', _consumer_key='testconsumer')
+        h.assert_equal(len(res), 1)
+
+    def test_search_permissions_world(self):
+        anno = Annotation(text='Foobar',
+                          consumer='testconsumer',
+                          permissions={'read': ['group:__world__']})
         anno.save()
 
         self.es.refresh(timesleep=0.01)
@@ -99,19 +134,61 @@ class TestAnnotation(TestCase):
         res = Annotation.search()
         h.assert_equal(len(res), 1)
 
+        res = Annotation.search(_user_id='alice', _consumer_key='testconsumer')
+        h.assert_equal(len(res), 1)
+
         res = Annotation.search(_user_id='bob')
         h.assert_equal(len(res), 1)
 
-        anno = Annotation(text='Foobar', permissions={'read': ['bob']})
+        res = Annotation.search(_user_id='bob', _consumer_key='testconsumer')
+        h.assert_equal(len(res), 1)
+
+    def test_search_permissions_authenticated(self):
+        anno = Annotation(text='Foobar',
+                          consumer='testconsumer',
+                          permissions={'read': ['group:__authenticated__']})
         anno.save()
 
         self.es.refresh(timesleep=0.01)
 
         res = Annotation.search()
+        h.assert_equal(len(res), 0)
+
+        res = Annotation.search(_user_id='alice', _consumer_key='testconsumer')
         h.assert_equal(len(res), 1)
 
-        res = Annotation.search(_user_id='alice')
+        res = Annotation.search(_user_id='bob', _consumer_key='anotherconsumer')
         h.assert_equal(len(res), 1)
 
-        res = Annotation.search(_user_id='bob')
-        h.assert_equal(len(res), 2)
+
+    def test_search_permissions_consumer(self):
+        anno = Annotation(text='Foobar',
+                          user='alice',
+                          consumer='testconsumer',
+                          permissions={'read': ['group:__consumer__']})
+        anno.save()
+
+        self.es.refresh(timesleep=0.01)
+
+        res = Annotation.search()
+        h.assert_equal(len(res), 0)
+
+        res = Annotation.search(_user_id='bob', _consumer_key='testconsumer')
+        h.assert_equal(len(res), 1)
+
+        res = Annotation.search(_user_id='bob', _consumer_key='anotherconsumer')
+        h.assert_equal(len(res), 0)
+
+    def test_search_permissions_owner(self):
+        anno = Annotation(text='Foobar',
+                          user='alice',
+                          consumer='testconsumer')
+        anno.save()
+
+        self.es.refresh(timesleep=0.01)
+
+        res = Annotation.search()
+        h.assert_equal(len(res), 0)
+
+        res = Annotation.search(_user_id='alice', _consumer_key='testconsumer')
+        h.assert_equal(len(res), 1)
