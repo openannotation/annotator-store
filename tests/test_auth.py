@@ -79,10 +79,15 @@ class TestAuth(object):
         request.headers['X-Annotator-Consumer-Key'] = request.headers['x-annotator-consumer-key']
         assert auth.verify_request(request), "request with mixed-case headers should have been verified"
 
-    def test_get_request_userid(self):
+    def test_get_request_user_id(self):
         issue_time = make_issue_time()
         request = make_request('Consumer', 'bob', issue_time)
-        assert auth.get_request_userid(request) == 'bob', "didn't extract user id from headers"
+        assert auth.get_request_user_id(request) == 'bob', "didn't extract user id from headers"
+
+    def test_get_request_consumer_key(self):
+        issue_time = make_issue_time()
+        request = make_request('Consumer', 'bob', issue_time)
+        assert auth.get_request_consumer_key(request) == 'Consumer', "didn't extract consumer key from headers"
 
     def test_headers_for_token(self):
         headers = auth.headers_for_token({

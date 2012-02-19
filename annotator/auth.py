@@ -75,9 +75,15 @@ def verify_request(request):
 
     return result
 
-def get_request_userid(request):
+def get_request_user_id(request):
     if HEADER_PREFIX + 'user-id' in request.headers:
         return request.headers[HEADER_PREFIX + 'user-id']
+    else:
+        return None
+
+def get_request_consumer_key(request):
+    if HEADER_PREFIX + 'consumer-key' in request.headers:
+        return request.headers[HEADER_PREFIX + 'consumer-key']
     else:
         return None
 
