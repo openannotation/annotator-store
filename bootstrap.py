@@ -16,8 +16,8 @@ if __name__ == '__main__':
 
     print("\nCreating SQLite database and ElasticSearch indices... ", end="")
 
-    annotator.create_app()
-    annotator.create_all()
+    app = annotator.create_app()
+    annotator.create_all(app)
 
     print("done.\n")
 
@@ -37,14 +37,15 @@ if __name__ == '__main__':
     if not ckey:
         ckey = 'annotateit'
 
-    with annotator.app.test_request_context():
+    with app.test_request_context():
+        db = app.extensions['sqlalchemy'].db
 
         print("\nCreating admin user... ", end="")
 
         u = User(username, email, password)
 
-        annotator.db.session.add(u)
-        annotator.db.session.commit()
+        db.session.add(u)
+        db.session.commit()
 
         print("done.")
 
@@ -53,8 +54,8 @@ if __name__ == '__main__':
         c = Consumer(ckey)
         c.user_id = u.id
 
-        annotator.db.session.add(c)
-        annotator.db.session.commit()
+        db.session.add(c)
+        db.session.commit()
 
         print("done.\n")
 
