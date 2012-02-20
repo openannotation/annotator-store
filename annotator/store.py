@@ -146,8 +146,8 @@ def search_annotations():
 # AUTH TOKEN
 @store.route('/token')
 def auth_token():
-    if g.user:
-        return jsonify(g.auth.generate_token('annotateit', g.user.username))
+    if g.session_user:
+        return jsonify(g.auth.generate_token('annotateit', g.session_user.username))
     else:
         return jsonify('Please go to {0} to log in!'.format(request.host_url), status=401)
 
