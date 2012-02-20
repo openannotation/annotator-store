@@ -1,0 +1,10 @@
+DEBUG = True
+
+# You should change this secret key to a uniquely secret string before deploying
+SECRET_KEY = '6E1C924B-C03B-4F7F-97DE-B72EE2338B39'
+
+ELASTICSEARCH_HOST = '127.0.0.1:9200'
+ELASTICSEARCH_INDEX = 'annotator'
+
+AUTH_ON = False
+AUTHZ_ON = False

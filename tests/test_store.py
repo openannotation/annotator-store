@@ -1,40 +1,35 @@
-from . import TestCase, helpers as h
+from . import TestCase
+from .helpers import MockUser, MockConsumer
+from nose.tools import *
 
 from flask import json, url_for
 
 import annotator
 from annotator import auth
-from annotator.model import Annotation, Consumer
+from annotator.annotation import make_model
 
 class TestStore(TestCase):
     def setup(self):
         super(TestStore, self).setup()
 
-        self.cli = self.app.test_client()
-        self.consumer = Consumer('test-consumer-key')
-        h.db_save(self.consumer)
+        self.consumer = MockConsumer()
+        self.user = MockUser()
 
-        self.user = 'test-user'
-
-        token = auth.generate_token(self.consumer.key, self.user)
+        token = auth.generate_token(self.consumer, self.user.username)
         self.headers = auth.headers_for_token(token)
-
 
     def _create_annotation(self, **kwargs):
         opts = {
-            'user': 'test-user',
-            'consumer': 'test-consumer-key',
-            'permissions': {
-                'read': ['group:__consumer__']
-            }
+            'user': self.user.username,
+            'consumer': self.consumer.key
         }
         opts.update(kwargs)
-        ann = Annotation(**opts)
+        ann = self.Annotation(**opts)
         ann.save()
         return ann
 
     def _get_annotation(self, id_):
-        return Annotation.fetch(id_)
+        return self.Annotation.fetch(id_)
 
     def test_index(self):
         response = self.cli.get('/api/annotations', headers=self.headers)
@@ -55,7 +50,7 @@ class TestStore(TestCase):
         assert response.status_code == 200, "response should be 200 OK"
         data = json.loads(response.data)
         assert 'id' in data, "annotation id should be returned in response"
-        assert data['user'] == self.user
+        assert data['user'] == self.user.username
         assert data['consumer'] == self.consumer.key
 
     def test_create_ignore_created(self):
@@ -95,8 +90,8 @@ class TestStore(TestCase):
         data = json.loads(response.data)
         ann = self._get_annotation(data['id'])
 
-        assert ann['user'] == 'test-user', "annotation 'user' field should not be futzable by API"
-        assert ann['consumer'] == 'test-consumer-key', "annotation 'consumer' field should not be used by API"
+        assert ann['user'] == self.user.username, "annotation 'user' field should not be futzable by API"
+        assert ann['consumer'] == self.consumer.key, "annotation 'consumer' field should not be used by API"
 
     def test_read(self):
         kwargs = dict(text=u"Foo", id='123')
@@ -193,8 +188,8 @@ class TestStore(TestCase):
 
         upd = self._get_annotation('123')
 
-        h.assert_equal(upd['user'], 'test-user', "annotation 'user' field should not be futzable by API")
-        h.assert_equal(upd['consumer'], 'test-consumer-key', "annotation 'consumer' field should not be futzable by API")
+        assert_equal(upd['user'], self.user.username, "annotation 'user' field should not be futzable by API")
+        assert_equal(upd['consumer'], self.consumer.key, "annotation 'consumer' field should not be futzable by API")
 
 
     def test_delete(self):
@@ -221,7 +216,7 @@ class TestStore(TestCase):
         annoid = anno.id
         anno2id = anno2.id
 
-        self.es.refresh(timesleep=0.01)
+        self.conn.refresh(timesleep=0.01)
 
         url = '/api/search'
         res = self.cli.get(url, headers=self.headers)
@@ -266,29 +261,26 @@ class TestStoreAuthz(TestCase):
 
     def setup(self):
         super(TestStoreAuthz, self).setup()
-        self.cli = self.app.test_client()
+
+        self.consumer = MockConsumer()
+        self.user = MockUser() # alice
 
         self.anno_id = '123'
         self.permissions = {
-            'read': ['alice', 'bob'],
-            'update': ['alice', 'charlie'],
-            'admin': ['alice']
+            'read': [self.user.username, 'bob'],
+            'update': [self.user.username, 'charlie'],
+            'admin': [self.user.username]
         }
 
-        ann = Annotation(id=self.anno_id,
-                         user='alice',
-                         consumer='test-consumer-key',
-                         text='Foobar',
-                         permissions=self.permissions)
+        ann = self.Annotation(id=self.anno_id,
+                              user=self.user.username,
+                              consumer=self.consumer.key,
+                              text='Foobar',
+                              permissions=self.permissions)
         ann.save()
 
-        self.consumer = Consumer('test-consumer-key')
-        h.db_save(self.consumer)
-
-        self.user = 'test-user'
-
         for u in ['alice', 'bob', 'charlie']:
-            token = auth.generate_token(self.consumer.key, u)
+            token = auth.generate_token(self.consumer, u)
             setattr(self, '%s_headers' % u, auth.headers_for_token(token))
 
     def test_read(self):
@@ -348,10 +340,10 @@ class TestStoreAuthz(TestCase):
         assert response.status_code == 200, "response should be 200 OK"
 
     def test_update_other_users_annotation(self):
-        ann = Annotation(id=123,
-                         user='foo',
-                         consumer='test-consumer-key',
-                         permissions={'update': ['group:__consumer__']})
+        ann = self.Annotation(id=123,
+                              user='foo',
+                              consumer=self.consumer.key,
+                              permissions={'update': ['group:__consumer__']})
         ann.save()
 
         payload = json.dumps({

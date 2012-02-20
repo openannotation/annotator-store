@@ -7,15 +7,9 @@ setup(
 
     install_requires = [
         'Flask==0.8',
-        'Flask-Mail==0.6.1'
-        'Flask-SQLAlchemy==0.15',
-        'Flask-WTF==0.5.2',
-        'SQLAlchemy==0.7.4',
         'pyes==0.16.0',
         'nose==1.0.0',
-        'mock==0.7.2',
-        'iso8601==0.1.4',
-        'itsdangerous==0.11'
+        'iso8601==0.1.4'
     ],
 
     # metadata for upload to PyPI

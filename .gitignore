@@ -1,6 +1,4 @@
 /pyenv
 /annotator.egg-info
-/instance/*.db
-/instance/*.db-journal
-/instance/annotator.cfg
+/annotator.cfg
 *.pyc

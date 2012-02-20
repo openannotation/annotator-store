@@ -17,6 +17,7 @@ the repository root:
 
     pip -E pyenv install -e .
     source pyenv/bin/activate
+    cp annotator.cfg.example annotator.cfg
     python run.py
 
 You should see something like:
@@ -24,9 +25,8 @@ You should see something like:
     * Running on http://127.0.0.1:5000/
     * Restarting with reloader...
 
-If you wish to customize the configuration of the Annotator Store, copy
-`instance/annotator.cfg.example` to `instance/annotator.cfg` and make your
-changes there.
+If you wish to customize the configuration of the Annotator Store, make your
+changes to `annotator.cfg` or dive into `run.py`.
 
 ## Store API
 
@@ -41,9 +41,9 @@ default. See the [Annotator documentation][4] for details.
 Simply run `python run_tests.py` to run the test suite
 
     $ python run_tests.py
-    .....................
+    ....................................................
     ----------------------------------------------------------------------
-    Ran 21 tests in 0.502s
+    Ran 52 tests in 3.233s
 
     OK
 

@@ -1,8 +1,6 @@
 from datetime import datetime
-from flask import current_app, request
 import pyes
 
-from annotator import auth
 from annotator import authz
 
 TYPE = 'annotation'
@@ -36,42 +34,56 @@ MAPPING = {
     }
 }
 
+def make_model(conn, index='annotator', authz_on=True):
+    return type('Annotation', (_Annotation,), {
+        'conn': conn,
+        'index': index,
+        'authz_on': authz_on
+    })
+
 class ValidationError(Exception):
     pass
 
-class Annotation(dict):
+class _Annotation(dict):
+    conn = None  # set by make_model
+    index = None # set by make_model
 
-    def __init__(self, *args, **kwargs):
-        conn, index = _get_pyes_details()
-        self.conn = conn
-        self.index = index
-        super(Annotation, self).__init__(*args, **kwargs)
+    @classmethod
+    def create_all(cls):
+        cls.conn.create_index_if_missing(cls.index)
+        cls.conn.put_mapping(TYPE, {'properties': MAPPING}, cls.index)
+
+    @classmethod
+    def drop_all(cls):
+        cls.conn.delete_index_if_exists(cls.index)
 
     # It would be lovely if this were called 'get', but the dict semantics
     # already define that method name.
     @classmethod
     def fetch(cls, id):
-        conn, index = _get_pyes_details()
-
         try:
-            doc = conn.get(index, TYPE, id)
+            doc = cls.conn.get(cls.index, TYPE, id)
         # We should be more specific than this, but pyes doesn't raise the
         # correct exception for missing documents at the moment
         except pyes.exceptions.ElasticSearchException:
             return None
-        return Annotation(doc['_source'], id=id)
+        return cls(doc['_source'], id=id)
 
     @classmethod
     def _build_query(cls, offset=0, limit=20, _user_id=None, _consumer_key=None, **kwargs):
         # Base query is a filtered match_all
-        f = {'and': []}
-        q = {'filtered': {'query': {'match_all': {}}, 'filter': f}}
+        q = {'match_all': {}}
+
+        if kwargs or cls.authz_on:
+            f = {'and': []}
+            q = {'filtered': {'query': q, 'filter': f}}
 
         # Add a term query for each kwarg that isn't otherwise accounted for
         for k, v in kwargs.iteritems():
-            f['and'].append({'term': {k: v}})
+            q['filtered']['filter']['and'].append({'term': {k: v}})
 
-        f['and'].append(_permissions_query(_user_id, _consumer_key))
+        if cls.authz_on:
+            q['filtered']['filter']['and'].append(_permissions_query(_user_id, _consumer_key))
 
         return {
             'sort': [{'updated': {'order': 'desc'}}], # Sort most recent first
@@ -82,19 +94,15 @@ class Annotation(dict):
 
     @classmethod
     def search(cls, **kwargs):
-        conn, index = _get_pyes_details()
-
         q = cls._build_query(**kwargs)
-        res = conn.search(q, index, TYPE)
+        res = cls.conn.search(q, cls.index, TYPE)
         docs = res['hits']['hits']
         return [cls(d['_source'], id=d['_id']) for d in docs]
 
     @classmethod
     def count(cls, **kwargs):
-        conn, index = _get_pyes_details()
-
         q = cls._build_query(**kwargs)
-        res = conn.count(q['query'], index, TYPE)
+        res = cls.conn.count(q['query'], cls.index, TYPE)
         return res['count']
 
     def _set_id(self, rhs):
@@ -107,10 +115,8 @@ class Annotation(dict):
 
     def save(self):
         # For brand new annotations
-        if not self.id:
-            _add_created(self)
-            _add_default_permissions(self)
-            _add_default_auth(self)
+        _add_created(self)
+        _add_default_permissions(self)
 
         # For all annotations about to be saved
         _add_updated(self)
@@ -123,7 +129,8 @@ class Annotation(dict):
             self.conn.delete(self.index, TYPE, self.id)
 
 def _add_created(ann):
-    ann['created'] = datetime.now().isoformat()
+    if 'created' not in ann:
+        ann['created'] = datetime.now().isoformat()
 
 def _add_updated(ann):
     ann['updated'] = datetime.now().isoformat()
@@ -131,17 +138,6 @@ def _add_updated(ann):
 def _add_default_permissions(ann):
     if 'permissions' not in ann:
         ann['permissions'] = {'read': [authz.GROUP_CONSUMER]}
-
-def _add_default_auth(ann):
-    if 'user' not in ann:
-        ann['user'] = auth.get_request_user_id(request)
-    if 'consumer' not in ann:
-        ann['consumer'] = auth.get_request_consumer_key(request)
-
-def _get_pyes_details():
-    conn = current_app.extensions['pyes']
-    index = current_app.config['ELASTICSEARCH_INDEX']
-    return conn, index
 
 def _permissions_query(user_id=None, consumer_key=None):
     # Append permissions filter.
