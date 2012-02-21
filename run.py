@@ -15,9 +15,8 @@ from __future__ import print_function
 import os
 import sys
 
-import pyes
 from flask import Flask, g, current_app
-from annotator import annotation, auth, authz, store
+from annotator import es, annotation, auth, authz, store
 from tests.helpers import MockUser, MockConsumer, MockAuthenticator
 from tests.helpers import mock_authorizer
 
@@ -32,14 +31,14 @@ def main():
         print("Please copy example config from annotator.cfg.example to annotator.cfg", file=sys.stderr)
         sys.exit(1)
 
-    esconn = pyes.ES(app.config['ELASTICSEARCH_HOST'])
-    Annotation = annotation.make_model(esconn)
-    Annotation.create_all()
+    es.init_app(app)
+
+    with app.test_request_context():
+        annotation.Annotation.create_all()
 
     @app.before_request
     def before_request():
-        g.esconn = pyes.ES(current_app.config['ELASTICSEARCH_HOST'])
-        g.Annotation = annotation.make_model(esconn, authz_on=current_app.config['AUTHZ_ON'])
+        g.Annotation = annotation.Annotation
 
         # In a real app, the current user and consumer would be determined by
         # a lookup in either the session or the request headers, as described

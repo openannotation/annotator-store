@@ -1,23 +1,18 @@
 from nose.tools import *
-import pyes
+from . import TestCase
 
-from annotator.annotation import make_model
+from annotator import es
+from annotator.annotation import Annotation
 
-conn = None
-Annotation = None
-
-def setup():
-    global conn, Annotation
-    conn = pyes.ES('127.0.0.1:9200')
-    Annotation = make_model(conn)
-    conn.delete_index_if_exists(Annotation.index)
-
-class TestAnnotation(object):
+class TestAnnotation(TestCase):
     def setup(self):
-        Annotation.create_all()
+        super(TestAnnotation, self).setup()
+        self.ctx = self.app.test_request_context()
+        self.ctx.push()
 
     def teardown(self):
-        Annotation.drop_all()
+        self.ctx.pop()
+        super(TestAnnotation, self).teardown()
 
     def test_new(self):
         a = Annotation()
@@ -70,7 +65,7 @@ class TestAnnotation(object):
         anno2.save()
         anno3.save()
 
-        conn.refresh(timesleep=0.01)
+        es.conn.refresh(timesleep=0.01)
 
         res = Annotation.search()
         assert_equal(len(res), 3)
@@ -108,7 +103,7 @@ class TestAnnotation(object):
         anno = Annotation(text='Foobar')
         anno.save()
 
-        conn.refresh(timesleep=0.01)
+        es.conn.refresh(timesleep=0.01)
 
         res = Annotation.search()
         assert_equal(len(res), 0)
@@ -122,7 +117,7 @@ class TestAnnotation(object):
                           permissions={'read': ['bob']})
         anno.save()
 
-        conn.refresh(timesleep=0.01)
+        es.conn.refresh(timesleep=0.01)
 
         res = Annotation.search()
         assert_equal(len(res), 0)
@@ -142,7 +137,7 @@ class TestAnnotation(object):
                           permissions={'read': ['group:__world__']})
         anno.save()
 
-        conn.refresh(timesleep=0.01)
+        es.conn.refresh(timesleep=0.01)
 
         res = Annotation.search()
         assert_equal(len(res), 1)
@@ -162,7 +157,7 @@ class TestAnnotation(object):
                           permissions={'read': ['group:__authenticated__']})
         anno.save()
 
-        conn.refresh(timesleep=0.01)
+        es.conn.refresh(timesleep=0.01)
 
         res = Annotation.search()
         assert_equal(len(res), 0)
@@ -181,7 +176,7 @@ class TestAnnotation(object):
                           permissions={'read': ['group:__consumer__']})
         anno.save()
 
-        conn.refresh(timesleep=0.01)
+        es.conn.refresh(timesleep=0.01)
 
         res = Annotation.search()
         assert_equal(len(res), 0)
@@ -198,7 +193,7 @@ class TestAnnotation(object):
                           consumer='testconsumer')
         anno.save()
 
-        conn.refresh(timesleep=0.01)
+        es.conn.refresh(timesleep=0.01)
 
         res = Annotation.search()
         assert_equal(len(res), 0)

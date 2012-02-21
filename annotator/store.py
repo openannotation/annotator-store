@@ -4,6 +4,8 @@ from flask import Flask, Blueprint, Response
 from flask import current_app, g
 from flask import abort, redirect, request
 
+from annotator.annotation import Annotation
+
 store = Blueprint('store', __name__)
 
 CREATE_FILTER_FIELDS = ('updated', 'created', 'consumer')
@@ -42,9 +44,9 @@ def index():
         if not g.auth.verify_request(request):
             return _failed_auth_response()
 
-        annotations = g.Annotation.search(_user_id=g.user.username, _consumer_key=g.consumer.key)
+        annotations = Annotation.search(_user_id=g.user.username, _consumer_key=g.consumer.key)
     else:
-        annotations = g.Annotation.search()
+        annotations = Annotation.search()
 
     return jsonify(annotations)
 
@@ -56,7 +58,7 @@ def create_annotation():
         return _failed_auth_response()
 
     if request.json:
-        annotation = g.Annotation(_filter_input(request.json, CREATE_FILTER_FIELDS))
+        annotation = Annotation(_filter_input(request.json, CREATE_FILTER_FIELDS))
 
         annotation['consumer'] = g.consumer.key
         if _get_annotation_user(annotation) != g.user.username:
@@ -71,7 +73,7 @@ def create_annotation():
 # READ
 @store.route('/annotations/<id>')
 def read_annotation(id):
-    annotation = g.Annotation.fetch(id)
+    annotation = Annotation.fetch(id)
     if not annotation:
         return jsonify('Annotation not found!', status=404)
 
@@ -84,7 +86,7 @@ def read_annotation(id):
 # UPDATE
 @store.route('/annotations/<id>', methods=['POST', 'PUT'])
 def update_annotation(id):
-    annotation = g.Annotation.fetch(id)
+    annotation = Annotation.fetch(id)
     if not annotation:
         return jsonify('Annotation not found! No update performed.', status=404)
 
@@ -108,7 +110,7 @@ def update_annotation(id):
 # DELETE
 @store.route('/annotations/<id>', methods=['DELETE'])
 def delete_annotation(id):
-    annotation = g.Annotation.fetch(id)
+    annotation = Annotation.fetch(id)
 
     if not annotation:
         return jsonify('Annotation not found. No delete performed.', status=404)
@@ -136,8 +138,8 @@ def search_annotations():
         kwargs.pop('_consumer_key', None)
         kwargs.pop('_user_id', None)
 
-    results = g.Annotation.search(**kwargs)
-    total = g.Annotation.count(**kwargs)
+    results = Annotation.search(**kwargs)
+    total = Annotation.count(**kwargs)
     return jsonify({
         'total': total,
         'rows': results,

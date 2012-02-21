@@ -1,9 +1,7 @@
 import os
+from flask import Flask, g, request
 
-import pyes
-from flask import Flask, g, request, current_app
-
-from annotator import auth, authz, annotation, store
+from annotator import es, auth, authz, annotation, store
 
 from .helpers import MockUser, MockConsumer
 
@@ -13,11 +11,10 @@ def create_app():
     app = Flask(__name__)
     app.config.from_pyfile(os.path.join(here, 'test.cfg'))
 
+    es.init_app(app)
+
     @app.before_request
     def before_request():
-        g.esconn = pyes.ES(current_app.config['ELASTICSEARCH_HOST'])
-        g.Annotation = annotation.make_model(g.esconn, index=current_app.config['ELASTICSEARCH_INDEX'])
-
         g.user = MockUser(request.headers.get(auth.HEADER_PREFIX + 'user-id'))
         g.consumer = MockConsumer(request.headers.get(auth.HEADER_PREFIX + 'consumer-key'))
 
@@ -32,13 +29,14 @@ class TestCase(object):
     @classmethod
     def setup_class(cls):
         cls.app = create_app()
-        cls.conn = pyes.ES(cls.app.config['ELASTICSEARCH_HOST'])
-        cls.Annotation = annotation.make_model(cls.conn, index=cls.app.config['ELASTICSEARCH_INDEX'])
-        cls.Annotation.drop_all()
+        with cls.app.test_request_context():
+            annotation.Annotation.drop_all()
 
     def setup(self):
-        self.Annotation.create_all()
+        with self.app.test_request_context():
+            annotation.Annotation.create_all()
         self.cli = self.app.test_client()
 
     def teardown(self):
-        self.Annotation.drop_all()
+        with self.app.test_request_context():
+            annotation.Annotation.drop_all()

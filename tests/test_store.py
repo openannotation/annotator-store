@@ -4,9 +4,8 @@ from nose.tools import *
 
 from flask import json, url_for
 
-import annotator
-from annotator import auth
-from annotator.annotation import make_model
+from annotator import auth, es
+from annotator.annotation import Annotation
 
 class TestStore(TestCase):
     def setup(self):
@@ -18,18 +17,25 @@ class TestStore(TestCase):
         token = auth.generate_token(self.consumer, self.user.username)
         self.headers = auth.headers_for_token(token)
 
+        self.ctx = self.app.test_request_context()
+        self.ctx.push()
+
+    def teardown(self):
+        self.ctx.pop()
+        super(TestStore, self).teardown()
+
     def _create_annotation(self, **kwargs):
         opts = {
             'user': self.user.username,
             'consumer': self.consumer.key
         }
         opts.update(kwargs)
-        ann = self.Annotation(**opts)
+        ann = Annotation(**opts)
         ann.save()
         return ann
 
     def _get_annotation(self, id_):
-        return self.Annotation.fetch(id_)
+        return Annotation.fetch(id_)
 
     def test_index(self):
         response = self.cli.get('/api/annotations', headers=self.headers)
@@ -216,7 +222,7 @@ class TestStore(TestCase):
         annoid = anno.id
         anno2id = anno2.id
 
-        self.conn.refresh(timesleep=0.01)
+        es.conn.refresh(timesleep=0.01)
 
         url = '/api/search'
         res = self.cli.get(url, headers=self.headers)
@@ -272,16 +278,23 @@ class TestStoreAuthz(TestCase):
             'admin': [self.user.username]
         }
 
-        ann = self.Annotation(id=self.anno_id,
-                              user=self.user.username,
-                              consumer=self.consumer.key,
-                              text='Foobar',
-                              permissions=self.permissions)
+        self.ctx = self.app.test_request_context()
+        self.ctx.push()
+
+        ann = Annotation(id=self.anno_id,
+                         user=self.user.username,
+                         consumer=self.consumer.key,
+                         text='Foobar',
+                         permissions=self.permissions)
         ann.save()
 
         for u in ['alice', 'bob', 'charlie']:
             token = auth.generate_token(self.consumer, u)
             setattr(self, '%s_headers' % u, auth.headers_for_token(token))
+
+    def teardown(self):
+        self.ctx.pop()
+        super(TestStoreAuthz, self).teardown()
 
     def test_read(self):
         response = self.cli.get('/api/annotations/123')
@@ -340,10 +353,10 @@ class TestStoreAuthz(TestCase):
         assert response.status_code == 200, "response should be 200 OK"
 
     def test_update_other_users_annotation(self):
-        ann = self.Annotation(id=123,
-                              user='foo',
-                              consumer=self.consumer.key,
-                              permissions={'update': ['group:__consumer__']})
+        ann = Annotation(id=123,
+                         user='foo',
+                         consumer=self.consumer.key,
+                         permissions={'update': ['group:__consumer__']})
         ann.save()
 
         payload = json.dumps({

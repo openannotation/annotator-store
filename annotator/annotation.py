@@ -1,7 +1,7 @@
 from datetime import datetime
-import pyes
 
-from annotator import authz
+from annotator import es, authz
+from flask import current_app
 
 TYPE = 'annotation'
 MAPPING = {
@@ -34,84 +34,24 @@ MAPPING = {
     }
 }
 
-def make_model(conn, index='annotator', authz_on=True):
-    return type('Annotation', (_Annotation,), {
-        'conn': conn,
-        'index': index,
-        'authz_on': authz_on
-    })
+class Annotation(es.Model):
 
-class ValidationError(Exception):
-    pass
-
-class _Annotation(dict):
-    conn = None  # set by make_model
-    index = None # set by make_model
-
-    @classmethod
-    def create_all(cls):
-        cls.conn.create_index_if_missing(cls.index)
-        cls.conn.put_mapping(TYPE, {'properties': MAPPING}, cls.index)
-
-    @classmethod
-    def drop_all(cls):
-        cls.conn.delete_index_if_exists(cls.index)
-
-    # It would be lovely if this were called 'get', but the dict semantics
-    # already define that method name.
-    @classmethod
-    def fetch(cls, id):
-        try:
-            doc = cls.conn.get(cls.index, TYPE, id)
-        # We should be more specific than this, but pyes doesn't raise the
-        # correct exception for missing documents at the moment
-        except pyes.exceptions.ElasticSearchException:
-            return None
-        return cls(doc['_source'], id=id)
+    __type__ = TYPE
+    __mapping__ = MAPPING
 
     @classmethod
     def _build_query(cls, offset=0, limit=20, _user_id=None, _consumer_key=None, **kwargs):
-        # Base query is a filtered match_all
-        q = {'match_all': {}}
+        q = super(Annotation, cls)._build_query(offset, limit, **kwargs)
 
-        if kwargs or cls.authz_on:
-            f = {'and': []}
-            q = {'filtered': {'query': q, 'filter': f}}
+        if current_app.config.get('AUTHZ_ON'):
+            if 'filtered' not in q['query']:
+                f = {'and': []}
+                q['query'] = {'filtered': {'query': q['query'], 'filter': f}}
 
-        # Add a term query for each kwarg that isn't otherwise accounted for
-        for k, v in kwargs.iteritems():
-            q['filtered']['filter']['and'].append({'term': {k: v}})
+            andclause = q['query']['filtered']['filter']['and']
+            andclause.append(_permissions_query(_user_id, _consumer_key))
 
-        if cls.authz_on:
-            q['filtered']['filter']['and'].append(_permissions_query(_user_id, _consumer_key))
-
-        return {
-            'sort': [{'updated': {'order': 'desc'}}], # Sort most recent first
-            'from': offset,
-            'size': limit,
-            'query': q
-        }
-
-    @classmethod
-    def search(cls, **kwargs):
-        q = cls._build_query(**kwargs)
-        res = cls.conn.search(q, cls.index, TYPE)
-        docs = res['hits']['hits']
-        return [cls(d['_source'], id=d['_id']) for d in docs]
-
-    @classmethod
-    def count(cls, **kwargs):
-        q = cls._build_query(**kwargs)
-        res = cls.conn.count(q['query'], cls.index, TYPE)
-        return res['count']
-
-    def _set_id(self, rhs):
-        self['id'] = rhs
-
-    def _get_id(self):
-        return self.get('id')
-
-    id = property(_get_id, _set_id)
+        return q
 
     def save(self):
         # For brand new annotations
@@ -121,12 +61,8 @@ class _Annotation(dict):
         # For all annotations about to be saved
         _add_updated(self)
 
-        res = self.conn.index(self, self.index, TYPE, self.id)
-        self.id = res['_id']
+        super(Annotation, self).save()
 
-    def delete(self):
-        if self.id:
-            self.conn.delete(self.index, TYPE, self.id)
 
 def _add_created(ann):
     if 'created' not in ann:
