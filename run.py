@@ -38,8 +38,6 @@ def main():
 
     @app.before_request
     def before_request():
-        g.Annotation = annotation.Annotation
-
         # In a real app, the current user and consumer would be determined by
         # a lookup in either the session or the request headers, as described
         # in the Annotator authentication documentation[1].
