@@ -138,6 +138,11 @@ def search_annotations():
         kwargs.pop('_consumer_key', None)
         kwargs.pop('_user_id', None)
 
+    if 'offset' in kwargs:
+        kwargs['offset'] = _quiet_int(kwargs['offset'])
+    if 'limit' in kwargs:
+        kwargs['limit'] = _quiet_int(kwargs['limit'], 20)
+
     results = Annotation.search(**kwargs)
     total = Annotation.count(**kwargs)
     return jsonify({
@@ -187,3 +192,9 @@ def _failed_auth_response():
     return jsonify("Cannot authenticate request. Perhaps you didn't send the "
                    "X-Annotator-* headers?",
                    status=401)
+
+def _quiet_int(obj, default=0):
+    try:
+        return int(obj)
+    except ValueError:
+        return default

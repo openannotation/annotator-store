@@ -90,6 +90,9 @@ class _Model(dict):
 
     @classmethod
     def _build_query(cls, offset=0, limit=20, **kwargs):
+        offset = max(0, offset)
+        limit = min(200, max(0, limit))
+
         # Base query is a filtered match_all
         q = {'match_all': {}}
 

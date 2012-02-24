@@ -37,6 +37,20 @@ class TestStore(TestCase):
     def _get_annotation(self, id_):
         return Annotation.fetch(id_)
 
+    def test_cors_preflight(self):
+        response = self.cli.open('/api/annotations', method="OPTIONS")
+
+        headers = dict(response.headers)
+
+        assert headers['Access-Control-Allow-Methods'] == 'GET, POST, PUT, DELETE, OPTIONS', \
+            "Did not send the right Access-Control-Allow-Methods header."
+
+        assert headers['Access-Control-Allow-Origin'] == '*', \
+            "Did not send the right Access-Control-Allow-Origin header."
+
+        assert headers['Access-Control-Expose-Headers'] == 'Location', \
+            "Did not send the right Access-Control-Expose-Headers header."
+
     def test_index(self):
         response = self.cli.get('/api/annotations', headers=self.headers)
         assert response.data == "[]", "response should be empty list"
@@ -219,49 +233,71 @@ class TestStore(TestCase):
         anno = self._create_annotation(uri=uri1, text=uri1, user=user)
         anno2 = self._create_annotation(uri=uri1, text=uri1 + uri1, user=user2)
         anno3 = self._create_annotation(uri=uri2, text=uri2, user=user)
-        annoid = anno.id
-        anno2id = anno2.id
 
         es.conn.refresh(timesleep=0.01)
 
-        url = '/api/search'
-        res = self.cli.get(url, headers=self.headers)
-        body = json.loads(res.data)
-        assert body['total'] == 3, body
+        res = self._get_search_results()
+        assert_equal(res['total'], 3)
 
-        url = '/api/search?limit=1'
-        res = self.cli.get(url, headers=self.headers)
-        body = json.loads(res.data)
-        assert body['total'] == 3, body
-        assert len(body['rows']) == 1
+        res = self._get_search_results('limit=1')
+        assert_equal(res['total'], 3)
+        assert_equal(len(res['rows']), 1)
 
-        url = '/api/search?uri=' + uri1
-        res = self.cli.get(url, headers=self.headers)
-        body = json.loads(res.data)
-        assert body['total'] == 2, body
-        out = body['rows']
-        assert len(out) == 2
-        assert out[0]['uri'] == uri1
-        assert out[0]['id'] in [ annoid, anno2id ]
+        res = self._get_search_results('uri=' + uri1)
+        assert_equal(res['total'], 2)
+        assert_equal(len(res['rows']), 2)
+        assert_equal(res['rows'][0]['uri'], uri1)
+        assert_in(res['rows'][0]['id'], [anno.id, anno2.id])
 
-        url = '/api/search'
-        res = self.cli.get(url, headers=self.headers)
-        body = json.loads(res.data)
-        assert len(body['rows']) == 3, body
+    def test_search_limit(self):
+        for i in xrange(250):
+            self._create_annotation()
 
-    def test_cors_preflight(self):
-        response = self.cli.open('/api/annotations', method="OPTIONS")
+        es.conn.refresh(timesleep=0.01)
 
-        headers = dict(response.headers)
+        # by default return 20
+        res = self._get_search_results()
+        assert_equal(len(res['rows']), 20)
 
-        assert headers['Access-Control-Allow-Methods'] == 'GET, POST, PUT, DELETE, OPTIONS', \
-            "Did not send the right Access-Control-Allow-Methods header."
+        # return maximum 200
+        res = self._get_search_results('limit=250')
+        assert_equal(len(res['rows']), 200)
 
-        assert headers['Access-Control-Allow-Origin'] == '*', \
-            "Did not send the right Access-Control-Allow-Origin header."
+        # return minimum 0
+        res = self._get_search_results('limit=-10')
+        assert_equal(len(res['rows']), 0)
 
-        assert headers['Access-Control-Expose-Headers'] == 'Location', \
-            "Did not send the right Access-Control-Expose-Headers header."
+        # ignore bogus values
+        res = self._get_search_results('limit=foobar')
+        assert_equal(len(res['rows']), 20)
+
+    def test_search_offset(self):
+        for i in xrange(250):
+            self._create_annotation()
+
+        es.conn.refresh(timesleep=0.01)
+
+        res = self._get_search_results()
+        assert_equal(len(res['rows']), 20)
+        first = res['rows'][0]
+
+        res = self._get_search_results('offset=240')
+        assert_equal(len(res['rows']), 10)
+
+        # ignore negative values
+        res = self._get_search_results('offset=-10')
+        assert_equal(len(res['rows']), 20)
+        assert_equal(res['rows'][0], first)
+
+        # ignore bogus values
+        res = self._get_search_results('offset=foobar')
+        assert_equal(len(res['rows']), 20)
+        assert_equal(res['rows'][0], first)
+
+    def _get_search_results(self, qs=''):
+        res = self.cli.get('/api/search?{qs}'.format(qs=qs), headers=self.headers)
+        return json.loads(res.data)
+
 
 class TestStoreAuthz(TestCase):
 
