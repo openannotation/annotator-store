@@ -21,7 +21,7 @@ class TestAnnotation(TestCase):
     def test_save(self):
         a = Annotation(name='bob')
         a.save()
-        assert_in('id', a)
+        assert_true('id' in a)
 
     def test_fetch(self):
         a = Annotation(foo='bar')
