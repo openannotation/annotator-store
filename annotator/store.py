@@ -61,7 +61,7 @@ def create_annotation():
         annotation = Annotation(_filter_input(request.json, CREATE_FILTER_FIELDS))
 
         annotation['consumer'] = g.consumer.key
-        if _get_annotation_user(annotation) != g.user.username:
+        if g.consumer.key == 'annotateit' and _get_annotation_user(annotation) != g.user.username:
             annotation['user'] = g.user.username
 
         annotation.save()
