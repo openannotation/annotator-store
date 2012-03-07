@@ -44,6 +44,13 @@ class Authenticator(object):
 
         return result
 
+    def request_detail(self, request, key, default=None):
+        return request.headers.get(HEADER_PREFIX + key, default)
+
+    def request_credentials(self, request):
+        return (self.request_detail(request, 'consumer-key'),
+                self.request_detail(request, 'user-id'))
+
 # Main auth routines
 
 def generate_token(consumer, user_id):

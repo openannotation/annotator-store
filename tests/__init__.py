@@ -15,9 +15,6 @@ def create_app():
 
     @app.before_request
     def before_request():
-        g.user = MockUser(request.headers.get(auth.HEADER_PREFIX + 'user-id'))
-        g.consumer = MockConsumer(request.headers.get(auth.HEADER_PREFIX + 'consumer-key'))
-
         g.auth = auth.Authenticator(MockConsumer)
         g.authorize = authz.authorize
 

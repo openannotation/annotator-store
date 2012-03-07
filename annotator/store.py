@@ -40,11 +40,13 @@ def root():
 # INDEX
 @store.route('/annotations')
 def index():
-    if g.consumer and g.user:
+    auth_consumer, auth_user = g.auth.request_credentials(request)
+
+    if auth_consumer and auth_user:
         if not g.auth.verify_request(request):
             return _failed_auth_response()
 
-        annotations = Annotation.search(_user_id=g.user.username, _consumer_key=g.consumer.key)
+        annotations = Annotation.search(_user_id=auth_user, _consumer_key=auth_consumer)
     else:
         annotations = Annotation.search()
 
@@ -60,9 +62,11 @@ def create_annotation():
     if request.json:
         annotation = Annotation(_filter_input(request.json, CREATE_FILTER_FIELDS))
 
-        annotation['consumer'] = g.consumer.key
-        if g.consumer.key == 'annotateit' and _get_annotation_user(annotation) != g.user.username:
-            annotation['user'] = g.user.username
+        auth_consumer, auth_user = g.auth.request_credentials(request)
+
+        annotation['consumer'] = auth_consumer
+        if _get_annotation_user(annotation) != auth_user:
+            annotation['user'] = auth_user
 
         annotation.save()
 
@@ -77,7 +81,7 @@ def read_annotation(id):
     if not annotation:
         return jsonify('Annotation not found!', status=404)
 
-    failure = _check_action(annotation, 'read', g.user, g.consumer)
+    failure = _check_action(annotation, 'read')
     if failure:
         return failure
 
@@ -90,7 +94,7 @@ def update_annotation(id):
     if not annotation:
         return jsonify('Annotation not found! No update performed.', status=404)
 
-    failure = _check_action(annotation, 'update', g.user, g.consumer)
+    failure = _check_action(annotation, 'update')
     if failure:
         return failure
 
@@ -99,8 +103,9 @@ def update_annotation(id):
         updated['id'] = id # use id from URL, regardless of what arrives in JSON payload
 
         if 'permissions' in updated and updated['permissions'] != annotation.get('permissions', {}):
-            if not g.authorize(annotation, 'admin', g.user.username, g.consumer.key):
-                return _failed_authz_response('permissions update')
+            failure = _check_action(annotation, 'admin', message='permissions update')
+            if failure:
+                return failure
 
         annotation.update(updated)
         annotation.save()
@@ -115,7 +120,7 @@ def delete_annotation(id):
     if not annotation:
         return jsonify('Annotation not found. No delete performed.', status=404)
 
-    failure = _check_action(annotation, 'delete', g.user, g.consumer)
+    failure = _check_action(annotation, 'delete')
     if failure:
         return failure
 
@@ -127,12 +132,14 @@ def delete_annotation(id):
 def search_annotations():
     kwargs = dict(request.args.items())
 
-    if g.user and g.consumer:
+    auth_consumer, auth_user = g.auth.request_credentials(request)
+
+    if auth_consumer and auth_user:
         if not g.auth.verify_request(request):
             return _failed_auth_response()
 
-        kwargs['_consumer_key'] = g.consumer.key
-        kwargs['_user_id'] = g.user.username
+        kwargs['_consumer_key'] = auth_consumer
+        kwargs['_user_id'] = auth_user
     else:
         # Prevent request forgery
         kwargs.pop('_consumer_key', None)
@@ -149,14 +156,6 @@ def search_annotations():
         'total': total,
         'rows': results,
     })
-
-# AUTH TOKEN
-@store.route('/token')
-def auth_token():
-    if g.session_user:
-        return jsonify(g.auth.generate_token('annotateit', g.session_user.username))
-    else:
-        return jsonify('Please go to {0} to log in!'.format(request.host_url), status=401)
 
 def _filter_input(obj, fields):
     for field in fields:
@@ -176,9 +175,11 @@ def _get_annotation_user(ann):
     except AttributeError:
         return user
 
-def _check_action(annotation, action, user, consumer):
-    if not user or not consumer or not g.authorize(annotation, action, user.username, consumer.key):
-        return _failed_authz_response()
+def _check_action(annotation, action, message=''):
+    consumer, user = g.auth.request_credentials(request)
+
+    if not user or not consumer or not g.authorize(annotation, action, user, consumer):
+        return _failed_authz_response(message)
 
     if user and not g.auth.verify_request(request):
         return _failed_auth_response()

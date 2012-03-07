@@ -44,8 +44,6 @@ def main():
         #
         # [1]: https://github.com/okfn/annotator/wiki/Authentication
         g.user = MockUser('alice')
-        g.session_user = MockUser('alice')
-        g.consumer = MockConsumer('annotateit')
 
         # By default, this test application won't do full-on authentication
         # tests. Set AUTH_ON to True in the config file to enable (limited)
