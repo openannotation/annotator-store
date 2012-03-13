@@ -48,7 +48,7 @@ class TestStore(TestCase):
         assert headers['Access-Control-Allow-Origin'] == '*', \
             "Did not send the right Access-Control-Allow-Origin header."
 
-        assert headers['Access-Control-Expose-Headers'] == 'Location', \
+        assert headers['Access-Control-Expose-Headers'] == 'Location, Content-Type, Content-Length', \
             "Did not send the right Access-Control-Expose-Headers header."
 
     def test_index(self):
