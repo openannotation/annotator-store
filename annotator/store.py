@@ -23,10 +23,10 @@ def after_request(response):
 
     response.headers[ac + 'Allow-Origin']      = request.headers.get('origin', '*')
     response.headers[ac + 'Allow-Credentials'] = 'true'
-    response.headers[ac + 'Expose-Headers']    = 'Location, Content-Type, Content-Length'
+    response.headers[ac + 'Expose-Headers']    = 'Content-Length, Content-Type, Location'
 
     if request.method == 'OPTIONS':
-        response.headers[ac + 'Allow-Headers']  = 'X-Requested-With, Content-Type, Content-Length, X-Annotator-Consumer-Key, X-Annotator-User-Id, X-Annotator-Auth-Token-Issue-Time, X-Annotator-Auth-Token-TTL, X-Annotator-Auth-Token'
+        response.headers[ac + 'Allow-Headers']  = 'Content-Length, Content-Type, X-Annotator-Auth-Token, X-Requested-With'
         response.headers[ac + 'Allow-Methods']  = 'GET, POST, PUT, DELETE, OPTIONS'
         response.headers[ac + 'Max-Age']        = '86400'
 
@@ -51,7 +51,7 @@ def create_annotation():
 
     # Only registered users can create annotations
     if not (consumer and user):
-        return _failed_auth_response()
+        return _failed_authz_response('create annotation')
 
     if request.json:
         annotation = Annotation(_filter_input(request.json, CREATE_FILTER_FIELDS))
@@ -166,13 +166,10 @@ def _check_action(annotation, action, message=''):
         return _failed_authz_response(message)
 
 def _failed_authz_response(msg=''):
+    consumer, user = g.auth.request_credentials(request)
     return jsonify("Cannot authorize request{0}. Perhaps you're not logged in as "
-                   "a user with appropriate permissions on this annotation?".format(' (' + msg + ')' if msg else ''),
-                   status=401)
-
-def _failed_auth_response():
-    return jsonify("Cannot authenticate request. Perhaps you didn't send the "
-                   "X-Annotator-* headers?",
+                   "a user with appropriate permissions on this annotation? "
+                   "(user={user}, consumer={consumer}".format(' (' + msg + ')' if msg else '', user=user, consumer=consumer),
                    status=401)
 
 def _quiet_int(obj, default=0):
