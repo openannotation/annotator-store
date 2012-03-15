@@ -14,8 +14,8 @@ class TestStore(TestCase):
         self.consumer = MockConsumer()
         self.user = MockUser()
 
-        token = auth.generate_token(self.consumer, self.user.username)
-        self.headers = auth.headers_for_token(token)
+        token = auth.generate_token(self.consumer, {'userId': self.user.username})
+        self.headers = {auth.HEADER_PREFIX + 'auth-token': token}
 
         self.ctx = self.app.test_request_context()
         self.ctx.push()
@@ -325,8 +325,8 @@ class TestStoreAuthz(TestCase):
         ann.save()
 
         for u in ['alice', 'bob', 'charlie']:
-            token = auth.generate_token(self.consumer, u)
-            setattr(self, '%s_headers' % u, auth.headers_for_token(token))
+            token = auth.generate_token(self.consumer, {'userId': u})
+            setattr(self, '%s_headers' % u, {auth.HEADER_PREFIX + 'auth-token': token})
 
     def teardown(self):
         self.ctx.pop()

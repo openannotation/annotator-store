@@ -1,7 +1,8 @@
 import hashlib
-import datetime
+import time
 
 from nose.tools import *
+from mock import Mock, patch
 
 from werkzeug import Headers
 
@@ -11,91 +12,73 @@ class MockRequest():
     def __init__(self, headers):
         self.headers = headers
 
-class MockConsumer():
-    key = 'Consumer'
+class MockConsumer(Mock):
+    key    = 'Consumer'
     secret = 'ConsumerSecret'
-    ttl = 300
+    ttl    = 300
 
-def make_issue_time(offset=0):
-    t = datetime.datetime.now() + datetime.timedelta(seconds=offset)
-    return t.strftime("%Y-%m-%dT%H:%M:%S")
-
-def make_token(consumer, user_id, issue_time):
-    token = hashlib.sha256(consumer.secret + user_id + issue_time).hexdigest()
-    return token
-
-def make_request(consumer, user_id, issue_time):
+def make_request(consumer, obj=None):
     return MockRequest(Headers([
-        ('x-annotator-consumer-key', consumer.key),
-        ('x-annotator-auth-token', make_token(consumer, user_id, issue_time)),
-        ('x-annotator-auth-token-issue-time', issue_time),
-        ('x-annotator-user-id', user_id)
+        ('x-annotator-auth-token', auth.generate_token(consumer, obj))
     ]))
 
-def test_verify_token():
-    issue_time = make_issue_time()
-    tok = make_token(MockConsumer, 'alice', issue_time)
-    assert auth.verify_token(MockConsumer, tok, 'alice', issue_time), "token should have been verified"
+class TestAuthBasics(object):
+    def setup(self):
+        self.consumer = MockConsumer()
+        self.now = time.time()
 
-def test_reject_inauthentic_token():
-    issue_time = make_issue_time()
-    tok = make_token(MockConsumer, 'alice', issue_time)
-    assert not auth.verify_token(MockConsumer, tok, 'bob', issue_time), "token was inauthentic, should have been rejected"
+        self.time_patcher = patch('itsdangerous.time.time')
+        self.time = self.time_patcher.start()
+        self.time.return_value = self.now
 
-def test_reject_invalid_token():
-    issue_time = make_issue_time(300)
-    tok = make_token(MockConsumer, 'alice', issue_time)
-    assert not auth.verify_token(MockConsumer, tok, 'alice', issue_time), "token not yet valid, should have been rejected"
+    def teardown(self):
+        self.time_patcher.stop()
 
-def test_reject_expired_token():
-    issue_time = make_issue_time(-301)
-    tok = make_token(MockConsumer, 'alice', issue_time)
-    assert not auth.verify_token(MockConsumer, tok, 'bob', issue_time), "token had expired, should have been rejected"
+    def test_verify_token(self):
+        tok = auth.generate_token(self.consumer)
+        assert auth.verify_token(self.consumer, tok), "token should have been verified"
 
-def test_headers_for_token():
-    headers = auth.headers_for_token({
-        'consumerKey': 'consumerFoo',
-        'authToken': 'abc',
-        'authTokenIssueTime': 'now',
-        'authTokenTTL': 300,
-        'userId': 'userBar'
-    })
-    assert_equal(headers, {
-        'x-annotator-consumer-key': 'consumerFoo',
-        'x-annotator-auth-token': 'abc',
-        'x-annotator-auth-token-issue-time': 'now',
-        'x-annotator-auth-token-ttl': 300,
-        'x-annotator-user-id': 'userBar'
-    })
+    def test_reject_inauthentic_token(self):
+        tok = auth.generate_token(self.consumer, {'userId': 'alice'})
+        tok = tok.replace('alice', 'bob')
+        assert not auth.verify_token(self.consumer, tok), "token was inauthentic, should have been rejected"
+
+    def test_reject_expired_token(self):
+        tok = auth.generate_token(self.consumer)
+        self.time.return_value = self.now + 301
+        assert not auth.verify_token(self.consumer, tok), "token had expired, should have been rejected"
 
 class TestAuthenticator(object):
     def setup(self):
-        fetcher = lambda x: MockConsumer()
+        self.consumer = MockConsumer()
+        fetcher = lambda x: self.consumer
         self.auth = auth.Authenticator(fetcher)
 
-    def test_generate_token(self):
-        issue_time = make_issue_time()
-        tok = self.auth.generate_token('Consumer', 'alice')
-        assert tok
-
-    def test_verify_token(self):
-        issue_time = make_issue_time()
-        tok = make_token(MockConsumer, 'alice', issue_time)
-        assert self.auth.verify_token('Consumer', tok, 'alice', issue_time), "token should have been verified"
-
     def test_verify_request(self):
-        issue_time = make_issue_time()
-        request = make_request(MockConsumer, 'alice', issue_time)
+        request = make_request(self.consumer)
         assert self.auth.verify_request(request), "request should have been verified"
 
     def test_reject_request_missing_headers(self):
-        issue_time = make_issue_time()
-        request = make_request(MockConsumer, 'alice', issue_time)
-        del request.headers['x-annotator-consumer-key']
-        assert not self.auth.verify_request(request), "request missing consumer key should have been rejected"
+        request = make_request(self.consumer)
+        del request.headers['x-annotator-auth-token']
+        assert not self.auth.verify_request(request), "request missing auth token should have been rejected"
 
-    def test_verify_request_mixedcase_headers(self):
-        issue_time = make_issue_time()
-        request = make_request(MockConsumer, 'alice', issue_time)
-        request.headers['X-Annotator-Consumer-Key'] = request.headers['x-annotator-consumer-key']
-        assert self.auth.verify_request(request), "request with mixed-case headers should have been verified"
+    def test_request_credentials(self):
+        request = make_request(self.consumer)
+        assert_equal(self.auth.request_credentials(request), ('Consumer', None))
+
+    def test_request_credentials_user(self):
+        request = make_request(self.consumer, {'userId': 'alice'})
+        assert_equal(self.auth.request_credentials(request), ('Consumer', 'alice'))
+
+    def test_request_credentials_missing(self):
+        request = make_request(self.consumer)
+        del request.headers['x-annotator-auth-token']
+        assert_equal(self.auth.request_credentials(request), (None, None))
+
+    def test_request_credentials_invalid(self):
+        request = make_request(self.consumer)
+        request.headers['x-annotator-auth-token'] = request.headers['x-annotator-auth-token'].replace('Consumer', 'LookMaIAmAHacker')
+        assert_equal(self.auth.request_credentials(request), (None, None))
+
+

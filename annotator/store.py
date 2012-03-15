@@ -1,8 +1,8 @@
 import json
 
-from flask import Flask, Blueprint, Response
-from flask import current_app, g
-from flask import abort, redirect, request
+from flask import Blueprint, Response
+from flask import g
+from flask import request
 
 from annotator.annotation import Annotation
 
@@ -40,33 +40,25 @@ def root():
 # INDEX
 @store.route('/annotations')
 def index():
-    auth_consumer, auth_user = g.auth.request_credentials(request)
-
-    if auth_consumer and auth_user:
-        if not g.auth.verify_request(request):
-            return _failed_auth_response()
-
-        annotations = Annotation.search(_user_id=auth_user, _consumer_key=auth_consumer)
-    else:
-        annotations = Annotation.search()
-
+    consumer, user = g.auth.request_credentials(request)
+    annotations = Annotation.search(_user_id=user, _consumer_key=consumer)
     return jsonify(annotations)
 
 # CREATE
 @store.route('/annotations', methods=['POST'])
 def create_annotation():
+    consumer, user = g.auth.request_credentials(request)
+
     # Only registered users can create annotations
-    if not g.auth.verify_request(request):
+    if not (consumer and user):
         return _failed_auth_response()
 
     if request.json:
         annotation = Annotation(_filter_input(request.json, CREATE_FILTER_FIELDS))
 
-        auth_consumer, auth_user = g.auth.request_credentials(request)
-
-        annotation['consumer'] = auth_consumer
-        if _get_annotation_user(annotation) != auth_user:
-            annotation['user'] = auth_user
+        annotation['consumer'] = consumer
+        if _get_annotation_user(annotation) != user:
+            annotation['user'] = user
 
         annotation.save()
 
@@ -132,18 +124,10 @@ def delete_annotation(id):
 def search_annotations():
     kwargs = dict(request.args.items())
 
-    auth_consumer, auth_user = g.auth.request_credentials(request)
+    consumer, user = g.auth.request_credentials(request)
 
-    if auth_consumer and auth_user:
-        if not g.auth.verify_request(request):
-            return _failed_auth_response()
-
-        kwargs['_consumer_key'] = auth_consumer
-        kwargs['_user_id'] = auth_user
-    else:
-        # Prevent request forgery
-        kwargs.pop('_consumer_key', None)
-        kwargs.pop('_user_id', None)
+    kwargs['_consumer_key'] = consumer
+    kwargs['_user_id'] = user
 
     if 'offset' in kwargs:
         kwargs['offset'] = _quiet_int(kwargs['offset'])
@@ -154,7 +138,7 @@ def search_annotations():
     total = Annotation.count(**kwargs)
     return jsonify({
         'total': total,
-        'rows': results,
+        'rows': results
     })
 
 def _filter_input(obj, fields):
@@ -178,15 +162,12 @@ def _get_annotation_user(ann):
 def _check_action(annotation, action, message=''):
     consumer, user = g.auth.request_credentials(request)
 
-    if not user or not consumer or not g.authorize(annotation, action, user, consumer):
+    if not g.authorize(annotation, action, user, consumer):
         return _failed_authz_response(message)
-
-    if user and not g.auth.verify_request(request):
-        return _failed_auth_response()
 
 def _failed_authz_response(msg=''):
     return jsonify("Cannot authorize request{0}. Perhaps you're not logged in as "
-                   "a user with appropriate permissions on this annotation?".format(' (' + msg + ')'),
+                   "a user with appropriate permissions on this annotation?".format(' (' + msg + ')' if msg else ''),
                    status=401)
 
 def _failed_auth_response():

@@ -1,6 +1,6 @@
 import datetime
-import hashlib
-import iso8601
+import itsdangerous
+import json
 
 HEADER_PREFIX = 'x-annotator-'
 
@@ -22,71 +22,50 @@ class Authenticator(object):
     def __init__(self, consumer_fetcher):
         self.consumer_fetcher = consumer_fetcher
 
-    def generate_token(self, key, *args):
-        consumer = self.consumer_fetcher(key)
-        return generate_token(consumer, *args)
-
-    def verify_token(self, key, *args):
-        consumer = self.consumer_fetcher(key)
-        return verify_token(consumer, *args)
-
     def verify_request(self, request):
-        required = ['consumer-key', 'auth-token', 'user-id', 'auth-token-issue-time']
-        headers  = [HEADER_PREFIX + key for key in required]
+        token = request.headers.get(HEADER_PREFIX + 'auth-token')
 
-        rh = request.headers
-
-        # False if not all the required headers have been provided
-        if not set(headers) <= set([key.lower() for key in rh.keys()]):
+        if not token:
             return False
 
-        result = self.verify_token( *[rh[h] for h in headers] )
+        unsafe_token = _unsafe_parse_token(token)
+        key = unsafe_token.get('consumerKey')
+        if not key:
+            return False
 
-        return result
-
-    def request_detail(self, request, key, default=None):
-        return request.headers.get(HEADER_PREFIX + key, default)
+        consumer = self.consumer_fetcher(key)
+        return verify_token(consumer, token)
 
     def request_credentials(self, request):
-        return (self.request_detail(request, 'consumer-key'),
-                self.request_detail(request, 'user-id'))
+        token = self.verify_request(request)
+
+        if not token:
+            return None, None
+        else:
+            return token.get('consumerKey'), token.get('userId')
 
 # Main auth routines
+def generate_token(consumer, token=None):
+    s = _get_serializer(consumer.key, consumer.secret)
+    signer = s.make_signer()
 
-def generate_token(consumer, user_id):
-    issue_time = datetime.datetime.now(UTC).isoformat()
-    token = hashlib.sha256(consumer.secret + user_id + issue_time).hexdigest()
+    token = token if token is not None else {}
+    token.update({
+        'consumerKey': consumer.key,
+        'authTokenIssueTime': signer.timestamp_to_datetime(signer.get_timestamp()).isoformat() + 'Z',
+        'authTokenTTL': consumer.ttl
+    })
+    return s.dumps(token)
 
-    return dict(
-        consumerKey=consumer.key,
-        authToken=token,
-        authTokenIssueTime=issue_time,
-        authTokenTTL=consumer.ttl,
-        userId=user_id
-    )
+def verify_token(consumer, token):
+    s = _get_serializer(consumer.key, consumer.secret)
+    try:
+        return s.loads(token, max_age=consumer.ttl)
+    except itsdangerous.BadSignature:
+        return False
 
-def verify_token(consumer, token, user_id, issue_time):
-    computed_token = hashlib.sha256(consumer.secret + user_id + issue_time).hexdigest()
+def _get_serializer(key, secret):
+    return itsdangerous.TimedSerializer(secret_key=secret, salt="annotator:authToken:{0}".format(key))
 
-    if computed_token != token:
-        return False # Token inauthentic: computed hash doesn't match.
-
-    validity = iso8601.parse_date(issue_time)
-    expiry = validity + datetime.timedelta(seconds=consumer.ttl)
-
-    if validity > datetime.datetime.now(UTC):
-        return False # Token not yet valid
-
-    if expiry < datetime.datetime.now(UTC):
-        return False # Token expired: issue_time + ttl > now
-
-    return True
-
-def headers_for_token(token):
-    return {
-        HEADER_PREFIX + 'consumer-key': token['consumerKey'],
-        HEADER_PREFIX + 'auth-token': token['authToken'],
-        HEADER_PREFIX + 'auth-token-issue-time': token['authTokenIssueTime'],
-        HEADER_PREFIX + 'auth-token-ttl': token['authTokenTTL'],
-        HEADER_PREFIX + 'user-id': token['userId']
-    }
+def _unsafe_parse_token(token):
+    return json.loads(token.rsplit('.', 2)[0])
