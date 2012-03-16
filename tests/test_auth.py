@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import time
 
@@ -18,35 +19,44 @@ class MockConsumer(Mock):
     ttl    = 300
 
 def make_request(consumer, obj=None):
+    obj = obj or {}
+    obj.update({'consumerKey': consumer.key})
     return MockRequest(Headers([
-        ('x-annotator-auth-token', auth.generate_token(consumer, obj))
+        ('x-annotator-auth-token', auth.encode_token(obj, consumer.secret))
     ]))
 
 class TestAuthBasics(object):
     def setup(self):
-        self.consumer = MockConsumer()
-        self.now = time.time()
+        self.now = auth._now()
 
-        self.time_patcher = patch('itsdangerous.time.time')
+        self.time_patcher = patch('annotator.auth._now')
         self.time = self.time_patcher.start()
         self.time.return_value = self.now
+
+    def time_travel(self, **kwargs):
+        self.time.return_value = self.now + datetime.timedelta(**kwargs)
 
     def teardown(self):
         self.time_patcher.stop()
 
-    def test_verify_token(self):
-        tok = auth.generate_token(self.consumer)
-        assert auth.verify_token(self.consumer, tok), "token should have been verified"
+    def test_decode_token(self):
+        tok = auth.encode_token({}, 'secret')
+        assert auth.decode_token(tok, 'secret'), "token should have been successfully decoded"
 
     def test_reject_inauthentic_token(self):
-        tok = auth.generate_token(self.consumer, {'userId': 'alice'})
-        tok = tok.replace('alice', 'bob')
-        assert not auth.verify_token(self.consumer, tok), "token was inauthentic, should have been rejected"
+        tok = auth.encode_token({'userId': 'alice'}, 'secret')
+        tok += 'extrajunk'
+        assert_raises(auth.TokenInvalid, auth.decode_token, tok, 'secret')
+
+    def test_reject_notyetvalid_token(self):
+        tok = auth.encode_token({}, 'secret')
+        self.time_travel(minutes=-1)
+        assert_raises(auth.TokenInvalid, auth.decode_token, tok, 'secret')
 
     def test_reject_expired_token(self):
-        tok = auth.generate_token(self.consumer)
-        self.time.return_value = self.now + 301
-        assert not auth.verify_token(self.consumer, tok), "token had expired, should have been rejected"
+        tok = auth.encode_token({}, 'secret')
+        self.time_travel(seconds=310)
+        assert_raises(auth.TokenInvalid, auth.decode_token, tok, 'secret', ttl=300)
 
 class TestAuthenticator(object):
     def setup(self):
@@ -63,6 +73,12 @@ class TestAuthenticator(object):
         del request.headers['x-annotator-auth-token']
         assert not self.auth.verify_request(request), "request missing auth token should have been rejected"
 
+    def test_request_junk_token(self):
+        request = MockRequest(Headers([
+            ('x-annotator-auth-token', 'foo.bar.baz')
+        ]))
+        assert_false(self.auth.verify_request(request))
+
     def test_request_credentials(self):
         request = make_request(self.consumer)
         assert_equal(self.auth.request_credentials(request), ('Consumer', None))
@@ -78,7 +94,5 @@ class TestAuthenticator(object):
 
     def test_request_credentials_invalid(self):
         request = make_request(self.consumer)
-        request.headers['x-annotator-auth-token'] = request.headers['x-annotator-auth-token'].replace('Consumer', 'LookMaIAmAHacker')
+        request.headers['x-annotator-auth-token'] += 'LookMaIAmAHacker'
         assert_equal(self.auth.request_credentials(request), (None, None))
-
-

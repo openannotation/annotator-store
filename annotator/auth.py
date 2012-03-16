@@ -1,8 +1,10 @@
 import datetime
-import itsdangerous
 import json
 
-HEADER_PREFIX = 'x-annotator-'
+import iso8601
+import jwt
+
+DEFAULT_TTL = 86400
 
 # Yoinked from python docs
 ZERO = datetime.timedelta(0)
@@ -18,25 +20,61 @@ class Utc(datetime.tzinfo):
 UTC = Utc()
 
 class Authenticator(object):
+    """
+    A wrapper around the low-level encode_token() and decode_token() that is
+    backend inspecific, and swallows all possible exceptions thrown by badly-
+    formatted, invalid, or malicious tokens.
+    """
 
     def __init__(self, consumer_fetcher):
+        """
+        Arguments:
+        consumer_fetcher -- a function which takes a consumer key and returns an object
+                            with 'key', 'secret', and 'ttl' attributes
+        """
         self.consumer_fetcher = consumer_fetcher
 
     def verify_request(self, request):
-        token = request.headers.get(HEADER_PREFIX + 'auth-token')
+        """
+        Retrieve any request token from the passed request, verify its
+        authenticity and validity, and return the parsed contents of the token
+        if and only if all such checks pass.
 
+        Arguments:
+        request -- a Flask Request object
+        """
+
+        token = request.headers.get('x-annotator-auth-token')
         if not token:
             return False
 
-        unsafe_token = _unsafe_parse_token(token)
+        try:
+            unsafe_token = decode_token(token, verify=False)
+        except TokenInvalid: # catch junk tokens
+            return False
+
         key = unsafe_token.get('consumerKey')
         if not key:
             return False
 
         consumer = self.consumer_fetcher(key)
-        return verify_token(consumer, token)
+        if not consumer:
+            return False
+
+        try:
+            return decode_token(token, secret=consumer.secret, ttl=consumer.ttl)
+        except TokenInvalid: # catch inauthentic or expired tokens
+            return False
 
     def request_credentials(self, request):
+        """
+        Retrieve the user credentials associated with the current request.
+
+        Arguments:
+        request -- a Flask Request object
+
+        Returns: a tuple (consumer_key, user_id)
+        """
         token = self.verify_request(request)
 
         if not token:
@@ -44,28 +82,37 @@ class Authenticator(object):
         else:
             return token.get('consumerKey'), token.get('userId')
 
+class TokenInvalid(Exception):
+    pass
+
 # Main auth routines
-def generate_token(consumer, token=None):
-    s = _get_serializer(consumer.key, consumer.secret)
-    signer = s.make_signer()
+def encode_token(token, secret):
+    token.update({'issuedAt': _now().isoformat()})
+    return jwt.encode(token, secret)
 
-    token = token if token is not None else {}
-    token.update({
-        'consumerKey': consumer.key,
-        'authTokenIssueTime': signer.timestamp_to_datetime(signer.get_timestamp()).isoformat() + 'Z',
-        'authTokenTTL': consumer.ttl
-    })
-    return s.dumps(token)
-
-def verify_token(consumer, token):
-    s = _get_serializer(consumer.key, consumer.secret)
+def decode_token(token, secret='', ttl=DEFAULT_TTL, verify=True):
     try:
-        return s.loads(token, max_age=consumer.ttl)
-    except itsdangerous.BadSignature:
-        return False
+        token = jwt.decode(token, secret, verify=verify)
+    except jwt.DecodeError:
+        import sys
+        exc_class, exc, tb = sys.exc_info()
+        new_exc = TokenInvalid("error decoding JSON Web Token: %s" % exc or exc_class)
+        raise new_exc.__class__, new_exc, tb
 
-def _get_serializer(key, secret):
-    return itsdangerous.TimedSerializer(secret_key=secret, salt="annotator:authToken:{0}".format(key))
+    if verify:
+        issue_time = token.get('issuedAt')
+        if issue_time is None:
+            raise TokenInvalid("'issuedAt' is missing from token")
 
-def _unsafe_parse_token(token):
-    return json.loads(token.rsplit('.', 2)[0])
+        issue_time = iso8601.parse_date(issue_time)
+        expiry_time = issue_time + datetime.timedelta(seconds=ttl)
+
+        if issue_time > _now():
+            raise TokenInvalid("token is not yet valid")
+        if expiry_time < _now():
+            raise TokenInvalid("token has expired")
+
+    return token
+
+def _now():
+    return datetime.datetime.now(UTC).replace(microsecond=0)
