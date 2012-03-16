@@ -8,6 +8,7 @@ setup(
     install_requires = [
         'Flask==0.8',
         'pyes==0.16.0',
+        'PyJWT==0.1.4',
         'nose==1.1.2',
         'mock==0.8.0'
     ],
