@@ -62,6 +62,9 @@ def create_annotation():
 
         annotation.save()
 
+        if hasattr(g, 'after_annotation_create'):
+            g.after_annotation_create(annotation)
+
         return jsonify(annotation)
     else:
         return jsonify('No JSON payload sent. Annotation not created.', status=400)
