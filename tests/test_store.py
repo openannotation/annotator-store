@@ -14,8 +14,9 @@ class TestStore(TestCase):
         self.consumer = MockConsumer()
         self.user = MockUser()
 
-        token = auth.generate_token(self.consumer, self.user.username)
-        self.headers = auth.headers_for_token(token)
+        payload = {'consumerKey': self.consumer.key, 'userId': self.user.username}
+        token = auth.encode_token(payload, self.consumer.secret)
+        self.headers = {'x-annotator-auth-token': token}
 
         self.ctx = self.app.test_request_context()
         self.ctx.push()
@@ -48,7 +49,7 @@ class TestStore(TestCase):
         assert headers['Access-Control-Allow-Origin'] == '*', \
             "Did not send the right Access-Control-Allow-Origin header."
 
-        assert headers['Access-Control-Expose-Headers'] == 'Location, Content-Type, Content-Length', \
+        assert headers['Access-Control-Expose-Headers'] == 'Content-Length, Content-Type, Location', \
             "Did not send the right Access-Control-Expose-Headers header."
 
     def test_index(self):
@@ -325,8 +326,8 @@ class TestStoreAuthz(TestCase):
         ann.save()
 
         for u in ['alice', 'bob', 'charlie']:
-            token = auth.generate_token(self.consumer, u)
-            setattr(self, '%s_headers' % u, auth.headers_for_token(token))
+            token = auth.encode_token({'consumerKey': self.consumer.key, 'userId': u}, self.consumer.secret)
+            setattr(self, '%s_headers' % u, {'x-annotator-auth-token': token})
 
     def teardown(self):
         self.ctx.pop()

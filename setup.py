@@ -8,8 +8,9 @@ setup(
     install_requires = [
         'Flask==0.8',
         'pyes==0.16.0',
-        'nose==1.0.0',
-        'iso8601==0.1.4'
+        'PyJWT==0.1.4',
+        'nose==1.1.2',
+        'mock==0.8.0'
     ],
 
     # metadata for upload to PyPI
