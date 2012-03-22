@@ -1,4 +1,3 @@
-from threading import Lock
 import json
 
 import pyes
@@ -30,7 +29,6 @@ class ElasticSearch(object):
             self.app = None
 
         self.Model = make_model(self)
-        self._connection_lock = Lock()
 
     def init_app(self, app):
         app.config.setdefault('ELASTICSEARCH_HOST', '127.0.0.1:9200')
@@ -53,12 +51,11 @@ class ElasticSearch(object):
                            'context')
 
     def get_conn(self, app):
-        with self._connection_lock:
-            host = app.config['ELASTICSEARCH_HOST']
-            # We specifically set decoder to prevent pyes from futzing with
-            # datetimes.
-            conn = pyes.ES(host, decoder=json.JSONDecoder)
-            return conn
+        host = app.config['ELASTICSEARCH_HOST']
+        # We specifically set decoder to prevent pyes from futzing with
+        # datetimes.
+        conn = pyes.ES(host, decoder=json.JSONDecoder)
+        return conn
 
     @property
     def conn(self):
