@@ -22,7 +22,6 @@ def after_request(response):
     ac = 'Access-Control-'
 
     response.headers[ac + 'Allow-Origin']      = request.headers.get('origin', '*')
-    response.headers[ac + 'Allow-Credentials'] = 'true'
     response.headers[ac + 'Expose-Headers']    = 'Content-Length, Content-Type, Location'
 
     if request.method == 'OPTIONS':
