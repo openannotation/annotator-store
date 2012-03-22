@@ -1,4 +1,5 @@
 from threading import Lock
+import json
 
 import pyes
 from flask import _request_ctx_stack
@@ -54,7 +55,9 @@ class ElasticSearch(object):
     def get_conn(self, app):
         with self._connection_lock:
             host = app.config['ELASTICSEARCH_HOST']
-            conn = pyes.ES(host)
+            # We specifically set decoder to prevent pyes from futzing with
+            # datetimes.
+            conn = pyes.ES(host, decoder=json.JSONDecoder)
             return conn
 
     @property
