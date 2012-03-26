@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'annotator',
-    version = '0.7.4',
+    version = '0.7.5',
     packages = find_packages(),
 
     install_requires = [
