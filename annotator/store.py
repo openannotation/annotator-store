@@ -63,6 +63,7 @@ def create_annotation():
 
         if hasattr(g, 'after_annotation_create'):
             g.after_annotation_create(annotation)
+            annotation.save()
 
         return jsonify(annotation)
     else:
@@ -102,6 +103,10 @@ def update_annotation(id):
                 return failure
 
         annotation.update(updated)
+
+        if hasattr(g, 'before_annotation_update'):
+            g.before_annotation_update(annotation)
+
         annotation.save()
 
     return jsonify(annotation)
