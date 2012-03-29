@@ -6,19 +6,6 @@ import jwt
 
 DEFAULT_TTL = 86400
 
-# Yoinked from python docs
-ZERO = datetime.timedelta(0)
-class Utc(datetime.tzinfo):
-    def utcoffset(self, dt):
-        return ZERO
-
-    def tzname(self, dt):
-        return "UTC"
-
-    def dst(self, dt):
-        return ZERO
-UTC = Utc()
-
 class Authenticator(object):
     """
     A wrapper around the low-level encode_token() and decode_token() that is
@@ -115,4 +102,4 @@ def decode_token(token, secret='', ttl=DEFAULT_TTL, verify=True):
     return token
 
 def _now():
-    return datetime.datetime.now(UTC).replace(microsecond=0)
+    return datetime.datetime.now(iso8601.iso8601.UTC).replace(microsecond=0)
