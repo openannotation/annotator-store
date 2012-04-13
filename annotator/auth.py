@@ -6,6 +6,19 @@ import jwt
 
 DEFAULT_TTL = 86400
 
+class Consumer(object):
+    def __init__(self, key):
+        self.key = key
+
+class User(object):
+    def __init__(self, id, consumer):
+        self.id = id
+        self.consumer = consumer
+
+    @classmethod
+    def from_token(cls, token):
+        return cls(token['userId'], Consumer(token['consumerKey']))
+
 class Authenticator(object):
     """
     A wrapper around the low-level encode_token() and decode_token() that is
@@ -21,7 +34,26 @@ class Authenticator(object):
         """
         self.consumer_fetcher = consumer_fetcher
 
-    def verify_request(self, request):
+    def request_user(self, request):
+        """
+        Retrieve the user object associated with the current request.
+
+        Arguments:
+        request -- a Flask Request object
+
+        Returns: a user object
+        """
+        token = self._decode_request_token(request)
+
+        if token:
+            try:
+                return User.from_token(token)
+            except KeyError:
+                return None
+        else:
+            return None
+
+    def _decode_request_token(self, request):
         """
         Retrieve any request token from the passed request, verify its
         authenticity and validity, and return the parsed contents of the token
@@ -32,7 +64,7 @@ class Authenticator(object):
         """
 
         token = request.headers.get('x-annotator-auth-token')
-        if not token:
+        if token is None:
             return False
 
         try:
@@ -52,22 +84,6 @@ class Authenticator(object):
             return decode_token(token, secret=consumer.secret, ttl=consumer.ttl)
         except TokenInvalid: # catch inauthentic or expired tokens
             return False
-
-    def request_credentials(self, request):
-        """
-        Retrieve the user credentials associated with the current request.
-
-        Arguments:
-        request -- a Flask Request object
-
-        Returns: a tuple (consumer_key, user_id)
-        """
-        token = self.verify_request(request)
-
-        if not token:
-            return None, None
-        else:
-            return token.get('consumerKey'), token.get('userId')
 
 class TokenInvalid(Exception):
     pass

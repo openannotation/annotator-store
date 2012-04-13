@@ -11,11 +11,10 @@ class TestStore(TestCase):
     def setup(self):
         super(TestStore, self).setup()
 
-        self.consumer = MockConsumer()
         self.user = MockUser()
 
-        payload = {'consumerKey': self.consumer.key, 'userId': self.user.username}
-        token = auth.encode_token(payload, self.consumer.secret)
+        payload = {'consumerKey': self.user.consumer.key, 'userId': self.user.id}
+        token = auth.encode_token(payload, self.user.consumer.secret)
         self.headers = {'x-annotator-auth-token': token}
 
         self.ctx = self.app.test_request_context()
@@ -27,8 +26,8 @@ class TestStore(TestCase):
 
     def _create_annotation(self, **kwargs):
         opts = {
-            'user': self.user.username,
-            'consumer': self.consumer.key
+            'user': self.user.id,
+            'consumer': self.user.consumer.key
         }
         opts.update(kwargs)
         ann = Annotation(**opts)
@@ -71,8 +70,8 @@ class TestStore(TestCase):
         assert response.status_code == 200, "response should be 200 OK"
         data = json.loads(response.data)
         assert 'id' in data, "annotation id should be returned in response"
-        assert data['user'] == self.user.username
-        assert data['consumer'] == self.consumer.key
+        assert data['user'] == self.user.id
+        assert data['consumer'] == self.user.consumer.key
 
     def test_create_ignore_created(self):
         payload = json.dumps({'created': 'abc'})
@@ -111,8 +110,8 @@ class TestStore(TestCase):
         data = json.loads(response.data)
         ann = self._get_annotation(data['id'])
 
-        assert ann['user'] == self.user.username, "annotation 'user' field should not be futzable by API"
-        assert ann['consumer'] == self.consumer.key, "annotation 'consumer' field should not be used by API"
+        assert ann['user'] == self.user.id, "annotation 'user' field should not be futzable by API"
+        assert ann['consumer'] == self.user.consumer.key, "annotation 'consumer' field should not be used by API"
 
     def test_read(self):
         kwargs = dict(text=u"Foo", id='123')
@@ -209,8 +208,8 @@ class TestStore(TestCase):
 
         upd = self._get_annotation('123')
 
-        assert_equal(upd['user'], self.user.username, "annotation 'user' field should not be futzable by API")
-        assert_equal(upd['consumer'], self.consumer.key, "annotation 'consumer' field should not be futzable by API")
+        assert_equal(upd['user'], self.user.id, "annotation 'user' field should not be futzable by API")
+        assert_equal(upd['consumer'], self.user.consumer.key, "annotation 'consumer' field should not be futzable by API")
 
 
     def test_delete(self):
@@ -305,28 +304,27 @@ class TestStoreAuthz(TestCase):
     def setup(self):
         super(TestStoreAuthz, self).setup()
 
-        self.consumer = MockConsumer()
         self.user = MockUser() # alice
 
         self.anno_id = '123'
         self.permissions = {
-            'read': [self.user.username, 'bob'],
-            'update': [self.user.username, 'charlie'],
-            'admin': [self.user.username]
+            'read': [self.user.id, 'bob'],
+            'update': [self.user.id, 'charlie'],
+            'admin': [self.user.id]
         }
 
         self.ctx = self.app.test_request_context()
         self.ctx.push()
 
         ann = Annotation(id=self.anno_id,
-                         user=self.user.username,
-                         consumer=self.consumer.key,
+                         user=self.user.id,
+                         consumer=self.user.consumer.key,
                          text='Foobar',
                          permissions=self.permissions)
         ann.save()
 
         for u in ['alice', 'bob', 'charlie']:
-            token = auth.encode_token({'consumerKey': self.consumer.key, 'userId': u}, self.consumer.secret)
+            token = auth.encode_token({'consumerKey': self.user.consumer.key, 'userId': u}, self.user.consumer.secret)
             setattr(self, '%s_headers' % u, {'x-annotator-auth-token': token})
 
     def teardown(self):
@@ -392,7 +390,7 @@ class TestStoreAuthz(TestCase):
     def test_update_other_users_annotation(self):
         ann = Annotation(id=123,
                          user='foo',
-                         consumer=self.consumer.key,
+                         consumer=self.user.consumer.key,
                          permissions={'update': ['group:__consumer__']})
         ann.save()
 

@@ -17,6 +17,11 @@ def jsonify(obj, *args, **kwargs):
     res = json.dumps(obj, indent=None if request.is_xhr else 2)
     return Response(res, mimetype='application/json', *args, **kwargs)
 
+@store.before_request
+def before_request():
+    if not hasattr(g, 'user') or g.user is None:
+        g.user = g.auth.request_user(request)
+
 @store.after_request
 def after_request(response):
     ac = 'Access-Control-'
@@ -39,25 +44,22 @@ def root():
 # INDEX
 @store.route('/annotations')
 def index():
-    consumer, user = g.auth.request_credentials(request)
-    annotations = Annotation.search(_user_id=user, _consumer_key=consumer)
+    annotations = Annotation.search()
     return jsonify(annotations)
 
 # CREATE
 @store.route('/annotations', methods=['POST'])
 def create_annotation():
-    consumer, user = g.auth.request_credentials(request)
-
     # Only registered users can create annotations
-    if not (consumer and user):
+    if g.user is None:
         return _failed_authz_response('create annotation')
 
     if request.json:
         annotation = Annotation(_filter_input(request.json, CREATE_FILTER_FIELDS))
 
-        annotation['consumer'] = consumer
-        if _get_annotation_user(annotation) != user:
-            annotation['user'] = user
+        annotation['consumer'] = g.user.consumer.key
+        if _get_annotation_user(annotation) != g.user.id:
+            annotation['user'] = g.user.id
 
         annotation.save()
 
@@ -131,11 +133,6 @@ def delete_annotation(id):
 def search_annotations():
     kwargs = dict(request.args.items())
 
-    consumer, user = g.auth.request_credentials(request)
-
-    kwargs['_consumer_key'] = consumer
-    kwargs['_user_id'] = user
-
     if 'offset' in kwargs:
         kwargs['offset'] = _quiet_int(kwargs['offset'])
     if 'limit' in kwargs:
@@ -167,16 +164,15 @@ def _get_annotation_user(ann):
         return user
 
 def _check_action(annotation, action, message=''):
-    consumer, user = g.auth.request_credentials(request)
-
-    if not g.authorize(annotation, action, user, consumer):
+    if not g.authorize(annotation, action, g.user):
         return _failed_authz_response(message)
 
 def _failed_authz_response(msg=''):
-    consumer, user = g.auth.request_credentials(request)
+    user = g.user.id if g.user else None
+    consumer = g.user.consumer.key if g.user else None
     return jsonify("Cannot authorize request{0}. Perhaps you're not logged in as "
                    "a user with appropriate permissions on this annotation? "
-                   "(user={user}, consumer={consumer}".format(' (' + msg + ')' if msg else '', user=user, consumer=consumer),
+                   "(user={user}, consumer={consumer})".format(' (' + msg + ')' if msg else '', user=user, consumer=consumer),
                    status=401)
 
 def _quiet_int(obj, default=0):

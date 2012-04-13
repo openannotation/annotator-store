@@ -2,7 +2,7 @@ from datetime import datetime
 import iso8601
 
 from annotator import es, authz
-from flask import current_app
+from flask import current_app, g
 
 TYPE = 'annotation'
 MAPPING = {
@@ -41,16 +41,11 @@ class Annotation(es.Model):
     __mapping__ = MAPPING
 
     @classmethod
-    def _build_query(cls, offset=0, limit=20, _user_id=None, _consumer_key=None, **kwargs):
+    def _build_query(cls, offset=0, limit=20, **kwargs):
         q = super(Annotation, cls)._build_query(offset, limit, **kwargs)
 
         if current_app.config.get('AUTHZ_ON'):
-            if 'filtered' not in q['query']:
-                f = {'and': []}
-                q['query'] = {'filtered': {'query': q['query'], 'filter': f}}
-
-            andclause = q['query']['filtered']['filter']['and']
-            andclause.append(_permissions_query(_user_id, _consumer_key))
+            q['query'] = authz.permissions_filter(q['query'], g.user)
 
         return q
 
@@ -75,33 +70,3 @@ def _add_updated(ann):
 def _add_default_permissions(ann):
     if 'permissions' not in ann:
         ann['permissions'] = {'read': [authz.GROUP_CONSUMER]}
-
-def _permissions_query(user_id=None, consumer_key=None):
-    # Append permissions filter.
-    # 1) world-readable annotations
-    perm_q = {'term': {'permissions.read': authz.GROUP_WORLD}}
-
-    if consumer_key:
-        # 2) annotations with 'consumer' matching current consumer and
-        #    consumer group readable
-        ckey_q = {'and': []}
-        ckey_q['and'].append({'term': {'consumer': consumer_key}})
-        ckey_q['and'].append({'term': {'permissions.read': authz.GROUP_CONSUMER}})
-
-        perm_q = {'or': [perm_q, ckey_q]}
-
-        if user_id:
-            # 3) annotations with consumer matching current consumer, user
-            #    matching current user
-            owner_q = {'and': []}
-            owner_q['and'].append({'term': {'consumer': consumer_key}})
-            owner_q['and'].append({'or': [{'term': {'user': user_id}},
-                                          {'term': {'user.id': user_id}}]})
-            perm_q['or'].append(owner_q)
-            # 4) annotations with authenticated group readable
-            perm_q['or'].append({'term': {'permissions.read': authz.GROUP_AUTHENTICATED}})
-            # 5) annotations with consumer matching current consumer, user
-            #    explicitly in permissions.read list
-            perm_q['or'].append({'term': {'permissions.read': user_id}})
-
-    return perm_q

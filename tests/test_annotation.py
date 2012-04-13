@@ -1,5 +1,7 @@
 from nose.tools import *
-from . import TestCase
+from . import TestCase, helpers as h
+
+from flask import g
 
 from annotator import es
 from annotator.annotation import Annotation
@@ -7,8 +9,10 @@ from annotator.annotation import Annotation
 class TestAnnotation(TestCase):
     def setup(self):
         super(TestAnnotation, self).setup()
-        self.ctx = self.app.test_request_context()
+        self.ctx = self.app.test_request_context(path='/api')
         self.ctx.push()
+
+        g.user = None
 
     def teardown(self):
         self.ctx.pop()
@@ -108,7 +112,8 @@ class TestAnnotation(TestCase):
         res = Annotation.search()
         assert_equal(len(res), 0)
 
-        res = Annotation.search(_user_id='bob')
+        g.user = h.MockUser('bob')
+        res = Annotation.search()
         assert_equal(len(res), 0)
 
     def test_search_permissions_simple(self):
@@ -122,13 +127,16 @@ class TestAnnotation(TestCase):
         res = Annotation.search()
         assert_equal(len(res), 0)
 
-        res = Annotation.search(_user_id='alice', _consumer_key='testconsumer')
+        g.user = h.MockUser('alice', 'testconsumer')
+        res = Annotation.search()
         assert_equal(len(res), 0)
 
-        res = Annotation.search(_user_id='bob')
+        g.user = h.MockUser('bob')
+        res = Annotation.search()
         assert_equal(len(res), 0)
 
-        res = Annotation.search(_user_id='bob', _consumer_key='testconsumer')
+        g.user = h.MockUser('bob', 'testconsumer')
+        res = Annotation.search()
         assert_equal(len(res), 1)
 
     def test_search_permissions_world(self):
@@ -142,13 +150,16 @@ class TestAnnotation(TestCase):
         res = Annotation.search()
         assert_equal(len(res), 1)
 
-        res = Annotation.search(_user_id='alice', _consumer_key='testconsumer')
+        g.user = h.MockUser('alice', 'testconsumer')
+        res = Annotation.search()
         assert_equal(len(res), 1)
 
-        res = Annotation.search(_user_id='bob')
+        g.user = h.MockUser('bob')
+        res = Annotation.search()
         assert_equal(len(res), 1)
 
-        res = Annotation.search(_user_id='bob', _consumer_key='testconsumer')
+        g.user = h.MockUser('bob', 'testconsumer')
+        res = Annotation.search()
         assert_equal(len(res), 1)
 
     def test_search_permissions_authenticated(self):
@@ -162,10 +173,12 @@ class TestAnnotation(TestCase):
         res = Annotation.search()
         assert_equal(len(res), 0)
 
-        res = Annotation.search(_user_id='alice', _consumer_key='testconsumer')
+        g.user = h.MockUser('alice', 'testconsumer')
+        res = Annotation.search()
         assert_equal(len(res), 1)
 
-        res = Annotation.search(_user_id='bob', _consumer_key='anotherconsumer')
+        g.user = h.MockUser('bob', 'anotherconsumer')
+        res = Annotation.search()
         assert_equal(len(res), 1)
 
 
@@ -181,10 +194,12 @@ class TestAnnotation(TestCase):
         res = Annotation.search()
         assert_equal(len(res), 0)
 
-        res = Annotation.search(_user_id='bob', _consumer_key='testconsumer')
+        g.user = h.MockUser('bob', 'testconsumer')
+        res = Annotation.search()
         assert_equal(len(res), 1)
 
-        res = Annotation.search(_user_id='bob', _consumer_key='anotherconsumer')
+        g.user = h.MockUser('alice', 'anotherconsumer')
+        res = Annotation.search()
         assert_equal(len(res), 0)
 
     def test_search_permissions_owner(self):
@@ -198,5 +213,6 @@ class TestAnnotation(TestCase):
         res = Annotation.search()
         assert_equal(len(res), 0)
 
-        res = Annotation.search(_user_id='alice', _consumer_key='testconsumer')
+        g.user = h.MockUser('alice', 'testconsumer')
+        res = Annotation.search()
         assert_equal(len(res), 1)

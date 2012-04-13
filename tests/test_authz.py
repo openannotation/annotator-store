@@ -1,3 +1,4 @@
+from . import helpers as h
 from annotator.authz import authorize
 
 class TestAuthorization(object):
@@ -6,15 +7,15 @@ class TestAuthorization(object):
         # An annotation with no permissions field is private
         ann = {}
         assert not authorize(ann, 'read')
-        assert not authorize(ann, 'read', 'bob')
-        assert not authorize(ann, 'read', 'bob', 'consumerkey')
+        assert not authorize(ann, 'read', h.MockUser('bob'))
+        assert not authorize(ann, 'read', h.MockUser('bob', 'consumerkey'))
 
     def test_authorize_null_consumer(self):
         # An annotation with no consumer set is private
         ann = {'permissions': {'read': ['bob']}}
         assert not authorize(ann, 'read')
-        assert not authorize(ann, 'read', 'bob')
-        assert not authorize(ann, 'read', 'bob', 'consumerkey')
+        assert not authorize(ann, 'read', h.MockUser('bob'))
+        assert not authorize(ann, 'read', h.MockUser('bob', 'consumerkey'))
 
     def test_authorize_basic(self):
         # Annotation with consumer and permissions fields is actionable as
@@ -25,12 +26,12 @@ class TestAuthorization(object):
         }
 
         assert not authorize(ann, 'read')
-        assert not authorize(ann, 'read', 'bob')
-        assert authorize(ann, 'read', 'bob', 'consumerkey')
-        assert not authorize(ann, 'read', 'alice', 'consumerkey')
+        assert not authorize(ann, 'read', h.MockUser('bob'))
+        assert authorize(ann, 'read', h.MockUser('bob', 'consumerkey'))
+        assert not authorize(ann, 'read', h.MockUser('alice', 'consumerkey'))
 
         assert not authorize(ann, 'update')
-        assert not authorize(ann, 'update', 'bob', 'consumerkey')
+        assert not authorize(ann, 'update', h.MockUser('bob', 'consumerkey'))
 
     def test_authorize_world(self):
         # Annotation (even without consumer key) is actionable if the action
@@ -39,8 +40,8 @@ class TestAuthorization(object):
             'permissions': {'read': ['group:__world__']}
         }
         assert authorize(ann, 'read')
-        assert authorize(ann, 'read', 'bob')
-        assert authorize(ann, 'read', 'bob', 'consumerkey')
+        assert authorize(ann, 'read', h.MockUser('bob'))
+        assert authorize(ann, 'read', h.MockUser('bob', 'consumerkey'))
 
     def test_authorize_authenticated(self):
         # Annotation (even without consumer key) is actionable if the action
@@ -50,8 +51,7 @@ class TestAuthorization(object):
             'permissions': {'read': ['group:__authenticated__']}
         }
         assert not authorize(ann, 'read')
-        assert not authorize(ann, 'read', 'bob')
-        assert authorize(ann, 'read', 'bob', 'consumerkey')
+        assert authorize(ann, 'read', h.MockUser('bob'))
 
     def test_authorize_consumer(self):
         # Annotation (WITH consumer key) is actionable if the action
@@ -61,18 +61,19 @@ class TestAuthorization(object):
             'permissions': {'read': ['group:__consumer__']}
         }
         assert not authorize(ann, 'read')
-        assert not authorize(ann, 'read', 'bob')
-        assert not authorize(ann, 'read', 'bob', 'consumerkey')
+        assert not authorize(ann, 'read', h.MockUser('bob'))
+        assert not authorize(ann, 'read', h.MockUser('bob', 'consumerkey'))
         ann = {
             'consumer': 'consumerkey',
             'permissions': {'read': ['group:__consumer__']}
         }
         assert not authorize(ann, 'read')
-        assert not authorize(ann, 'read', 'bob')
-        assert authorize(ann, 'read', 'alice', 'consumerkey')
-        assert authorize(ann, 'read', 'bob', 'consumerkey')
-        assert not authorize(ann, 'read', 'bob', 'adifferentconsumerkey')
-        assert not authorize(ann, 'read', 'group:__consumer__', 'adifferentconsumerkey')
+        assert not authorize(ann, 'read', h.MockUser('bob'))
+        assert authorize(ann, 'read', h.MockUser('alice', 'consumerkey'))
+        assert authorize(ann, 'read', h.MockUser('bob', 'consumerkey'))
+        assert not authorize(ann, 'read', h.MockUser('bob', 'adifferentconsumerkey'))
+        assert not authorize(ann, 'read', h.MockUser('group:__consumer__', 'consumerkey'))
+        assert not authorize(ann, 'read', h.MockUser('group:__consumer__', 'adifferentconsumerkey'))
 
     def test_authorize_owner(self):
         # The annotation-owning user can do anything ('user' is a string)
@@ -81,9 +82,9 @@ class TestAuthorization(object):
             'user': 'bob',
             'permissions': {'read': ['alice', 'charlie']}
         }
-        assert authorize(ann, 'read', 'bob', 'consumerkey')
-        assert not authorize(ann, 'read', 'bob', 'adifferentconsumer')
-        assert not authorize(ann, 'read', 'sally', 'consumerkey')
+        assert authorize(ann, 'read', h.MockUser('bob', 'consumerkey'))
+        assert not authorize(ann, 'read', h.MockUser('bob', 'adifferentconsumer'))
+        assert not authorize(ann, 'read', h.MockUser('sally', 'consumerkey'))
 
     def test_authorize_read_annotation_user_dict(self):
         # The annotation-owning user can do anything ('user' is an object)
@@ -92,8 +93,8 @@ class TestAuthorization(object):
             'user': {'id': 'bob'},
             'permissions': {'read': ['alice', 'charlie']}
         }
-        assert authorize(ann, 'read', 'bob', 'consumerkey')
-        assert not authorize(ann, 'read', 'bob', 'adifferentconsumer')
-        assert not authorize(ann, 'read', 'sally', 'consumerkey')
+        assert authorize(ann, 'read', h.MockUser('bob', 'consumerkey'))
+        assert not authorize(ann, 'read', h.MockUser('bob', 'adifferentconsumer'))
+        assert not authorize(ann, 'read', h.MockUser('sally', 'consumerkey'))
 
 

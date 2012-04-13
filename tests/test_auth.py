@@ -64,35 +64,29 @@ class TestAuthenticator(object):
         fetcher = lambda x: self.consumer
         self.auth = auth.Authenticator(fetcher)
 
-    def test_verify_request(self):
+    def test_request_user(self):
         request = make_request(self.consumer)
-        assert self.auth.verify_request(request), "request should have been verified"
+        user = self.auth.request_user(request)
+        assert_equal(user, None) # No userId supplied
 
-    def test_reject_request_missing_headers(self):
+    def test_request_user_user(self):
+        request = make_request(self.consumer, {'userId': 'alice'})
+        user = self.auth.request_user(request)
+        assert_equal(user.consumer.key, 'Consumer')
+        assert_equal(user.id, 'alice')
+
+    def test_request_user_missing(self):
         request = make_request(self.consumer)
         del request.headers['x-annotator-auth-token']
-        assert not self.auth.verify_request(request), "request missing auth token should have been rejected"
+        assert_equal(self.auth.request_user(request), None)
 
-    def test_request_junk_token(self):
+    def test_request_user_junk_token(self):
         request = MockRequest(Headers([
             ('x-annotator-auth-token', 'foo.bar.baz')
         ]))
-        assert_false(self.auth.verify_request(request))
+        assert_equal(self.auth.request_user(request), None)
 
-    def test_request_credentials(self):
-        request = make_request(self.consumer)
-        assert_equal(self.auth.request_credentials(request), ('Consumer', None))
-
-    def test_request_credentials_user(self):
-        request = make_request(self.consumer, {'userId': 'alice'})
-        assert_equal(self.auth.request_credentials(request), ('Consumer', 'alice'))
-
-    def test_request_credentials_missing(self):
-        request = make_request(self.consumer)
-        del request.headers['x-annotator-auth-token']
-        assert_equal(self.auth.request_credentials(request), (None, None))
-
-    def test_request_credentials_invalid(self):
+    def test_request_user_invalid(self):
         request = make_request(self.consumer)
         request.headers['x-annotator-auth-token'] += 'LookMaIAmAHacker'
-        assert_equal(self.auth.request_credentials(request), (None, None))
+        assert_equal(self.auth.request_user(request), None)
