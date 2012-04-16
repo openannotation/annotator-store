@@ -69,7 +69,7 @@ def _annotation_owner(annotation):
     except AttributeError:
         return (user, consumer)
 
-def permissions_filter(es_query, user=None):
+def permissions_filter(user=None):
     """ Filter an ElasticSearch query by the permissions of the current user """
     uid = user.id if user else None
     ckey = user.consumer.key if user else None
@@ -96,4 +96,4 @@ def permissions_filter(es_query, user=None):
         perm_f['or'].append({'and': [{'term': {'consumer': ckey}},
                                      {'term': {'permissions.read': uid}}]})
 
-    return {'filtered': {'filter': perm_f, 'query': es_query}}
+    return perm_f
