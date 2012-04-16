@@ -19,8 +19,11 @@ def jsonify(obj, *args, **kwargs):
 
 @store.before_request
 def before_request():
-    if not hasattr(g, 'user') or g.user is None:
-        g.user = g.auth.request_user(request)
+    user = g.auth.request_user(request)
+    if user is not None:
+        g.user = user
+    elif not hasattr(g, 'user'):
+        g.user = None
 
 @store.after_request
 def after_request(response):
