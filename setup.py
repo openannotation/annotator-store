@@ -17,10 +17,7 @@ setup(
     # metadata for upload to PyPI
     author = 'Rufus Pollock and Nick Stenning (Open Knowledge Foundation)',
     author_email = 'annotator@okfn.org',
-    description = 'Inline web annotation application and middleware using javascript and WSGI',
-    long_description = """Inline javascript-based web annotation library. \
-Package includeds a database-backed annotation store \
-with RESTFul (WSGI-powered) web-interface.""",
+    description = 'Database backend for the Annotator (http://annotateit.org)',
     license = 'MIT',
     keywords = 'annotation web javascript',
 
@@ -28,7 +25,7 @@ with RESTFul (WSGI-powered) web-interface.""",
     download_url = 'https://github.com/okfn/annotator-store',
 
     classifiers = [
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
