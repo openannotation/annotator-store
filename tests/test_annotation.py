@@ -230,3 +230,17 @@ class TestAnnotation(TestCase):
         g.user = h.MockUser('group:anyone', 'testconsumer')
         res = Annotation.search()
         assert_equal(len(res), 0)
+
+    def test_search_permissions_admin(self):
+        anno = Annotation(text='Foobar',
+                          user='alice',
+                          consumer='testconsumer')
+        anno.save()
+
+        es.conn.refresh(timesleep=0.01)
+
+        g.user = h.MockUser('bob', 'testconsumer')
+        g.user.is_admin = True
+
+        res = Annotation.search()
+        assert_equal(len(res), 1)

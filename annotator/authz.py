@@ -98,4 +98,8 @@ def permissions_filter(user=None):
         perm_f['or'].append({'and': [{'term': {'consumer': user.consumer.key}},
                                      {'term': {'permissions.read': user.id}}]})
 
+        # Scenario 6
+        if user.is_admin:
+            perm_f['or'].append({'term': {'consumer': user.consumer.key}})
+
     return perm_f
