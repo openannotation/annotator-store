@@ -114,6 +114,8 @@ class _Model(dict):
     @classmethod
     def search(cls, **kwargs):
         q = cls._build_query(**kwargs)
+        if not q:
+            return []
         res = cls.es.conn.search(q, cls.es.index, cls.__type__)
         docs = res['hits']['hits']
         return [cls(d['_source'], id=d['_id']) for d in docs]
@@ -121,6 +123,8 @@ class _Model(dict):
     @classmethod
     def count(cls, **kwargs):
         q = cls._build_query(**kwargs)
+        if not q:
+            return 0
         res = cls.es.conn.count(q['query'], cls.es.index, cls.__type__)
         return res['count']
 

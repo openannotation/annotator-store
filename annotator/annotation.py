@@ -45,8 +45,11 @@ class Annotation(es.Model):
         q = super(Annotation, cls)._build_query(offset, limit, **kwargs)
 
         if current_app.config.get('AUTHZ_ON'):
+            f = authz.permissions_filter(g.user)
+            if not f:
+                return False # Refuse to perform the query
             q['query'] = {'filtered': {'query': q['query'],
-                                       'filter': authz.permissions_filter(g.user)}}
+                                       'filter': f}}
 
         return q
 

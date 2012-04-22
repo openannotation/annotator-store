@@ -216,3 +216,17 @@ class TestAnnotation(TestCase):
         g.user = h.MockUser('alice', 'testconsumer')
         res = Annotation.search()
         assert_equal(len(res), 1)
+
+    def test_search_permissions_malicious(self):
+        anno = Annotation(text='Foobar',
+                          user='alice',
+                          consumer='testconsumer',
+                          permissions={'read': ['group:__consumer__']})
+        anno.save()
+
+        es.conn.refresh(timesleep=0.01)
+
+        # Any user whose username starts with "group:" must be refused any results
+        g.user = h.MockUser('group:anyone', 'testconsumer')
+        res = Annotation.search()
+        assert_equal(len(res), 0)

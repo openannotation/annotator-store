@@ -21,26 +21,21 @@ GROUP_AUTHENTICATED = 'group:__authenticated__'
 GROUP_CONSUMER = 'group:__consumer__'
 
 def authorize(annotation, action, user=None):
-    uid = user.id if user else None
-    ckey = user.consumer.key if user else None
-
-    # Fail fast if this looks dodgy
-    if uid and uid.startswith('group:'):
-        return False
-
-    permissions = annotation.get('permissions', {})
-    action_field = permissions.get(action, [])
-
-    ann_uid, ann_ckey = _annotation_owner(annotation)
+    action_field = annotation.get('permissions', {}).get(action, [])
 
     # Scenario 1
     if GROUP_WORLD in action_field:
         return True
 
-    elif uid and ckey:
+    elif user is not None:
+        # Fail fast if this looks dodgy
+        if user.id.startswith('group:'):
+            return False
+
+        ann_uid, ann_ckey = _annotation_owner(annotation)
 
         # Scenario 2
-        if (uid, ckey) == (ann_uid, ann_ckey):
+        if (user.id, user.consumer.key) == (ann_uid, ann_ckey):
             return True
 
         # Scenario 3
@@ -48,11 +43,11 @@ def authorize(annotation, action, user=None):
             return True
 
         # Scenario 4
-        elif ckey == ann_ckey and GROUP_CONSUMER in action_field:
+        elif user.consumer.key == ann_ckey and GROUP_CONSUMER in action_field:
             return True
 
         # Scenario 5
-        elif ckey == ann_ckey and uid in action_field:
+        elif user.consumer.key == ann_ckey and user.id in action_field:
             return True
 
     return False
@@ -71,29 +66,31 @@ def _annotation_owner(annotation):
 
 def permissions_filter(user=None):
     """ Filter an ElasticSearch query by the permissions of the current user """
-    uid = user.id if user else None
-    ckey = user.consumer.key if user else None
 
     # Scenario 1
     perm_f = {'term': {'permissions.read': GROUP_WORLD}}
 
-    if uid and ckey:
+    if user is not None:
+        # Fail fast if this looks dodgy
+        if user.id.startswith('group:'):
+            return False
+
         perm_f = {'or': [perm_f]}
 
         # Scenario 2
-        perm_f['or'].append({'and': [{'term': {'consumer': ckey}},
-                                     {'or': [{'term': {'user': uid}},
-                                             {'term': {'user.id': uid}}]}]})
+        perm_f['or'].append({'and': [{'term': {'consumer': user.consumer.key}},
+                                     {'or': [{'term': {'user': user.id}},
+                                             {'term': {'user.id': user.id}}]}]})
 
         # Scenario 3
         perm_f['or'].append({'term': {'permissions.read': GROUP_AUTHENTICATED}})
 
         # Scenario 4
-        perm_f['or'].append({'and': [{'term': {'consumer': ckey}},
+        perm_f['or'].append({'and': [{'term': {'consumer': user.consumer.key}},
                                      {'term': {'permissions.read': GROUP_CONSUMER}}]})
 
         # Scenario 5
-        perm_f['or'].append({'and': [{'term': {'consumer': ckey}},
-                                     {'term': {'permissions.read': uid}}]})
+        perm_f['or'].append({'and': [{'term': {'consumer': user.consumer.key}},
+                                     {'term': {'permissions.read': user.id}}]})
 
     return perm_f
