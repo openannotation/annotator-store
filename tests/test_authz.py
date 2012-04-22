@@ -97,4 +97,14 @@ class TestAuthorization(object):
         assert not authorize(ann, 'read', h.MockUser('bob', 'adifferentconsumer'))
         assert not authorize(ann, 'read', h.MockUser('sally', 'consumerkey'))
 
-
+    def test_authorize_admin(self):
+        # An admin user can do anything
+        ann = {
+            'consumer': 'consumerkey',
+            'user': 'bob'
+        }
+        admin = h.MockUser('walter', 'consumerkey')
+        admin.is_admin = True
+        assert authorize(ann, 'read', admin)
+        assert authorize(ann, 'update', admin)
+        assert authorize(ann, 'admin', admin)

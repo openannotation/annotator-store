@@ -15,6 +15,7 @@
 # 5) the consumer matches that of the annotation and the user is listed in the
 #    permissions field for the specified action
 #
+# 6) the consumer matches that of the annotation and the user is an admin
 
 GROUP_WORLD = 'group:__world__'
 GROUP_AUTHENTICATED = 'group:__authenticated__'
@@ -48,6 +49,10 @@ def authorize(annotation, action, user=None):
 
         # Scenario 5
         elif user.consumer.key == ann_ckey and user.id in action_field:
+            return True
+
+        # Scenario 6
+        elif user.consumer.key == ann_ckey and user.is_admin:
             return True
 
     return False

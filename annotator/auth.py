@@ -11,13 +11,18 @@ class Consumer(object):
         self.key = key
 
 class User(object):
-    def __init__(self, id, consumer):
+    def __init__(self, id, consumer, is_admin):
         self.id = id
         self.consumer = consumer
+        self.is_admin = is_admin
 
     @classmethod
     def from_token(cls, token):
-        return cls(token['userId'], Consumer(token['consumerKey']))
+        return cls(
+            token['userId'],
+            Consumer(token['consumerKey']),
+            token.get('admin', False)
+        )
 
 class Authenticator(object):
     """
