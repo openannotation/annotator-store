@@ -7,7 +7,7 @@ setup(
 
     install_requires = [
         'Flask==0.8',
-        'pyes==0.16.0',
+        'pyes==0.19.1',
         'PyJWT==0.1.4',
         'iso8601==0.1.4',
         'nose==1.1.2',

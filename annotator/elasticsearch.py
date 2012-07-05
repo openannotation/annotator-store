@@ -82,11 +82,9 @@ class _Model(dict):
     def fetch(cls, id):
         try:
             doc = cls.es.conn.get(cls.es.index, cls.__type__, id)
-        # We should be more specific than this, but pyes doesn't raise the
-        # correct exception for missing documents at the moment
-        except pyes.exceptions.ElasticSearchException:
+        except pyes.exceptions.NotFoundException:
             return None
-        return cls(doc['_source'], id=id)
+        return cls(doc, id=id)
 
     @classmethod
     def _build_query(cls, offset=0, limit=20, **kwargs):
@@ -116,7 +114,7 @@ class _Model(dict):
         q = cls._build_query(**kwargs)
         if not q:
             return []
-        res = cls.es.conn.search(q, cls.es.index, cls.__type__)
+        res = cls.es.conn.search_raw(q, cls.es.index, cls.__type__)
         docs = res['hits']['hits']
         return [cls(d['_source'], id=d['_id']) for d in docs]
 
