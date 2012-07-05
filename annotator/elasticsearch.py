@@ -1,7 +1,10 @@
 import json
+import logging
 
 import pyes
 from flask import _request_ctx_stack
+
+log = logging.getLogger(__name__)
 
 class ElasticSearch(object):
 
@@ -75,7 +78,10 @@ class ElasticSearch(object):
 class _Model(dict):
     @classmethod
     def create_all(cls):
-        cls.es.conn.create_index_if_missing(cls.es.index)
+        try:
+            cls.es.conn.create_index_if_missing(cls.es.index)
+        except pyes.exceptions.ElasticSearchException:
+            log.warn('Index creation failed. If you are running against Bonsai Elasticsearch, this is expected and ignorable.')
         cls.es.conn.put_mapping(cls.__type__, {'properties': cls.__mapping__}, cls.es.index)
 
     @classmethod
