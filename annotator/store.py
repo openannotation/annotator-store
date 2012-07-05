@@ -4,6 +4,7 @@ from flask import Blueprint, Response
 from flask import g
 from flask import request
 
+from annotator.atoi import atoi
 from annotator.annotation import Annotation
 
 store = Blueprint('store', __name__)
@@ -137,9 +138,9 @@ def search_annotations():
     kwargs = dict(request.args.items())
 
     if 'offset' in kwargs:
-        kwargs['offset'] = _quiet_int(kwargs['offset'])
+        kwargs['offset'] = atoi(kwargs['offset'])
     if 'limit' in kwargs:
-        kwargs['limit'] = _quiet_int(kwargs['limit'], 20)
+        kwargs['limit'] = atoi(kwargs['limit'], 20)
 
     results = Annotation.search(**kwargs)
     total = Annotation.count(**kwargs)
@@ -147,6 +148,12 @@ def search_annotations():
         'total': total,
         'rows': results
     })
+
+# RAW ES SEARCH
+@store.route('/search_raw', methods=['GET', 'POST'])
+def search_annotations_raw():
+    res = Annotation.search_raw(request)
+    return jsonify(res, status=res.get('status', 200))
 
 def _filter_input(obj, fields):
     for field in fields:
@@ -177,9 +184,3 @@ def _failed_authz_response(msg=''):
                    "a user with appropriate permissions on this annotation? "
                    "(user={user}, consumer={consumer})".format(' (' + msg + ')' if msg else '', user=user, consumer=consumer),
                    status=401)
-
-def _quiet_int(obj, default=0):
-    try:
-        return int(obj)
-    except ValueError:
-        return default

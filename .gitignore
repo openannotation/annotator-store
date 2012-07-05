@@ -1,4 +1,7 @@
 /pyenv
 /annotator.egg-info
 /annotator.cfg
+/.coverage
+/cover
+/dist
 *.pyc

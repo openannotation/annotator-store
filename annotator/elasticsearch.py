@@ -1,10 +1,15 @@
+import csv
 import json
 import logging
 
 import pyes
 from flask import _request_ctx_stack
 
+from annotator.atoi import atoi
+
 log = logging.getLogger(__name__)
+
+RESULTS_MAX_SIZE = 200
 
 class ElasticSearch(object):
 
@@ -100,26 +105,11 @@ class _Model(dict):
 
     @classmethod
     def _build_query(cls, offset=0, limit=20, **kwargs):
-        offset = max(0, offset)
-        limit = min(200, max(0, limit))
+        return _build_query(offset, limit, kwargs)
 
-        # Base query is a filtered match_all
-        q = {'match_all': {}}
-
-        if kwargs:
-            f = {'and': []}
-            q = {'filtered': {'query': q, 'filter': f}}
-
-        # Add a term query for each kwarg that isn't otherwise accounted for
-        for k, v in kwargs.iteritems():
-            q['filtered']['filter']['and'].append({'term': {k: v}})
-
-        return {
-            'sort': [{'updated': {'order': 'desc'}}], # Sort most recent first
-            'from': offset,
-            'size': limit,
-            'query': q
-        }
+    @classmethod
+    def _build_query_raw(cls, request):
+        return _build_query_raw(request)
 
     @classmethod
     def search(cls, **kwargs):
@@ -129,6 +119,18 @@ class _Model(dict):
         res = cls.es.conn.search_raw(q, cls.es.index, cls.__type__)
         docs = res['hits']['hits']
         return [cls(d['_source'], id=d['_id']) for d in docs]
+
+    @classmethod
+    def search_raw(cls, request):
+        q, params = cls._build_query_raw(request)
+        if 'error' in q:
+            return q
+        try:
+            res = cls.es.conn.search_raw(q, cls.es.index, cls.__type__, **params)
+        except pyes.exceptions.ElasticSearchException as e:
+            return e.result
+        else:
+            return res
 
     @classmethod
     def count(cls, **kwargs):
@@ -158,3 +160,88 @@ class _Model(dict):
 
 def make_model(es):
     return type('Model', (_Model,), {'es': es})
+
+def _csv_split(s, delimiter=','):
+    return [r for r in csv.reader([s], delimiter=delimiter)][0]
+
+def _build_query(offset, limit, kwds):
+    # Base query is a filtered match_all
+    q = {'match_all': {}}
+
+    if kwds:
+        f = {'and': []}
+        q = {'filtered': {'query': q, 'filter': f}}
+
+    # Add a term query for each keyword
+    for k, v in kwds.iteritems():
+        q['filtered']['filter']['and'].append({'term': {k: v}})
+
+    return {
+        'sort': [{'updated': {'order': 'desc'}}], # Sort most recent first
+        'from': max(0, offset),
+        'size': min(RESULTS_MAX_SIZE, max(0, limit)),
+        'query': q
+    }
+
+def _build_query_raw(request):
+    query = {}
+    params = {}
+
+    if request.method == 'GET':
+        for k, v in request.args.iteritems():
+            _update_query_raw(query, params, k, v)
+
+    elif request.method == 'POST':
+
+        try:
+            query = json.loads(request.json or request.data or request.form.keys()[0])
+        except (ValueError, IndexError):
+            return {'error': 'Could not parse request payload!', 'status': 400}, None
+
+        params = request.args
+
+    for o in (params, query):
+        if 'from' in o:
+            o['from'] = max(0, atoi(o['from']))
+        if 'size' in o:
+            o['size'] = min(RESULTS_MAX_SIZE, max(0, atoi(o['size'])))
+
+    return query, params
+
+def _update_query_raw(qo, params, k, v):
+    if 'query' not in qo:
+        qo['query'] = {}
+    q = qo['query']
+
+    if 'query_string' not in q:
+        q['query_string'] = {}
+    qs = q['query_string']
+
+    if k == 'q':
+        qs['query'] = v
+
+    elif k == 'df':
+        qs['default_field'] = v
+
+    elif k in ('explain', 'track_scores', 'from', 'size', 'timeout',
+               'lowercase_expanded_terms', 'analyze_wildcard'):
+        qo[k] = v
+
+    elif k == 'fields':
+        qo[k] = _csv_split(v)
+
+    elif k == 'sort':
+        if 'sort' not in r:
+            qo[k] = []
+
+        split = _csv_split(v, ':')
+
+        if len(split) == 1:
+            qo[k].append(split[0])
+        else:
+            fld = ':'.join(split[0:-1])
+            drn = split[-1]
+            qo[k].append({fld: drn})
+
+    elif k == 'search_type':
+        params[k] = v

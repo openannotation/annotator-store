@@ -53,6 +53,20 @@ class Annotation(es.Model):
 
         return q
 
+    @classmethod
+    def _build_query_raw(cls, request):
+        q, p = super(Annotation, cls)._build_query_raw(request)
+
+        if current_app.config.get('AUTHZ_ON'):
+            f = authz.permissions_filter(g.user)
+            if not f:
+                return {'error': "Authorization error!", 'status': 400}, None
+            if 'query' in q:
+                q['query'] = {'filtered': {'query': q['query'],
+                                           'filter': f}}
+
+        return q, p
+
     def save(self, *args, **kwargs):
         # For brand new annotations
         _add_created(self)
