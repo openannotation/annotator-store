@@ -5,7 +5,9 @@ from flask import _request_ctx_stack
 
 class ElasticSearch(object):
 
-    """Thin wrapper around an ElasticSearch connection to make connection handling
+    """
+
+    Thin wrapper around an ElasticSearch connection to make connection handling
     transparent in a Flask application. Usage:
 
         app = Flask(__name__)
@@ -19,6 +21,7 @@ class ElasticSearch(object):
             app = Flask(__name__)
             es.init_app(app)
             return app
+
     """
 
     def __init__(self, app=None):
@@ -31,7 +34,7 @@ class ElasticSearch(object):
         self.Model = make_model(self)
 
     def init_app(self, app):
-        app.config.setdefault('ELASTICSEARCH_HOST', '127.0.0.1:9200')
+        app.config.setdefault('ELASTICSEARCH_HOST', 'http://127.0.0.1:9200')
         app.config.setdefault('ELASTICSEARCH_INDEX', app.name)
 
         if not hasattr(app, 'extensions'):
@@ -39,7 +42,10 @@ class ElasticSearch(object):
         app.extensions['elasticsearch'] = self
 
     def get_app(self):
-        """Helper method that implements the logic to look up an application.
+        """
+
+        Helper method that implements the logic to look up an application.
+
         """
         if self.app is not None:
             return self.app
