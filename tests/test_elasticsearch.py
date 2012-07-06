@@ -63,7 +63,7 @@ class TestModel(object):
     @patch('annotator.elasticsearch.pyes.ES')
     def test_fetch(self, pyes_mock):
         conn = pyes_mock.return_value
-        conn.get.return_value = {'_source': {'foo': 'bar'}}
+        conn.get.return_value = {'foo': 'bar'}
         o = self.Model.fetch(123)
         assert_equal(o['foo'], 'bar')
         assert_equal(o['id'], 123)
@@ -73,7 +73,7 @@ class TestModel(object):
     def test_fetch_not_found(self, pyes_mock):
         conn = pyes_mock.return_value
         def raise_exc(self, *args, **kwargs):
-            raise pyes.exceptions.ElasticSearchException('foo')
+            raise pyes.exceptions.NotFoundException('foo')
         conn.get.side_effect = raise_exc
         o = self.Model.fetch(123)
         assert_equal(o, None)
