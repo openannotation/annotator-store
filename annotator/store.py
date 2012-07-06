@@ -58,18 +58,19 @@ def create_annotation():
     if g.user is None:
         return _failed_authz_response('create annotation')
 
-    if request.json:
+    if request.json is not None:
         annotation = Annotation(_filter_input(request.json, CREATE_FILTER_FIELDS))
 
         annotation['consumer'] = g.user.consumer.key
         if _get_annotation_user(annotation) != g.user.id:
             annotation['user'] = g.user.id
 
-        annotation.save()
-
         if hasattr(g, 'after_annotation_create'):
+            annotation.save(refresh=False)
             g.after_annotation_create(annotation)
-            annotation.save()
+
+        refresh = request.args.get('refresh') != 'false'
+        annotation.save(refresh=refresh)
 
         return jsonify(annotation)
     else:
@@ -99,7 +100,7 @@ def update_annotation(id):
     if failure:
         return failure
 
-    if request.json:
+    if request.json is not None:
         updated = _filter_input(request.json, UPDATE_FILTER_FIELDS)
         updated['id'] = id # use id from URL, regardless of what arrives in JSON payload
 
@@ -113,7 +114,8 @@ def update_annotation(id):
         if hasattr(g, 'before_annotation_update'):
             g.before_annotation_update(annotation)
 
-        annotation.save()
+        refresh = request.args.get('refresh') != 'false'
+        annotation.save(refresh=refresh)
 
     return jsonify(annotation)
 

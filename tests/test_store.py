@@ -1,6 +1,7 @@
 from . import TestCase
 from .helpers import MockUser, MockConsumer
 from nose.tools import *
+from mock import patch
 
 from flask import json, url_for
 
@@ -112,6 +113,26 @@ class TestStore(TestCase):
 
         assert ann['user'] == self.user.id, "annotation 'user' field should not be futzable by API"
         assert ann['consumer'] == self.user.consumer.key, "annotation 'consumer' field should not be used by API"
+
+    @patch('annotator.store.json')
+    @patch('annotator.store.Annotation')
+    def test_create_refresh(self, ann_mock, json_mock):
+        json_mock.dumps.return_value = "{}"
+        response = self.cli.post('/api/annotations?refresh=true',
+                                 data="{}",
+                                 content_type='application/json',
+                                 headers=self.headers)
+        ann_mock.return_value.save.assert_called_once_with(refresh=True)
+
+    @patch('annotator.store.json')
+    @patch('annotator.store.Annotation')
+    def test_create_disable_refresh(self, ann_mock, json_mock):
+        json_mock.dumps.return_value = "{}"
+        response = self.cli.post('/api/annotations?refresh=false',
+                                 data="{}",
+                                 content_type='application/json',
+                                 headers=self.headers)
+        ann_mock.return_value.save.assert_called_once_with(refresh=False)
 
     def test_read(self):
         kwargs = dict(text=u"Foo", id='123')
