@@ -3,6 +3,7 @@ import json
 from flask import Blueprint, Response
 from flask import g
 from flask import request
+from flask import url_for
 
 from annotator.atoi import atoi
 from annotator.annotation import Annotation
@@ -43,7 +44,55 @@ def after_request(response):
 # ROOT
 @store.route('/')
 def root():
-    return jsonify("Annotator Store API")
+    return jsonify({
+        'message': "Annotator Store API",
+        'links': {
+            'annotation': {
+                'create': {
+                    'method': 'POST',
+                    'url': url_for('.create_annotation', _external=True),
+                    'query': {
+                        'refresh': {
+                            'type': 'bool',
+                            'desc': "Force an index refresh after create (default: true)"
+                        }
+                    },
+                    'desc': "Create a new annotation"
+                },
+                'read': {
+                    'method': 'GET',
+                    'url': url_for('.read_annotation', id=':id', _external=True),
+                    'desc': "Get an existing annotation"
+                },
+                'update': {
+                    'method': 'PUT',
+                    'url': url_for('.update_annotation', id=':id', _external=True),
+                    'query': {
+                        'refresh': {
+                            'type': 'bool',
+                            'desc': "Force an index refresh after update (default: true)"
+                        }
+                    },
+                    'desc': "Update an existing annotation"
+                },
+                'delete': {
+                    'method': 'DELETE',
+                    'url': url_for('.delete_annotation', id=':id', _external=True),
+                    'desc': "Delete an annotation"
+                }
+            },
+            'search': {
+                'method': 'GET',
+                'url': url_for('.search_annotations', _external=True),
+                'desc': 'Basic search API'
+            },
+            'search_raw': {
+                'method': 'GET/POST',
+                'url': url_for('.search_annotations_raw', _external=True),
+                'desc': 'Advanced search API -- direct access to ElasticSearch. Uses the same API as the ElasticSearch query endpoint.'
+            }
+        }
+    })
 
 # INDEX
 @store.route('/annotations')
