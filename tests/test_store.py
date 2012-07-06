@@ -24,14 +24,14 @@ class TestStore(TestCase):
         self.ctx.pop()
         super(TestStore, self).teardown()
 
-    def _create_annotation(self, **kwargs):
+    def _create_annotation(self, refresh=True, **kwargs):
         opts = {
             'user': self.user.id,
             'consumer': self.user.consumer.key
         }
         opts.update(kwargs)
         ann = Annotation(**opts)
-        ann.save()
+        ann.save(refresh=refresh)
         return ann
 
     def _get_annotation(self, id_):
@@ -234,8 +234,6 @@ class TestStore(TestCase):
         anno2 = self._create_annotation(uri=uri1, text=uri1 + uri1, user=user2)
         anno3 = self._create_annotation(uri=uri2, text=uri2, user=user)
 
-        es.conn.refresh(timesleep=0.01)
-
         res = self._get_search_results()
         assert_equal(res['total'], 3)
 
@@ -251,7 +249,7 @@ class TestStore(TestCase):
 
     def test_search_limit(self):
         for i in xrange(250):
-            self._create_annotation()
+            self._create_annotation(refresh=False)
 
         es.conn.refresh(timesleep=0.01)
 
@@ -273,7 +271,7 @@ class TestStore(TestCase):
 
     def test_search_offset(self):
         for i in xrange(250):
-            self._create_annotation()
+            self._create_annotation(refresh=False)
 
         es.conn.refresh(timesleep=0.01)
 

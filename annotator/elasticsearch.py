@@ -146,9 +146,11 @@ class _Model(dict):
 
     id = property(_get_id, _set_id)
 
-    def save(self):
+    def save(self, refresh=True):
         res = self.es.conn.index(self, self.es.index, self.__type__, self.id)
         self.id = res['_id']
+        if refresh:
+            self.es.conn.refresh()
 
     def delete(self):
         if self.id:

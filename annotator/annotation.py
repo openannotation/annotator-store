@@ -53,7 +53,7 @@ class Annotation(es.Model):
 
         return q
 
-    def save(self):
+    def save(self, *args, **kwargs):
         # For brand new annotations
         _add_created(self)
         _add_default_permissions(self)
@@ -61,7 +61,7 @@ class Annotation(es.Model):
         # For all annotations about to be saved
         _add_updated(self)
 
-        super(Annotation, self).save()
+        super(Annotation, self).save(*args, **kwargs)
 
 
 def _add_created(ann):

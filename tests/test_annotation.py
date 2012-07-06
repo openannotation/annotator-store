@@ -1,4 +1,5 @@
 from nose.tools import *
+from mock import MagicMock
 from . import TestCase, helpers as h
 
 from flask import g
@@ -22,10 +23,23 @@ class TestAnnotation(TestCase):
         a = Annotation()
         assert_equal('{}', repr(a))
 
-    def test_save(self):
+    def test_save_refresh(self):
         a = Annotation(name='bob')
-        a.save()
+        c = pa.es.conn
+        a.save(refresh=True)
         assert_true('id' in a)
+
+    def test_save_refresh(self):
+        a = Annotation(name='bob')
+        a.es = MagicMock()
+        a.save()
+        assert_equal(1, a.es.conn.refresh.call_count)
+
+    def test_save_refresh_disable(self):
+        a = Annotation(name='bob')
+        a.es = MagicMock()
+        a.save(refresh=False)
+        assert_false(a.es.conn.refresh.called)
 
     def test_fetch(self):
         a = Annotation(foo='bar')
@@ -69,8 +83,6 @@ class TestAnnotation(TestCase):
         anno2.save()
         anno3.save()
 
-        es.conn.refresh(timesleep=0.01)
-
         res = Annotation.search()
         assert_equal(len(res), 3)
 
@@ -107,8 +119,6 @@ class TestAnnotation(TestCase):
         anno = Annotation(text='Foobar')
         anno.save()
 
-        es.conn.refresh(timesleep=0.01)
-
         res = Annotation.search()
         assert_equal(len(res), 0)
 
@@ -121,8 +131,6 @@ class TestAnnotation(TestCase):
                           consumer='testconsumer',
                           permissions={'read': ['bob']})
         anno.save()
-
-        es.conn.refresh(timesleep=0.01)
 
         res = Annotation.search()
         assert_equal(len(res), 0)
@@ -145,8 +153,6 @@ class TestAnnotation(TestCase):
                           permissions={'read': ['group:__world__']})
         anno.save()
 
-        es.conn.refresh(timesleep=0.01)
-
         res = Annotation.search()
         assert_equal(len(res), 1)
 
@@ -168,8 +174,6 @@ class TestAnnotation(TestCase):
                           permissions={'read': ['group:__authenticated__']})
         anno.save()
 
-        es.conn.refresh(timesleep=0.01)
-
         res = Annotation.search()
         assert_equal(len(res), 0)
 
@@ -189,8 +193,6 @@ class TestAnnotation(TestCase):
                           permissions={'read': ['group:__consumer__']})
         anno.save()
 
-        es.conn.refresh(timesleep=0.01)
-
         res = Annotation.search()
         assert_equal(len(res), 0)
 
@@ -208,8 +210,6 @@ class TestAnnotation(TestCase):
                           consumer='testconsumer')
         anno.save()
 
-        es.conn.refresh(timesleep=0.01)
-
         res = Annotation.search()
         assert_equal(len(res), 0)
 
@@ -224,8 +224,6 @@ class TestAnnotation(TestCase):
                           permissions={'read': ['group:__consumer__']})
         anno.save()
 
-        es.conn.refresh(timesleep=0.01)
-
         # Any user whose username starts with "group:" must be refused any results
         g.user = h.MockUser('group:anyone', 'testconsumer')
         res = Annotation.search()
@@ -236,8 +234,6 @@ class TestAnnotation(TestCase):
                           user='alice',
                           consumer='testconsumer')
         anno.save()
-
-        es.conn.refresh(timesleep=0.01)
 
         g.user = h.MockUser('bob', 'testconsumer')
         g.user.is_admin = True
