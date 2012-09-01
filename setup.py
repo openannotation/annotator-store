@@ -1,18 +1,24 @@
 from setuptools import setup, find_packages
+import sys
+
+requires = [
+    'Flask==0.8',
+    'pyes==0.19.1',
+    'PyJWT==0.1.4',
+    'iso8601==0.1.4',
+    'nose==1.1.2',
+    'mock==0.8.0'
+]
+
+if sys.version_info < (2, 7):
+    requires.append('ordereddict==1.1')
 
 setup(
     name = 'annotator',
     version = '0.8.0',
     packages = find_packages(),
 
-    install_requires = [
-        'Flask==0.8',
-        'pyes==0.19.1',
-        'PyJWT==0.1.4',
-        'iso8601==0.1.4',
-        'nose==1.1.2',
-        'mock==0.8.0'
-    ],
+    install_requires = requires,
 
     # metadata for upload to PyPI
     author = 'Rufus Pollock and Nick Stenning (Open Knowledge Foundation)',
