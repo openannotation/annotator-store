@@ -38,14 +38,21 @@ default. See the [Annotator documentation][4] for details.
 
 ## Running tests
 
-Simply run `python run_tests.py` to run the test suite
+We use `nosetests` to run tests. You can just `pip install nosetests mock` and
+then:
 
-    $ python run_tests.py
+    $ nosetests
     ....................................................
     ----------------------------------------------------------------------
     Ran 52 tests in 3.233s
 
     OK
+
+Alternatively (and preferably), you should install [Tox][5], and then run
+`tox`. This will run the tests against multiple versions of Python (if you
+have them installed).
+
+[5]: http://tox.testrun.org/
 
 Please [open an issue](annotator-store/issues) if you find that the tests
 don't all pass on your machine, making sure to include the output of `pip

@@ -67,7 +67,7 @@ class TestModel(object):
         o = self.Model.fetch(123)
         assert_equal(o['foo'], 'bar')
         assert_equal(o['id'], 123)
-        assert_is_instance(o, self.Model)
+        assert_true(isinstance(o, self.Model))
 
     @patch('annotator.elasticsearch.pyes.ES')
     def test_fetch_not_found(self, pyes_mock):
