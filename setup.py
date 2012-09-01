@@ -13,7 +13,7 @@ if sys.version_info < (2, 7):
 
 setup(
     name = 'annotator',
-    version = '0.8.0',
+    version = '0.8.1',
     packages = find_packages(),
 
     install_requires = requires,
