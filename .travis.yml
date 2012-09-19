@@ -3,6 +3,8 @@ python:
   - 2.6
   - 2.7
   - pypy
+services:
+  - elasticsearch
 install:
   - pip install . --use-mirrors
 script: nosetests
