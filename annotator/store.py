@@ -181,7 +181,7 @@ def delete_annotation(id):
         return failure
 
     annotation.delete()
-    return None, 204
+    return '', 204
 
 # SEARCH
 @store.route('/search')
