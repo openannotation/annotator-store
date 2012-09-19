@@ -26,14 +26,14 @@ class TestCase(object):
     @classmethod
     def setup_class(cls):
         cls.app = create_app()
-        with cls.app.test_request_context():
+        with cls.app.app_context():
             annotation.Annotation.drop_all()
 
     def setup(self):
-        with self.app.test_request_context():
+        with self.app.app_context():
             annotation.Annotation.create_all()
         self.cli = self.app.test_client()
 
     def teardown(self):
-        with self.app.test_request_context():
+        with self.app.app_context():
             annotation.Annotation.drop_all()
