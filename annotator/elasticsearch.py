@@ -191,6 +191,9 @@ def _build_query_raw(request):
         for k, v in request.args.iteritems():
             _update_query_raw(query, params, k, v)
 
+        if 'query' not in query:
+            query['query'] = {'match_all': {}}
+
     elif request.method == 'POST':
 
         try:

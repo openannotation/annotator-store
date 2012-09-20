@@ -48,8 +48,7 @@ class Annotation(es.Model):
             f = authz.permissions_filter(g.user)
             if not f:
                 return False # Refuse to perform the query
-            q['query'] = {'filtered': {'query': q['query'],
-                                       'filter': f}}
+            q['query'] = {'filtered': {'query': q['query'], 'filter': f}}
 
         return q
 
@@ -61,9 +60,7 @@ class Annotation(es.Model):
             f = authz.permissions_filter(g.user)
             if not f:
                 return {'error': "Authorization error!", 'status': 400}, None
-            if 'query' in q:
-                q['query'] = {'filtered': {'query': q['query'],
-                                           'filter': f}}
+            q['query'] = {'filtered': {'query': q['query'], 'filter': f}}
 
         return q, p
 
