@@ -1,9 +1,0 @@
-syntax: glob
-
-db/*.sqlite
-pyenv
-annotator.cfg
-*.pyc
-*.egg-info
-sandbox/*
-
