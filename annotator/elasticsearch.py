@@ -152,7 +152,7 @@ class _Model(dict):
         res = self.es.conn.index(self, self.es.index, self.__type__, self.id)
         self.id = res['_id']
         if refresh:
-            self.es.conn.refresh()
+            self.es.conn.indices.refresh(self.es.index)
 
     def delete(self):
         if self.id:

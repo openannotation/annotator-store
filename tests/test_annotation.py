@@ -33,13 +33,13 @@ class TestAnnotation(TestCase):
         a = Annotation(name='bob')
         a.es = MagicMock()
         a.save()
-        assert_equal(1, a.es.conn.refresh.call_count)
+        assert_equal(1, a.es.conn.indices.refresh.call_count)
 
     def test_save_refresh_disable(self):
         a = Annotation(name='bob')
         a.es = MagicMock()
         a.save(refresh=False)
-        assert_false(a.es.conn.refresh.called)
+        assert_false(a.es.conn.indices.refresh.called)
 
     def test_fetch(self):
         a = Annotation(foo='bar')
