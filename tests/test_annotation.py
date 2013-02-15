@@ -32,14 +32,16 @@ class TestAnnotation(TestCase):
     def test_save_refresh(self):
         a = Annotation(name='bob')
         a.es = MagicMock()
+        a.es.index = 'foo'
         a.save()
-        assert_equal(1, a.es.conn.indices.refresh.call_count)
+        a.es.conn._send_request.assert_called_with('POST', '/foo/_refresh')
 
     def test_save_refresh_disable(self):
         a = Annotation(name='bob')
         a.es = MagicMock()
+        a.es.index = 'foo'
         a.save(refresh=False)
-        assert_false(a.es.conn.indices.refresh.called)
+        a.es.conn._send_request.assert_not_called_with('POST', '/foo/_refresh')
 
     def test_fetch(self):
         a = Annotation(foo='bar')

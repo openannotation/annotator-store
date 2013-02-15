@@ -152,7 +152,10 @@ class _Model(dict):
         res = self.es.conn.index(self, self.es.index, self.__type__, self.id)
         self.id = res['_id']
         if refresh:
-            self.es.conn.indices.refresh(self.es.index)
+            # Can't simply call self.es.conn.indices.refresh(self.es.index)
+            # here, as that automatically makes a cluster health call
+            # afterwards that the Bonsai API refuses to service.
+            self.es.conn._send_request('POST', '/{0}/_refresh'.format(self.es.index))
 
     def delete(self):
         if self.id:
