@@ -25,11 +25,11 @@ class TestAnnotation(TestCase):
 
     def test_save_refresh(self):
         a = Annotation(name='bob')
-        c = pa.es.conn
+        c = a.es.conn
         a.save(refresh=True)
         assert_true('id' in a)
 
-    def test_save_refresh(self):
+    def test_save_assert_refresh(self):
         a = Annotation(name='bob')
         a.es = MagicMock()
         a.es.index = 'foo'
