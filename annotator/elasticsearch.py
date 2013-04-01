@@ -83,6 +83,7 @@ class ElasticSearch(object):
 class _Model(dict):
     @classmethod
     def create_all(cls):
+        logging.error("creating index " + cls.es.index)
         try:
             cls.es.conn.create_index_if_missing(cls.es.index)
         except pyes.exceptions.ElasticSearchException:
@@ -91,6 +92,8 @@ class _Model(dict):
 
     @classmethod
     def drop_all(cls):
+        if cls.es.conn.exists_index(cls.es.index):
+            cls.es.conn.close_index(cls.es.index)
         cls.es.conn.delete_index_if_exists(cls.es.index)
 
     # It would be lovely if this were called 'get', but the dict semantics
