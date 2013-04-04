@@ -1,7 +1,7 @@
 import os
 from flask import Flask, g, request
 
-from annotator import es, auth, authz, annotation, store
+from annotator import es, auth, authz, annotation, store, document
 
 from .helpers import MockUser, MockConsumer
 
@@ -28,12 +28,15 @@ class TestCase(object):
         cls.app = create_app()
         with cls.app.app_context():
             annotation.Annotation.drop_all()
+            document.Document.drop_all()
 
     def setup(self):
         with self.app.app_context():
             annotation.Annotation.create_all()
+            document.Document.create_all()
         self.cli = self.app.test_client()
 
     def teardown(self):
         with self.app.app_context():
             annotation.Annotation.drop_all()
+            document.Document.drop_all()

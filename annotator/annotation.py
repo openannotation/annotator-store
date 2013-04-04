@@ -1,6 +1,3 @@
-from datetime import datetime
-import iso8601
-
 from annotator import es, authz
 from flask import current_app, g
 
@@ -65,22 +62,9 @@ class Annotation(es.Model):
         return q, p
 
     def save(self, *args, **kwargs):
-        # For brand new annotations
-        _add_created(self)
         _add_default_permissions(self)
-
-        # For all annotations about to be saved
-        _add_updated(self)
-
         super(Annotation, self).save(*args, **kwargs)
 
-
-def _add_created(ann):
-    if 'created' not in ann:
-        ann['created'] = datetime.now(iso8601.iso8601.UTC).isoformat()
-
-def _add_updated(ann):
-    ann['updated'] = datetime.now(iso8601.iso8601.UTC).isoformat()
 
 def _add_default_permissions(ann):
     if 'permissions' not in ann:

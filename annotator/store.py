@@ -187,6 +187,7 @@ def delete_annotation(id):
 @store.route('/search')
 def search_annotations():
     kwargs = dict(request.args.items())
+    import logging; logging.debug(request.args.items())
 
     if 'offset' in kwargs:
         kwargs['offset'] = atoi(kwargs['offset'])
