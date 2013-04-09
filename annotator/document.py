@@ -26,6 +26,24 @@ class Document(es.Model):
 
     @classmethod
     def get_all_by_url(cls, url):
-        q = {"nested": {"path": "link", "query": {"term": {"link.href": url}}}}
-        res = cls.es.conn.search(q, cls.es.index, cls.__type__, sort=sort)
-        return [cls(d) for d in res]
+        q = {
+            "query": {
+                "nested": {
+                    "path": "link", 
+                    "query": {
+                        "term": {
+                            "link.href": url
+                        }
+                    }
+                }
+            },
+            "sort": [
+              {
+                "updated": {
+                  "order": "asc"
+                }
+              }
+            ]
+        }
+        res = cls.es.conn.search_raw(q, cls.es.index, cls.__type__)
+        return [cls(d['_source']) for d in res['hits']['hits']]
