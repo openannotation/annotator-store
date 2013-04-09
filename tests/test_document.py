@@ -76,4 +76,54 @@ class TestDocument(TestCase):
         res = Document.search(title='annotation')
         assert_equal(len(res), 1)
 
+    def test_get_by_url(self):
+        d = Document({
+            "id": "1", 
+            "title": "document1",
+            "link": [
+                {
+                    "href": "https://peerj.com/articles/53/",
+                    "type": "text/html"
+                },
+                { 
+                    "href": "https://peerj.com/articles/53.pdf",
+                    "type": "application/pdf"
+                },
+            ],
+        })
+        d.save()
 
+        d = Document({
+            "id": "2", 
+            "title": "document2",
+            "link": [
+                {
+                    "href": "https://peerj.com/articles/53/",
+                    "type": "text/html"
+                },
+                { 
+                    "href": "https://peerj.com/articles/53.pdf",
+                    "type": "application/pdf"
+                },
+            ],
+        })
+        d.save()
+
+        d = Document({
+            "id": "3", 
+            "title": "document3",
+            "link": [
+                {
+                    "href": "http://nature.com/123/",
+                    "type": "text/html"
+                }
+            ],
+        })
+        d.save()
+
+        doc = Document.get_by_url("https://peerj.com/articles/53/")
+        assert doc
+        assert_equal(doc['title'], "document1") 
+
+        docs = Document.get_all_by_url("https://peerj.com/articles/53/")
+        assert_equal(len(docs), 2)
