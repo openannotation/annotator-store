@@ -77,6 +77,9 @@ class TestDocument(TestCase):
         assert_equal(len(res), 1)
 
     def test_get_by_url(self):
+
+        # create 3 documents and make sure get_by_url works properly
+
         d = Document({
             "id": "1", 
             "title": "document1",
@@ -127,3 +130,6 @@ class TestDocument(TestCase):
 
         docs = Document.get_all_by_url("https://peerj.com/articles/53/")
         assert_equal(len(docs), 2)
+        assert_equal(docs[0]['title'], 'document1')
+        assert_equal(docs[1]['title'], 'document2')
+
