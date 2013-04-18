@@ -218,6 +218,6 @@ class TestDocument(TestCase):
 
         doc = Document.get_by_url("https://peerj.com/articles/53/")
         assert doc
-        assert_equal(doc['link'], 3)
+        assert_equal(len(doc['link']), 3)
 
 
