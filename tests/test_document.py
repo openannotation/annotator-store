@@ -59,7 +59,7 @@ class TestDocument(TestCase):
     def test_search(self):
         d = Document({
             "id": "1", 
-            "title": "annotation",
+            "title": "document",
             "link": [
                 {
                     "href": "https://peerj.com/articles/53/",
@@ -72,7 +72,7 @@ class TestDocument(TestCase):
             ],
         })
         d.save()
-        res = Document.search(title='annotation')
+        res = Document.search(title='document')
         assert_equal(len(res), 1)
 
     def test_get_by_url(self):
@@ -133,7 +133,7 @@ class TestDocument(TestCase):
 
         d = Document({
             "id": "1", 
-            "title": "annotation",
+            "title": "document1",
             "link": [
                 {
                     "href": "https://peerj.com/articles/53/",
@@ -145,7 +145,7 @@ class TestDocument(TestCase):
 
         d = Document({
             "id": "2", 
-            "title": "annotation",
+            "title": "document2",
             "link": [
                 { 
                     "href": "https://peerj.com/articles/53.pdf",
@@ -161,7 +161,7 @@ class TestDocument(TestCase):
     def test_urls(self):
         d = Document({
             "id": "1", 
-            "title": "annotation",
+            "title": "document",
             "link": [
                 {
                     "href": "https://peerj.com/articles/53/",
@@ -177,4 +177,47 @@ class TestDocument(TestCase):
             "https://peerj.com/articles/53/",
             "https://peerj.com/articles/53.pdf"
         ])
+
+    def test_merge_links(self):
+        d = Document({
+            "id": "1", 
+            "title": "document",
+            "link": [
+                {
+                    "href": "https://peerj.com/articles/53/",
+                    "type": "text/html"
+                },
+                { 
+                    "href": "https://peerj.com/articles/53.pdf",
+                    "type": "application/pdf"
+                }
+            ],
+        })
+        d.save()
+
+        d = Document.fetch(1)
+        assert d
+        assert_equal(len(d['link']), 2)
+
+        d.merge_links([
+            {
+                "href": "https://peerj.com/articles/53/",
+                "type": "text/html"
+            },
+            {
+                "href": "http://peerj.com/articles/53.doc",
+                "type": "application/vnd.ms-word.document"
+            }
+        ])
+        d.save()
+
+        assert_equal(len(d['link']), 3)
+        d = Document.fetch(1)
+        assert d
+        assert_equal(len(d['link']), 3)
+
+        doc = Document.get_by_url("https://peerj.com/articles/53/")
+        assert doc
+        assert_equal(doc['link'], 3)
+
 

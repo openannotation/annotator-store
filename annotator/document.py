@@ -50,11 +50,17 @@ class Document(es.Model):
             ]
         }
         res = cls.es.conn.search_raw(q, cls.es.index, cls.__type__)
-        return [cls(d['_source']) for d in res['hits']['hits']]
+        return [cls(d['_source'], id=d['_id']) for d in res['hits']['hits']]
 
     def urls(self):
         """Returns a list of the urls for the document"""
         return self._urls_from_links(self.get('link', []))
+
+    def merge_links(self, links):
+        current_urls = self.urls()
+        for l in links:
+            if l['href'] and l['type'] and l['href'] not in current_urls:
+                self['link'].append(l)
 
     def _urls_from_links(self, links):
         urls = []

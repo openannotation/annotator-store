@@ -112,20 +112,22 @@ def create_annotation():
         annotation = Annotation(_filter_input(request.json, CREATE_FILTER_FIELDS))
 
         # if the annotation payload includes document metadata look to 
-        # see if we have it modeled separately as a document yet and add
-        # it if it is not there
+        # see if we have it modeled separately as a document and add
+        # it if it is not there. if we already know about the document
+        # make sure we have all of its urls
 
-        doc = None
         if request.json.has_key("document"):
             d = request.json["document"]
-            
-            # get all the urls from the document
-            urls = [link["href"] for link in d.get("link")]
-
-            # look to see if we have a document modeled for one of those urls
+            links = d.get('link', [])
+            urls = [link["href"] for link in links]
             docs = Document.get_all_by_urls(urls)
+
             if len(docs) == 0:
                 doc = Document(d)
+                doc.save()
+            else:
+                doc = docs[0]
+                doc.merge_links(links)
                 doc.save()
 
         annotation['consumer'] = g.user.consumer.key
