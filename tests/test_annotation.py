@@ -65,12 +65,21 @@ class TestAnnotation(TestCase):
         ann['ranges'] = []
         ann['ranges'].append({})
         ann['ranges'].append({})
+        ann['document'] = {
+            'title': 'Annotation for Dummies',
+            'link': [
+                {'href': 'http://example.com/1234', 'type': 'application/pdf'}
+            ]
+        }
         ann.save()
 
         ann = Annotation.fetch(ann.id)
         assert_equal(ann['text'], "Hello there")
         assert_equal(ann['user'], "alice")
         assert_equal(len(ann['ranges']), 2)
+        assert_equal(ann['document']['title'], 'Annotation for Dummies')
+        assert_equal(ann['document']['link'][0]['href'], 'http://example.com/1234')
+        assert_equal(ann['document']['link'][0]['type'], 'application/pdf')
 
     def test_search(self):
         perms = {'read': ['group:__world__']}

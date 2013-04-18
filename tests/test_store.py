@@ -74,6 +74,37 @@ class TestStore(TestCase):
         assert data['user'] == self.user.id
         assert data['consumer'] == self.user.consumer.key
 
+    def test_create_with_document(self):
+        payload = json.dumps({
+            'name': 'Foo', 
+            'document': {
+                'title': 'annotation',
+                'link': [
+                    {
+                        'href': 'http://example.com/1234',
+                        'type': 'text/html'
+                    },
+                    {
+                        'href': 'http://example.com/1234.pdf',
+                        'type': 'application/pdf'
+                    }
+                ]
+            }
+        })
+        response = self.cli.post('/api/annotations',
+                                 data=payload,
+                                 content_type='application/json',
+                                 headers=self.headers)
+
+        assert_equal(response.status_code, 200, "response should be 200 OK")
+        data = json.loads(response.data)
+        assert 'id' in data, "annotation id should be returned in response"
+        assert_equal(data['user'], self.user.id)
+        assert_equal(data['consumer'], self.user.consumer.key)
+        assert 'document' in data
+        assert_equal(data['document']['title'], 'annotation')
+        assert_equal(len(data['document']['link']), 2)
+
     def test_create_ignore_created(self):
         payload = json.dumps({'created': 'abc'})
 

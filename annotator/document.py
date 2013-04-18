@@ -21,18 +21,22 @@ class Document(es.Model):
 
     @classmethod
     def get_by_url(cls, url):
-        results = cls.get_all_by_url(url)
+        """returns the first document match for a given URL"""
+        results = cls.get_all_by_urls([url])
         return results[0] if len(results) > 0 else []
 
     @classmethod
-    def get_all_by_url(cls, url):
+    def get_all_by_urls(cls, urls):
+        """returns a list of documents that have any of the supplied urls
+        It is only necessary for one of the supplied urls to match.
+        """
         q = {
             "query": {
                 "nested": {
                     "path": "link", 
                     "query": {
-                        "term": {
-                            "link.href": url
+                        "terms": {
+                            "link.href": urls
                         }
                     }
                 }
@@ -47,3 +51,15 @@ class Document(es.Model):
         }
         res = cls.es.conn.search_raw(q, cls.es.index, cls.__type__)
         return [cls(d['_source']) for d in res['hits']['hits']]
+
+    def urls(self):
+        """Returns a list of the urls for the document"""
+        return self._urls_from_links(self.get('link', []))
+
+    def _urls_from_links(self, links):
+        urls = []
+        for link in links:
+            urls.append(link.get('href'))
+        return urls
+
+

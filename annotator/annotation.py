@@ -29,6 +29,18 @@ MAPPING = {
             'delete': {'type': 'string', 'index': 'not_analyzed'},
             'admin':  {'type': 'string', 'index': 'not_analyzed'}
         }
+    },
+    'document': {
+        'properties': {
+            'title': {'type': 'string'},
+            'link': {
+                'type': 'nested',
+                'properties': {
+                    'type': {'type': 'string', 'index': 'not_analyzed'},
+                    'href': {'type': 'string', 'index': 'not_analyzed'},
+                }
+            }
+        }
     }
 }
 

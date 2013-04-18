@@ -56,7 +56,6 @@ class TestDocument(TestCase):
         nodoc = Document.fetch(1)
         assert nodoc == None
 
-
     def test_search(self):
         d = Document({
             "id": "1", 
@@ -128,8 +127,54 @@ class TestDocument(TestCase):
         assert doc
         assert_equal(doc['title'], "document1") 
 
-        docs = Document.get_all_by_url("https://peerj.com/articles/53/")
+    def test_get_all_by_urls(self):
+
+        # add two documents and make sure get_all_by_urls fetches both
+
+        d = Document({
+            "id": "1", 
+            "title": "annotation",
+            "link": [
+                {
+                    "href": "https://peerj.com/articles/53/",
+                    "type": "text/html"
+                },
+            ]
+        })
+        d.save()
+
+        d = Document({
+            "id": "2", 
+            "title": "annotation",
+            "link": [
+                { 
+                    "href": "https://peerj.com/articles/53.pdf",
+                    "type": "application/pdf"
+                }
+            ]
+        })
+        d.save()
+
+        docs = Document.get_all_by_urls(["https://peerj.com/articles/53/", "https://peerj.com/articles/53.pdf"])
         assert_equal(len(docs), 2)
-        assert_equal(docs[0]['title'], 'document1')
-        assert_equal(docs[1]['title'], 'document2')
+
+    def test_urls(self):
+        d = Document({
+            "id": "1", 
+            "title": "annotation",
+            "link": [
+                {
+                    "href": "https://peerj.com/articles/53/",
+                    "type": "text/html"
+                },
+                { 
+                    "href": "https://peerj.com/articles/53.pdf",
+                    "type": "application/pdf"
+                }
+            ],
+        })
+        assert_equal(d.urls(), [
+            "https://peerj.com/articles/53/",
+            "https://peerj.com/articles/53.pdf"
+        ])
 

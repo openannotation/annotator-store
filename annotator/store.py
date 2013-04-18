@@ -7,6 +7,7 @@ from flask import url_for
 
 from annotator.atoi import atoi
 from annotator.annotation import Annotation
+from annotator.document import Document
 
 store = Blueprint('store', __name__)
 
@@ -110,6 +111,23 @@ def create_annotation():
     if request.json is not None:
         annotation = Annotation(_filter_input(request.json, CREATE_FILTER_FIELDS))
 
+        # if the annotation payload includes document metadata look to 
+        # see if we have it modeled separately as a document yet and add
+        # it if it is not there
+
+        doc = None
+        if request.json.has_key("document"):
+            d = request.json["document"]
+            
+            # get all the urls from the document
+            urls = [link["href"] for link in d.get("link")]
+
+            # look to see if we have a document modeled for one of those urls
+            docs = Document.get_all_by_urls(urls)
+            if len(docs) == 0:
+                doc = Document(d)
+                doc.save()
+
         annotation['consumer'] = g.user.consumer.key
         if _get_annotation_user(annotation) != g.user.id:
             annotation['user'] = g.user.id
@@ -187,7 +205,6 @@ def delete_annotation(id):
 @store.route('/search')
 def search_annotations():
     kwargs = dict(request.args.items())
-    import logging; logging.debug(request.args.items())
 
     if 'offset' in kwargs:
         kwargs['offset'] = atoi(kwargs['offset'])
