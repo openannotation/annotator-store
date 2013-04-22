@@ -114,13 +114,13 @@ def create_annotation():
         # if the annotation payload includes document metadata look to 
         # see if we have it modeled separately as a document and add
         # it if it is not there. if we already know about the document
-        # make sure we have all of its urls
+        # make sure we know about all of its urls
 
         if request.json.has_key("document"):
             d = request.json["document"]
             links = d.get('link', [])
-            urls = [link["href"] for link in links]
-            docs = Document.get_all_by_urls(urls)
+            uris = [link["href"] for link in links]
+            docs = Document.get_all_by_uris(uris)
 
             if len(docs) == 0:
                 doc = Document(d)

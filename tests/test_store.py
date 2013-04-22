@@ -106,7 +106,7 @@ class TestStore(TestCase):
         assert_equal(data['document']['title'], 'Awesome Document')
         assert_equal(len(data['document']['link']), 2)
 
-        doc = Document.get_by_url('http://example.com/1234')
+        doc = Document.get_by_uri('http://example.com/1234')
         assert_equal(doc['title'], 'Awesome Document')
 
     def test_document_merge(self):
@@ -157,7 +157,7 @@ class TestStore(TestCase):
                                  content_type='application/json',
                                  headers=self.headers)
 
-        doc = Document.get_by_url('http://example.com/1234')
+        doc = Document.get_by_uri('http://example.com/1234')
         assert_equal(doc['title'], 'Awesome Document')
         assert_equal(len(doc['link']), 3)
 

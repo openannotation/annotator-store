@@ -20,15 +20,15 @@ class Document(es.Model):
     __mapping__ = MAPPING
 
     @classmethod
-    def get_by_url(cls, url):
+    def get_by_uri(cls, uri):
         """returns the first document match for a given URL"""
-        results = cls.get_all_by_urls([url])
+        results = cls.get_all_by_uris([uri])
         return results[0] if len(results) > 0 else []
 
     @classmethod
-    def get_all_by_urls(cls, urls):
-        """returns a list of documents that have any of the supplied urls
-        It is only necessary for one of the supplied urls to match.
+    def get_all_by_uris(cls, uris):
+        """returns a list of documents that have any of the supplied uris
+        It is only necessary for one of the supplied uris to match.
         """
         q = {
             "query": {
@@ -36,7 +36,7 @@ class Document(es.Model):
                     "path": "link", 
                     "query": {
                         "terms": {
-                            "link.href": urls
+                            "link.href": uris
                         }
                     }
                 }
@@ -52,20 +52,20 @@ class Document(es.Model):
         res = cls.es.conn.search_raw(q, cls.es.index, cls.__type__)
         return [cls(d['_source'], id=d['_id']) for d in res['hits']['hits']]
 
-    def urls(self):
-        """Returns a list of the urls for the document"""
-        return self._urls_from_links(self.get('link', []))
+    def uris(self):
+        """Returns a list of the uris for the document"""
+        return self._uris_from_links(self.get('link', []))
 
     def merge_links(self, links):
-        current_urls = self.urls()
+        current_uris = self.uris()
         for l in links:
-            if l['href'] and l['type'] and l['href'] not in current_urls:
+            if l['href'] and l['type'] and l['href'] not in current_uris:
                 self['link'].append(l)
 
-    def _urls_from_links(self, links):
-        urls = []
+    def _uris_from_links(self, links):
+        uris = []
         for link in links:
-            urls.append(link.get('href'))
-        return urls
+            uris.append(link.get('href'))
+        return uris
 
 

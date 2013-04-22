@@ -75,9 +75,9 @@ class TestDocument(TestCase):
         res = Document.search(title='document')
         assert_equal(len(res), 1)
 
-    def test_get_by_url(self):
+    def test_get_by_uri(self):
 
-        # create 3 documents and make sure get_by_url works properly
+        # create 3 documents and make sure get_by_uri works properly
 
         d = Document({
             "id": "1", 
@@ -123,13 +123,13 @@ class TestDocument(TestCase):
         })
         d.save()
 
-        doc = Document.get_by_url("https://peerj.com/articles/53/")
+        doc = Document.get_by_uri("https://peerj.com/articles/53/")
         assert doc
         assert_equal(doc['title'], "document1") 
 
-    def test_get_all_by_urls(self):
+    def test_get_all_by_uri(self):
 
-        # add two documents and make sure get_all_by_urls fetches both
+        # add two documents and make sure get_all_by_uri fetches both
 
         d = Document({
             "id": "1", 
@@ -155,10 +155,10 @@ class TestDocument(TestCase):
         })
         d.save()
 
-        docs = Document.get_all_by_urls(["https://peerj.com/articles/53/", "https://peerj.com/articles/53.pdf"])
+        docs = Document.get_all_by_uris(["https://peerj.com/articles/53/", "https://peerj.com/articles/53.pdf"])
         assert_equal(len(docs), 2)
 
-    def test_urls(self):
+    def test_uris(self):
         d = Document({
             "id": "1", 
             "title": "document",
@@ -173,7 +173,7 @@ class TestDocument(TestCase):
                 }
             ],
         })
-        assert_equal(d.urls(), [
+        assert_equal(d.uris(), [
             "https://peerj.com/articles/53/",
             "https://peerj.com/articles/53.pdf"
         ])
@@ -216,7 +216,7 @@ class TestDocument(TestCase):
         assert d
         assert_equal(len(d['link']), 3)
 
-        doc = Document.get_by_url("https://peerj.com/articles/53/")
+        doc = Document.get_by_uri("https://peerj.com/articles/53/")
         assert doc
         assert_equal(len(doc['link']), 3)
 
