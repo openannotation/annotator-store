@@ -279,7 +279,7 @@ class TestAnnotation(TestCase):
         # annotator doesn't currently extract information from pdfs
 
         a2 = Annotation(uri='http://example.com/1234.pdf', 
-                        text='annotation1',
+                        text='annotation2',
                         user='alice',
                         consumer='testconsumer')
         a2.save()
