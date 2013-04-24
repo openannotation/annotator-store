@@ -7,7 +7,6 @@ from flask import url_for
 
 from annotator.atoi import atoi
 from annotator.annotation import Annotation
-from annotator.document import Document
 
 store = Blueprint('store', __name__)
 
@@ -110,25 +109,6 @@ def create_annotation():
 
     if request.json is not None:
         annotation = Annotation(_filter_input(request.json, CREATE_FILTER_FIELDS))
-
-        # if the annotation payload includes document metadata look to 
-        # see if we have it modeled separately as a document and add
-        # it if it is not there. if we already know about the document
-        # make sure we know about all of its urls
-
-        if request.json.has_key("document"):
-            d = request.json["document"]
-            links = d.get('link', [])
-            uris = [link["href"] for link in links]
-            docs = Document.get_all_by_uris(uris)
-
-            if len(docs) == 0:
-                doc = Document(d)
-                doc.save()
-            else:
-                doc = docs[0]
-                doc.merge_links(links)
-                doc.save()
 
         annotation['consumer'] = g.user.consumer.key
         if _get_annotation_user(annotation) != g.user.id:

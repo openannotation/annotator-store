@@ -7,7 +7,6 @@ from flask import json, url_for
 
 from annotator import auth, es
 from annotator.annotation import Annotation
-from annotator.document import Document
 
 class TestStore(TestCase):
     def setup(self):
@@ -74,92 +73,6 @@ class TestStore(TestCase):
         assert 'id' in data, "annotation id should be returned in response"
         assert data['user'] == self.user.id
         assert data['consumer'] == self.user.consumer.key
-
-    def test_create_with_document(self):
-        payload = json.dumps({
-            'text': 'super!',
-            'document': {
-                'title': 'Awesome Document',
-                'link': [
-                    {
-                        'href': 'http://example.com/1234',
-                        'type': 'text/html'
-                    },
-                    {
-                        'href': 'http://example.com/1234.pdf',
-                        'type': 'application/pdf'
-                    }
-                ]
-            }
-        })
-        response = self.cli.post('/api/annotations',
-                                 data=payload,
-                                 content_type='application/json',
-                                 headers=self.headers)
-
-        assert_equal(response.status_code, 200, "response should be 200 OK")
-        data = json.loads(response.data)
-        assert 'id' in data, "annotation id should be returned in response"
-        assert_equal(data['user'], self.user.id)
-        assert_equal(data['consumer'], self.user.consumer.key)
-        assert 'document' in data
-        assert_equal(data['document']['title'], 'Awesome Document')
-        assert_equal(len(data['document']['link']), 2)
-
-        doc = Document.get_by_uri('http://example.com/1234')
-        assert_equal(doc['title'], 'Awesome Document')
-
-    def test_document_merge(self):
-        a1 = json.dumps({
-            'consumerKey': self.user.consumer.key,
-            'userId': self.user.id,
-            'text': 'super!',
-            'document': {
-                'title': 'Awesome Document',
-                'link': [
-                    {
-                        'href': 'http://example.com/1234',
-                        'type': 'text/html'
-                    },
-                    {
-                        'href': 'http://example.com/1234.pdf',
-                        'type': 'application/pdf'
-                    }
-                ]
-            }
-        })
-        response = self.cli.post('/api/annotations',
-                                 data=a1,
-                                 content_type='application/json',
-                                 headers=self.headers)
-
-        a2 = json.dumps({
-            'consumerKey': self.user.consumer.key,
-            'userId': self.user.id,
-            'text': 'duper!',
-            'document': {
-                'title': 'Awesome Document',
-                'link': [
-                    {
-                        'href': 'http://example.com/1234',
-                        'type': 'text/html'
-                    },
-                    {
-                        'href': 'http://example.com/1234.doc',
-                        'type': 'application/word'
-                    }
-                ]
-            }
-        })
-
-        response = self.cli.post('/api/annotations',
-                                 data=a2,
-                                 content_type='application/json',
-                                 headers=self.headers)
-
-        doc = Document.get_by_uri('http://example.com/1234')
-        assert_equal(doc['title'], 'Awesome Document')
-        assert_equal(len(doc['link']), 3)
 
     def test_create_ignore_created(self):
         payload = json.dumps({'created': 'abc'})
