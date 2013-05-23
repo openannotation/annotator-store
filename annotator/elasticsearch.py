@@ -1,6 +1,9 @@
 import csv
 import json
 import logging
+import datetime
+
+import iso8601
 
 import pyes
 from flask import _app_ctx_stack
@@ -83,6 +86,7 @@ class ElasticSearch(object):
 class _Model(dict):
     @classmethod
     def create_all(cls):
+        logging.error("creating index " + cls.es.index)
         try:
             cls.es.conn.create_index_if_missing(cls.es.index)
         except pyes.exceptions.ElasticSearchException:
@@ -91,6 +95,8 @@ class _Model(dict):
 
     @classmethod
     def drop_all(cls):
+        if cls.es.conn.exists_index(cls.es.index):
+            cls.es.conn.close_index(cls.es.index)
         cls.es.conn.delete_index_if_exists(cls.es.index)
 
     # It would be lovely if this were called 'get', but the dict semantics
@@ -116,6 +122,7 @@ class _Model(dict):
         q = cls._build_query(**kwargs)
         if not q:
             return []
+        logging.debug("doing search: %s", q)
         res = cls.es.conn.search_raw(q, cls.es.index, cls.__type__)
         docs = res['hits']['hits']
         return [cls(d['_source'], id=d['_id']) for d in docs]
@@ -149,6 +156,8 @@ class _Model(dict):
     id = property(_get_id, _set_id)
 
     def save(self, refresh=True):
+        _add_created(self)
+        _add_updated(self)
         res = self.es.conn.index(self, self.es.index, self.__type__, self.id)
         self.id = res['_id']
         if refresh:
@@ -251,3 +260,12 @@ def _update_query_raw(qo, params, k, v):
 
     elif k == 'search_type':
         params[k] = v
+
+def _add_created(ann):
+    if 'created' not in ann:
+        ann['created'] = datetime.datetime.now(iso8601.iso8601.UTC).isoformat()
+
+def _add_updated(ann):
+    ann['updated'] = datetime.datetime.now(iso8601.iso8601.UTC).isoformat()
+
+
