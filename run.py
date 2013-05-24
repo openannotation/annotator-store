@@ -16,7 +16,7 @@ import os
 import sys
 
 from flask import Flask, g, current_app
-from annotator import es, annotation, auth, authz, store
+from annotator import es, annotation, auth, authz, document, store
 from tests.helpers import MockUser, MockConsumer, MockAuthenticator
 from tests.helpers import mock_authorizer
 
@@ -35,6 +35,7 @@ def main():
 
     with app.test_request_context():
         annotation.Annotation.create_all()
+        document.Document.create_all()
 
     @app.before_request
     def before_request():
