@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 run.py: A simple example app for using the Annotator Store blueprint
 
