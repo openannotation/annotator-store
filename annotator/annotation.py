@@ -41,6 +41,15 @@ MAPPING = {
                     'type': {'type': 'string', 'index': 'not_analyzed'},
                     'href': {'type': 'string', 'index': 'not_analyzed'},
                 }
+            },
+            'dc': {
+                'type': 'nested',
+                'properties': {
+                    # by default elastic search will try to parse this as 
+                    # a date but unfortunately the data that is in the wild 
+                    # may not be parsable by ES which throws an exception
+                    'date': {'type': 'string', 'index': 'not_analyzed'}
+                }
             }
         }
     }
