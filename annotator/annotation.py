@@ -59,7 +59,7 @@ class Annotation(es.Model):
             else:
                 doc = docs[0]
                 links = d.get('link', [])
-                doc.merge_links(d['link'])
+                doc.merge_links(links)
                 doc.save()
 
         super(Annotation, self).save(*args, **kwargs)

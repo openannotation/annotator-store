@@ -68,7 +68,7 @@ class Document(es.Model):
     def merge_links(self, links):
         current_uris = self.uris()
         for l in links:
-            if l['href'] and l['type'] and l['href'] not in current_uris:
+            if 'href' in l and 'type' in l and l['href'] not in current_uris:
                 self['link'].append(l)
 
     def _uris_from_links(self, links):
