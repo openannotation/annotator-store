@@ -166,6 +166,9 @@ def update_annotation(id):
         refresh = request.args.get('refresh') != 'false'
         annotation.save(refresh=refresh)
 
+        if hasattr(g, 'after_annotation_update'):
+            g.after_annotation_update(annotation)
+
     return jsonify(annotation)
 
 # DELETE
@@ -181,6 +184,10 @@ def delete_annotation(id):
         return failure
 
     annotation.delete()
+
+    if hasattr(g, 'after_annotation_delete'):
+    	g.after_annotation_delete(annotation)
+        
     return '', 204
 
 # SEARCH
