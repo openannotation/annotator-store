@@ -186,8 +186,8 @@ def delete_annotation(id):
     annotation.delete()
 
     if hasattr(g, 'after_annotation_delete'):
-    	g.after_annotation_delete(annotation)
-        
+        g.after_annotation_delete(annotation)
+
     return '', 204
 
 # SEARCH
