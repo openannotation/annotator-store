@@ -114,6 +114,9 @@ def create_annotation():
         if _get_annotation_user(annotation) != g.user.id:
             annotation['user'] = g.user.id
 
+        if hasattr(g, 'before_annotation_create'):
+            g.before_annotation_create(annotation)
+
         if hasattr(g, 'after_annotation_create'):
             annotation.save(refresh=False)
             g.after_annotation_create(annotation)
@@ -182,6 +185,9 @@ def delete_annotation(id):
     failure = _check_action(annotation, 'delete')
     if failure:
         return failure
+
+    if hasattr(g, 'before_annotation_delete'):
+        g.before_annotation_delete(annotation)
 
     annotation.delete()
 
