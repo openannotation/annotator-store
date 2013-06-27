@@ -86,7 +86,7 @@ class ElasticSearch(object):
 class _Model(dict):
     @classmethod
     def create_all(cls):
-        logging.error("creating index " + cls.es.index)
+        logging.info("creating index " + cls.es.index)
         try:
             cls.es.conn.create_index_if_missing(cls.es.index)
         except pyes.exceptions.ElasticSearchException:
