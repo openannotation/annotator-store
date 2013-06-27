@@ -22,6 +22,17 @@ def create_app():
 
     return app
 
+
+# pyes 0.19.1 has a bug where cluster.health sends the arguments in
+# a JSON request body instead of as query parameters. The fix is
+# already upstream, but here's a workaround for now. Remove this once
+# a new pyes is released and the dependency version is updated in
+# annotator-store.
+def wait_for_status(conn, level='yellow'):
+    params = dict(wait_for_status=level)
+    conn._send_request('GET', '/_cluster/health', params=params)
+
+
 class TestCase(object):
     @classmethod
     def setup_class(cls):
@@ -35,6 +46,7 @@ class TestCase(object):
             annotation.Annotation.create_all()
             document.Document.create_all()
         self.cli = self.app.test_client()
+        wait_for_status(es.get_conn(self.app))
 
     def teardown(self):
         with self.app.app_context():
