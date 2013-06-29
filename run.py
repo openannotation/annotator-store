@@ -26,10 +26,17 @@ here = os.path.dirname(__file__)
 def main():
     app = Flask(__name__)
 
+    cfg_file = 'annotator.cfg'
+    if len(sys.argv) == 2:
+        cfg_file = sys.argv[1]
+
+    cfg_path = os.path.join(here, cfg_file)
+
     try:
-        app.config.from_pyfile(os.path.join(here, 'annotator.cfg'))
+        app.config.from_pyfile(cfg_path)
     except IOError:
-        print("Please copy example config from annotator.cfg.example to annotator.cfg", file=sys.stderr)
+        print("Could not find config file %s" % cfg_path, file=sys.stderr)
+        print("Perhaps you need to copy annotator.cfg.example to annotator.cfg", file=sys.stderr)
         sys.exit(1)
 
     es.init_app(app)

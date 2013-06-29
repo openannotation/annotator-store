@@ -1,1 +1,1 @@
-web: python run.py
+web: python run.py annotator.cfg.heroku
