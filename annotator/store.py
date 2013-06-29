@@ -114,6 +114,9 @@ def create_annotation():
         if _get_annotation_user(annotation) != g.user.id:
             annotation['user'] = g.user.id
 
+        if hasattr(g, 'before_annotation_create'):
+            g.before_annotation_create(annotation)
+
         if hasattr(g, 'after_annotation_create'):
             annotation.save(refresh=False)
             g.after_annotation_create(annotation)
@@ -166,6 +169,9 @@ def update_annotation(id):
         refresh = request.args.get('refresh') != 'false'
         annotation.save(refresh=refresh)
 
+        if hasattr(g, 'after_annotation_update'):
+            g.after_annotation_update(annotation)
+
     return jsonify(annotation)
 
 # DELETE
@@ -180,7 +186,14 @@ def delete_annotation(id):
     if failure:
         return failure
 
+    if hasattr(g, 'before_annotation_delete'):
+        g.before_annotation_delete(annotation)
+
     annotation.delete()
+
+    if hasattr(g, 'after_annotation_delete'):
+        g.after_annotation_delete(annotation)
+
     return '', 204
 
 # SEARCH
