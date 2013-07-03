@@ -246,7 +246,7 @@ def _update_query_raw(qo, params, k, v):
         qo[k] = _csv_split(v)
 
     elif k == 'sort':
-        if 'sort' not in r:
+        if 'sort' not in qo:
             qo[k] = []
 
         split = _csv_split(v, ':')
