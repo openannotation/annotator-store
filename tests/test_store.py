@@ -1,9 +1,9 @@
 from . import TestCase
-from .helpers import MockUser, MockConsumer
+from .helpers import MockUser
 from nose.tools import *
 from mock import patch
 
-from flask import json, url_for
+from flask import json
 
 from annotator import auth, es
 from annotator.annotation import Annotation
@@ -58,6 +58,7 @@ class TestStore(TestCase):
 
     def test_create(self):
         payload = json.dumps({'name': 'Foo'})
+
         response = self.cli.post('/api/annotations',
                                  data=payload,
                                  content_type='application/json',

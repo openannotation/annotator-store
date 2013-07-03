@@ -5,9 +5,11 @@ import jwt
 
 DEFAULT_TTL = 86400
 
+
 class Consumer(object):
     def __init__(self, key):
         self.key = key
+
 
 class User(object):
     def __init__(self, id, consumer, is_admin):
@@ -17,11 +19,10 @@ class User(object):
 
     @classmethod
     def from_token(cls, token):
-        return cls(
-            token['userId'],
-            Consumer(token['consumerKey']),
-            token.get('admin', False)
-        )
+        return cls(token['userId'],
+                   Consumer(token['consumerKey']),
+                   token.get('admin', False))
+
 
 class Authenticator(object):
     """
@@ -33,8 +34,9 @@ class Authenticator(object):
     def __init__(self, consumer_fetcher):
         """
         Arguments:
-        consumer_fetcher -- a function which takes a consumer key and returns an object
-                            with 'key', 'secret', and 'ttl' attributes
+        consumer_fetcher -- a function which takes a consumer key and returns
+                            an object with 'key', 'secret', and 'ttl'
+                            attributes
         """
         self.consumer_fetcher = consumer_fetcher
 
@@ -73,7 +75,7 @@ class Authenticator(object):
 
         try:
             unsafe_token = decode_token(token, verify=False)
-        except TokenInvalid: # catch junk tokens
+        except TokenInvalid:  # catch junk tokens
             return False
 
         key = unsafe_token.get('consumerKey')
@@ -85,17 +87,23 @@ class Authenticator(object):
             return False
 
         try:
-            return decode_token(token, secret=consumer.secret, ttl=consumer.ttl)
-        except TokenInvalid: # catch inauthentic or expired tokens
+            return decode_token(token,
+                                secret=consumer.secret,
+                                ttl=consumer.ttl)
+        except TokenInvalid:  # catch inauthentic or expired tokens
             return False
+
 
 class TokenInvalid(Exception):
     pass
 
+
 # Main auth routines
+
 def encode_token(token, secret):
     token.update({'issuedAt': _now().isoformat()})
     return jwt.encode(token, secret)
+
 
 def decode_token(token, secret='', ttl=DEFAULT_TTL, verify=True):
     try:
@@ -103,7 +111,8 @@ def decode_token(token, secret='', ttl=DEFAULT_TTL, verify=True):
     except jwt.DecodeError:
         import sys
         exc_class, exc, tb = sys.exc_info()
-        new_exc = TokenInvalid("error decoding JSON Web Token: %s" % exc or exc_class)
+        new_exc = TokenInvalid("error decoding JSON Web Token: %s" %
+                               exc or exc_class)
         raise new_exc.__class__, new_exc, tb
 
     if verify:
@@ -120,6 +129,7 @@ def decode_token(token, secret='', ttl=DEFAULT_TTL, verify=True):
             raise TokenInvalid("token has expired")
 
     return token
+
 
 def _now():
     return datetime.datetime.now(iso8601.iso8601.UTC).replace(microsecond=0)

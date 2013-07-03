@@ -14,8 +14,8 @@ log = logging.getLogger(__name__)
 
 RESULTS_MAX_SIZE = 200
 
-class ElasticSearch(object):
 
+class ElasticSearch(object):
     """
 
     Thin wrapper around an ElasticSearch connection to make connection handling
@@ -84,14 +84,18 @@ class ElasticSearch(object):
 
 
 class _Model(dict):
+
     @classmethod
     def create_all(cls):
         logging.info("creating index " + cls.es.index)
         try:
             cls.es.conn.create_index_if_missing(cls.es.index)
         except pyes.exceptions.ElasticSearchException:
-            log.warn('Index creation failed. If you are running against Bonsai Elasticsearch, this is expected and ignorable.')
-        cls.es.conn.put_mapping(cls.__type__, {'properties': cls.__mapping__}, cls.es.index)
+            log.warn('Index creation failed. If you are running against '
+                     'Bonsai Elasticsearch, this is expected and ignorable.')
+        cls.es.conn.put_mapping(cls.__type__,
+                                {'properties': cls.__mapping__},
+                                cls.es.index)
 
     @classmethod
     def drop_all(cls):
@@ -133,7 +137,10 @@ class _Model(dict):
         if 'error' in q:
             return q
         try:
-            res = cls.es.conn.search_raw(q, cls.es.index, cls.__type__, **params)
+            res = cls.es.conn.search_raw(q,
+                                         cls.es.index,
+                                         cls.__type__,
+                                         **params)
         except pyes.exceptions.ElasticSearchException as e:
             return e.result
         else:
@@ -164,17 +171,21 @@ class _Model(dict):
             # Can't simply call self.es.conn.indices.refresh(self.es.index)
             # here, as that automatically makes a cluster health call
             # afterwards that the Bonsai API refuses to service.
-            self.es.conn._send_request('POST', '/{0}/_refresh'.format(self.es.index))
+            self.es.conn._send_request('POST',
+                                       '/{0}/_refresh'.format(self.es.index))
 
     def delete(self):
         if self.id:
             self.es.conn.delete(self.es.index, self.__type__, self.id)
 
+
 def make_model(es):
     return type('Model', (_Model,), {'es': es})
 
+
 def _csv_split(s, delimiter=','):
     return [r for r in csv.reader([s], delimiter=delimiter)][0]
+
 
 def _build_query(offset, limit, kwds):
     # Base query is a filtered match_all
@@ -189,11 +200,12 @@ def _build_query(offset, limit, kwds):
         q['filtered']['filter']['and'].append({'term': {k: v}})
 
     return {
-        'sort': [{'updated': {'order': 'desc'}}], # Sort most recent first
+        'sort': [{'updated': {'order': 'desc'}}],  # Sort most recent first
         'from': max(0, offset),
         'size': min(RESULTS_MAX_SIZE, max(0, limit)),
         'query': q
     }
+
 
 def _build_query_raw(request):
     query = {}
@@ -209,9 +221,13 @@ def _build_query_raw(request):
     elif request.method == 'POST':
 
         try:
-            query = json.loads(request.json or request.data or request.form.keys()[0])
+            query = json.loads(request.json or
+                               request.data or
+                               request.form.keys()[0])
         except (ValueError, IndexError):
-            return {'error': 'Could not parse request payload!', 'status': 400}, None
+            return ({'error': 'Could not parse request payload!',
+                     'status': 400},
+                    None)
 
         params = request.args
 
@@ -222,6 +238,7 @@ def _build_query_raw(request):
             o['size'] = min(RESULTS_MAX_SIZE, max(0, atoi(o['size'])))
 
     return query, params
+
 
 def _update_query_raw(qo, params, k, v):
     if 'query' not in qo:
@@ -261,11 +278,11 @@ def _update_query_raw(qo, params, k, v):
     elif k == 'search_type':
         params[k] = v
 
+
 def _add_created(ann):
     if 'created' not in ann:
         ann['created'] = datetime.datetime.now(iso8601.iso8601.UTC).isoformat()
 
+
 def _add_updated(ann):
     ann['updated'] = datetime.datetime.now(iso8601.iso8601.UTC).isoformat()
-
-

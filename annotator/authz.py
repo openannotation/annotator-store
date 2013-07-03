@@ -3,14 +3,15 @@
 # 1) the permissions field for the specified action contains the magic value
 #    'group:__world__'
 #
-# 2) the user and consumer match those of the annotation (i.e. the authenticated
-#    user is the owner of the annotation)
+# 2) the user and consumer match those of the annotation (i.e. the
+#    authenticated user is the owner of the annotation)
 #
 # 3) a user and consumer are provided and the permissions field contains the
 #    magic value 'group:__authenticated__'
 #
 # 4) the provided consumer matches that of the annotation and the permissions
-#    field for the specified action contains the magic value 'group:__consumer__'
+#    field for the specified action contains the magic value
+#    'group:__consumer__'
 #
 # 5) the consumer matches that of the annotation and the user is listed in the
 #    permissions field for the specified action
@@ -20,6 +21,7 @@
 GROUP_WORLD = 'group:__world__'
 GROUP_AUTHENTICATED = 'group:__authenticated__'
 GROUP_CONSUMER = 'group:__consumer__'
+
 
 def authorize(annotation, action, user=None):
     action_field = annotation.get('permissions', {}).get(action, [])
@@ -57,6 +59,7 @@ def authorize(annotation, action, user=None):
 
     return False
 
+
 def _annotation_owner(annotation):
     user = annotation.get('user')
     consumer = annotation.get('consumer')
@@ -69,8 +72,9 @@ def _annotation_owner(annotation):
     except AttributeError:
         return (user, consumer)
 
+
 def permissions_filter(user=None):
-    """ Filter an ElasticSearch query by the permissions of the current user """
+    """Filter an ElasticSearch query by the permissions of the current user"""
 
     # Scenario 1
     perm_f = {'term': {'permissions.read': GROUP_WORLD}}
@@ -83,20 +87,24 @@ def permissions_filter(user=None):
         perm_f = {'or': [perm_f]}
 
         # Scenario 2
-        perm_f['or'].append({'and': [{'term': {'consumer': user.consumer.key}},
-                                     {'or': [{'term': {'user': user.id}},
-                                             {'term': {'user.id': user.id}}]}]})
+        perm_f['or'].append(
+            {'and': [{'term': {'consumer': user.consumer.key}},
+                     {'or': [{'term': {'user': user.id}},
+                             {'term': {'user.id': user.id}}]}]})
 
         # Scenario 3
-        perm_f['or'].append({'term': {'permissions.read': GROUP_AUTHENTICATED}})
+        perm_f['or'].append(
+            {'term': {'permissions.read': GROUP_AUTHENTICATED}})
 
         # Scenario 4
-        perm_f['or'].append({'and': [{'term': {'consumer': user.consumer.key}},
-                                     {'term': {'permissions.read': GROUP_CONSUMER}}]})
+        perm_f['or'].append(
+            {'and': [{'term': {'consumer': user.consumer.key}},
+                     {'term': {'permissions.read': GROUP_CONSUMER}}]})
 
         # Scenario 5
-        perm_f['or'].append({'and': [{'term': {'consumer': user.consumer.key}},
-                                     {'term': {'permissions.read': user.id}}]})
+        perm_f['or'].append(
+            {'and': [{'term': {'consumer': user.consumer.key}},
+                     {'term': {'permissions.read': user.id}}]})
 
         # Scenario 6
         if user.is_admin:
