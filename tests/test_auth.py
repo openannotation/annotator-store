@@ -43,6 +43,10 @@ class TestAuthBasics(object):
         tok = auth.encode_token({}, 'secret')
         assert auth.decode_token(tok, 'secret'), "token should have been successfully decoded"
 
+    def test_decode_token_unicode(self):
+        tok = auth.encode_token({}, 'secret')
+        assert auth.decode_token(unicode(tok), 'secret'), "token should have been successfully decoded"
+
     def test_reject_inauthentic_token(self):
         tok = auth.encode_token({'userId': 'alice'}, 'secret')
         tok += 'extrajunk'

@@ -99,7 +99,7 @@ def encode_token(token, secret):
 
 def decode_token(token, secret='', ttl=DEFAULT_TTL, verify=True):
     try:
-        token = jwt.decode(token, secret, verify=verify)
+        token = jwt.decode(str(token), secret, verify=verify)
     except jwt.DecodeError:
         import sys
         exc_class, exc, tb = sys.exc_info()
