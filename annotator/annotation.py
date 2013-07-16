@@ -69,16 +69,10 @@ class Annotation(es.Model):
     def _build_query(cls, offset=0, limit=20, **kwargs):
         q = super(Annotation, cls)._build_query(offset, limit, **kwargs)
 
-        if current_app.config.get('AUTHZ_ON'):
-            f = authz.permissions_filter(g.user)
-            if not f:
-                return False  # Refuse to perform the query
-            q['query'] = {'filtered': {'query': q['query'], 'filter': f}}
-
         # attempt to expand query to include uris for other representations
         # using information we may have on hand about the Document
         if 'uri' in kwargs:
-            term_filter = q['query']['filtered']['query']['filtered']['filter']
+            term_filter = q['query']['filtered']['filter']
             doc = document.Document.get_by_uri(kwargs['uri'])
             if doc:
                 new_terms = []
@@ -90,6 +84,12 @@ class Annotation(es.Model):
                     new_terms.append(term)
 
                 term_filter['and'] = new_terms
+
+        if current_app.config.get('AUTHZ_ON'):
+            f = authz.permissions_filter(g.user)
+            if not f:
+                return False  # Refuse to perform the query
+            q['query'] = {'filtered': {'query': q['query'], 'filter': f}}
 
         return q
 
