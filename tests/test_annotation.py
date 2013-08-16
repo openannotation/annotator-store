@@ -254,10 +254,10 @@ class TestAnnotation(TestCase):
 
     def test_cross_representations(self):
 
-        # create an annotation for an html document which we can 
+        # create an annotation for an html document which we can
         # scrape some document metadata from, including a link to a pdf
 
-        a1 = Annotation(uri='http://example.com/1234', 
+        a1 = Annotation(uri='http://example.com/1234',
                         text='annotation1',
                         user='alice',
                         document = {
@@ -278,7 +278,7 @@ class TestAnnotation(TestCase):
         # create an annotation for the pdf that lacks document metadata since
         # annotator doesn't currently extract information from pdfs
 
-        a2 = Annotation(uri='http://example.com/1234.pdf', 
+        a2 = Annotation(uri='http://example.com/1234.pdf',
                         text='annotation2',
                         user='alice',
                         consumer='testconsumer')
@@ -289,7 +289,7 @@ class TestAnnotation(TestCase):
         g.user = h.MockUser('alice', 'testconsumer')
         res = Annotation.search(uri='http://example.com/1234.pdf')
         assert_equal(len(res), 2)
-        
+
         # and likewise for annotations of the html
         res = Annotation.search(uri='http://example.com/1234')
         assert_equal(len(res), 2)

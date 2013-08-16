@@ -17,19 +17,19 @@ class TestDocument(TestCase):
         super(TestDocument, self).teardown()
 
     def test_new(self):
-        d = Document() 
+        d = Document()
         assert_equal('{}', repr(d))
 
     def test_basics(self):
         d = Document({
-            "id": "1", 
+            "id": "1",
             "title": "Annotations: The Missing Manual",
             "link": [
                 {
                     "href": "https://peerj.com/articles/53/",
                     "type": "text/html"
                 },
-                { 
+                {
                     "href": "https://peerj.com/articles/53.pdf",
                     "type": "application/pdf"
                 }
@@ -58,14 +58,14 @@ class TestDocument(TestCase):
 
     def test_search(self):
         d = Document({
-            "id": "1", 
+            "id": "1",
             "title": "document",
             "link": [
                 {
                     "href": "https://peerj.com/articles/53/",
                     "type": "text/html"
                 },
-                { 
+                {
                     "href": "https://peerj.com/articles/53.pdf",
                     "type": "application/pdf"
                 }
@@ -80,14 +80,14 @@ class TestDocument(TestCase):
         # create 3 documents and make sure get_by_uri works properly
 
         d = Document({
-            "id": "1", 
+            "id": "1",
             "title": "document1",
             "link": [
                 {
                     "href": "https://peerj.com/articles/53/",
                     "type": "text/html"
                 },
-                { 
+                {
                     "href": "https://peerj.com/articles/53.pdf",
                     "type": "application/pdf"
                 },
@@ -96,14 +96,14 @@ class TestDocument(TestCase):
         d.save()
 
         d = Document({
-            "id": "2", 
+            "id": "2",
             "title": "document2",
             "link": [
                 {
                     "href": "https://peerj.com/articles/53/",
                     "type": "text/html"
                 },
-                { 
+                {
                     "href": "https://peerj.com/articles/53.pdf",
                     "type": "application/pdf"
                 },
@@ -112,7 +112,7 @@ class TestDocument(TestCase):
         d.save()
 
         d = Document({
-            "id": "3", 
+            "id": "3",
             "title": "document3",
             "link": [
                 {
@@ -128,11 +128,10 @@ class TestDocument(TestCase):
         assert_equal(doc['title'], "document1") 
 
     def test_get_all_by_uri(self):
-
-        # add two documents and make sure get_all_by_uri fetches both
+        # add two documents and make sure we can search for both
 
         d = Document({
-            "id": "1", 
+            "id": "1",
             "title": "document1",
             "link": [
                 {
@@ -144,10 +143,10 @@ class TestDocument(TestCase):
         d.save()
 
         d = Document({
-            "id": "2", 
+            "id": "2",
             "title": "document2",
             "link": [
-                { 
+                {
                     "href": "https://peerj.com/articles/53.pdf",
                     "type": "application/pdf"
                 }
@@ -160,14 +159,14 @@ class TestDocument(TestCase):
 
     def test_uris(self):
         d = Document({
-            "id": "1", 
+            "id": "1",
             "title": "document",
             "link": [
                 {
                     "href": "https://peerj.com/articles/53/",
                     "type": "text/html"
                 },
-                { 
+                {
                     "href": "https://peerj.com/articles/53.pdf",
                     "type": "application/pdf"
                 }
@@ -180,14 +179,14 @@ class TestDocument(TestCase):
 
     def test_merge_links(self):
         d = Document({
-            "id": "1", 
+            "id": "1",
             "title": "document",
             "link": [
                 {
                     "href": "https://peerj.com/articles/53/",
                     "type": "text/html"
                 },
-                { 
+                {
                     "href": "https://peerj.com/articles/53.pdf",
                     "type": "application/pdf"
                 }
