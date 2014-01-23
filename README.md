@@ -39,8 +39,8 @@ default. See the [Annotator documentation][4] for details.
 
 ## Running tests
 
-We use `nosetests` to run tests. You can just `pip install nosetests mock` and
-then:
+We use `nosetests` to run tests. You can just `pip install nosetests mock`,
+ensure ElasticSearch is running, and then:
 
     $ nosetests
     ....................................................
