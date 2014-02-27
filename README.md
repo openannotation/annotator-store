@@ -4,8 +4,8 @@ This is a backend store for the [Annotator][1].
 
 ## Getting going
 
-You'll need a recent version of [Python][2] (>=2.6) and [ElasticSearch][3]
-installed.
+You'll need a recent version of [Python][2] (>=2.6) and
+[ElasticSearch][3] (>=1.0.0) installed.
 
 [1]: http://okfnlabs.org/annotator
 [2]: http://python.org
