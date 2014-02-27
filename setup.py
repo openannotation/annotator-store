@@ -17,6 +17,10 @@ setup(
     packages = find_packages(),
 
     install_requires = requires,
+    extras_require = {
+        'docs': ['Sphinx'],
+        'testing': ['nose', 'coverage'],
+    },
 
     # metadata for upload to PyPI
     author = 'Rufus Pollock and Nick Stenning (Open Knowledge Foundation)',
