@@ -1,0 +1,5 @@
+Unreleased
+==========
+
+- Bump ElasticSearch requirement to v1.0.x
+
