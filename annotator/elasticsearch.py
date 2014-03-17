@@ -151,8 +151,7 @@ class _Model(dict):
         q = cls._build_query(**kwargs)
         if not q:
             return 0
-        req = {'query': q['query']}
-        res = cls.es.conn.count(req, cls.es.index, cls.__type__)
+        res = cls.es.conn.count(q['query'], cls.es.index, cls.__type__)
         return res['count']
 
     def _set_id(self, rhs):
