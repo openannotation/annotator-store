@@ -6,8 +6,8 @@ import datetime
 import iso8601
 
 import pyes
-from flask import _app_ctx_stack
-
+from flask import current_app
+from flask import _app_ctx_stack as stack
 from annotator.atoi import atoi
 
 log = logging.getLogger(__name__)
@@ -37,10 +37,7 @@ class ElasticSearch(object):
 
     def __init__(self, app=None):
         if app is not None:
-            self.app = app
             self.init_app(app)
-        else:
-            self.app = None
 
         self.Model = make_model(self)
 
@@ -48,27 +45,8 @@ class ElasticSearch(object):
         app.config.setdefault('ELASTICSEARCH_HOST', 'http://127.0.0.1:9200')
         app.config.setdefault('ELASTICSEARCH_INDEX', app.name)
 
-        if not hasattr(app, 'extensions'):
-            app.extensions = {}
-        app.extensions['elasticsearch'] = self
-
-    def get_app(self):
-        """
-
-        Helper method that implements the logic to look up an application.
-
-        """
-        if self.app is not None:
-            return self.app
-        ctx = _app_ctx_stack.top
-        if ctx is not None:
-            return ctx.app
-        raise RuntimeError('application not registered on ElasticSearch '
-                           'instance and no application bound to current '
-                           'context')
-
-    def get_conn(self, app):
-        host = app.config['ELASTICSEARCH_HOST']
+    def connect(self):
+        host = current_app.config['ELASTICSEARCH_HOST']
         # We specifically set decoder to prevent pyes from futzing with
         # datetimes.
         conn = pyes.ES(host, decoder=json.JSONDecoder)
@@ -76,11 +54,15 @@ class ElasticSearch(object):
 
     @property
     def conn(self):
-        return self.get_conn(self.get_app())
+        ctx = stack.top
+        if ctx is not None:
+            if not hasattr(ctx, 'elasticsearch'):
+                ctx.elasticsearch = self.connect()
+            return ctx.elasticsearch
 
     @property
     def index(self):
-        return self.get_app().config['ELASTICSEARCH_INDEX']
+        return current_app.config['ELASTICSEARCH_INDEX']
 
 
 class _Model(dict):
