@@ -10,7 +10,7 @@ class TestElasticSearch(object):
 
     def test_noapp_error(self):
         es = ElasticSearch()
-        assert_raises(RuntimeError, es.conn)
+        assert_raises(RuntimeError, lambda: es.conn)
 
     def test_conn(self):
         app = Flask('testy')
@@ -18,7 +18,7 @@ class TestElasticSearch(object):
         app.config['ELASTICSEARCH_INDEX'] = 'foobar'
         es = ElasticSearch(app)
         with app.app_context():
-            assert_is_instance(es.conn, elasticsearch.Elasticsearch)
+            assert_true(isinstance(es.conn, elasticsearch.Elasticsearch))
 
     def test_index(self):
         app = Flask('testy')

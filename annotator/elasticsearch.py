@@ -57,10 +57,9 @@ class ElasticSearch(object):
     @property
     def conn(self):
         ctx = stack.top
-        if ctx is not None:
-            if not hasattr(ctx, 'elasticsearch'):
-                ctx.elasticsearch = self.connect()
-            return ctx.elasticsearch
+        if not hasattr(ctx, 'elasticsearch'):
+            ctx.elasticsearch = self.connect()
+        return ctx.elasticsearch
 
     @property
     def index(self):
