@@ -23,6 +23,9 @@ def jsonify(obj, *args, **kwargs):
 
 @store.before_request
 def before_request():
+    if not hasattr(g, 'annotation_class'):
+        g.annotation_class = Annotation
+
     user = g.auth.request_user(request)
     if user is not None:
         g.user = user
@@ -116,9 +119,8 @@ def root():
 # INDEX
 @store.route('/annotations')
 def index():
-    annotations = Annotation.search()
+    annotations = g.annotation_class.search()
     return jsonify(annotations)
-
 
 # CREATE
 @store.route('/annotations', methods=['POST'])
@@ -128,7 +130,7 @@ def create_annotation():
         return _failed_authz_response('create annotation')
 
     if request.json is not None:
-        annotation = Annotation(
+        annotation = g.annotation_class(
             _filter_input(
                 request.json,
                 CREATE_FILTER_FIELDS))
@@ -156,7 +158,7 @@ def create_annotation():
 # READ
 @store.route('/annotations/<id>')
 def read_annotation(id):
-    annotation = Annotation.fetch(id)
+    annotation = g.annotation_class.fetch(id)
     if not annotation:
         return jsonify('Annotation not found!', status=404)
 
@@ -170,7 +172,7 @@ def read_annotation(id):
 # UPDATE
 @store.route('/annotations/<id>', methods=['POST', 'PUT'])
 def update_annotation(id):
-    annotation = Annotation.fetch(id)
+    annotation = g.annotation_class.fetch(id)
     if not annotation:
         return jsonify('Annotation not found! No update performed.',
                        status=404)
@@ -212,7 +214,7 @@ def update_annotation(id):
 # DELETE
 @store.route('/annotations/<id>', methods=['DELETE'])
 def delete_annotation(id):
-    annotation = Annotation.fetch(id)
+    annotation = g.annotation_class.fetch(id)
 
     if not annotation:
         return jsonify('Annotation not found. No delete performed.',
@@ -243,8 +245,8 @@ def search_annotations():
     if 'limit' in kwargs:
         kwargs['limit'] = atoi(kwargs['limit'], 20)
 
-    results = Annotation.search(**kwargs)
-    total = Annotation.count(**kwargs)
+    results = g.annotation_class.search(**kwargs)
+    total = g.annotation_class.count(**kwargs)
     return jsonify({'total': total,
                     'rows': results})
 
@@ -252,7 +254,7 @@ def search_annotations():
 # RAW ES SEARCH
 @store.route('/search_raw', methods=['GET', 'POST'])
 def search_annotations_raw():
-    res = Annotation.search_raw(request)
+    res = g.annotation_class.search_raw(request)
     return jsonify(res, status=res.get('status', 200))
 
 

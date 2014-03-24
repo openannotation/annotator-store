@@ -7,6 +7,7 @@ from .helpers import MockUser, MockConsumer
 
 here = os.path.dirname(__file__)
 
+
 def create_app():
     app = Flask(__name__)
     app.config.from_pyfile(os.path.join(here, 'test.cfg'))

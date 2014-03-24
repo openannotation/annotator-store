@@ -3,10 +3,11 @@ from .helpers import MockUser
 from nose.tools import *
 from mock import patch
 
-from flask import json
+from flask import json, g
 
 from annotator import auth, es
 from annotator.annotation import Annotation
+
 
 class TestStore(TestCase):
     def setup(self):
@@ -51,6 +52,12 @@ class TestStore(TestCase):
 
         assert headers['Access-Control-Expose-Headers'] == 'Content-Length, Content-Type, Location', \
             "Did not send the right Access-Control-Expose-Headers header."
+
+    @patch('annotator.store.Annotation')
+    def test_pluggable_class(self, ann_mock):
+        g.annotation_class = ann_mock
+        response = self.cli.get('/api/annotations/testID', headers=self.headers)
+        ann_mock.return_value.fetch.assert_called_once()
 
     def test_index(self):
         response = self.cli.get('/api/annotations', headers=self.headers)
