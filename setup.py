@@ -3,7 +3,7 @@ import sys
 
 requires = [
     'Flask==0.9',
-    'elasticsearch==1.0.0',
+    'elasticsearch',
     'PyJWT==0.1.4',
     'iso8601==0.1.4',
 ]

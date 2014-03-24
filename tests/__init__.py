@@ -12,6 +12,10 @@ def create_app():
     app = Flask(__name__)
     app.config.from_pyfile(os.path.join(here, 'test.cfg'))
 
+    # Travis provides elasticsearch 0.90.x
+    if os.environ.get('TRAVIS') == 'true':
+        app.config['ELASTICSEARCH_COMPATIBILITY_MODE'] = 'pre-1.0.0'
+
     es.init_app(app)
 
     @app.before_request

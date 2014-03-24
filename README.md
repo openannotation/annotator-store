@@ -4,8 +4,8 @@ This is a backend store for the [Annotator][1].
 
 ## Getting going
 
-You'll need a recent version of [Python][2] (>=2.6) and
-[ElasticSearch][3] (>=1.0.0) installed.
+You'll need a recent version of [Python][2] (>=2.6) and [Elasticsearch][3]
+(>=1.0.0) installed (although see "Elasticsearch compatibility" below).
 
 [1]: http://okfnlabs.org/annotator
 [2]: http://python.org
@@ -58,3 +58,19 @@ have them installed).
 Please [open an issue](annotator-store/issues) if you find that the tests
 don't all pass on your machine, making sure to include the output of `pip
 freeze`.
+
+## Elasticsearch compatibility
+
+The store should ideally be run against Elasticsearch version 1.0.0 or greater,
+but can also be run against the legacy 0.90.x series (and possibly even earlier)
+if desired. In order to do this, set the following configuration option
+
+    ELASTICSEARCH_COMPATIBILITY_MODE = 'pre-1.0.0'
+
+and ensure that you have installed a version of the `elasticsearch` library from
+the 0.4.x series:
+
+    pip install 'elasticsearch>0.4,<0.5'
+
+**NB:** This mode of operation is deprecated. Support will be dropped for
+Elasticsearch 0.90.x in the future.

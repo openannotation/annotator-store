@@ -47,6 +47,7 @@ class ElasticSearch(object):
     def init_app(self, app):
         app.config.setdefault('ELASTICSEARCH_HOST', 'http://127.0.0.1:9200')
         app.config.setdefault('ELASTICSEARCH_INDEX', app.name)
+        app.config.setdefault('ELASTICSEARCH_COMPATIBILITY_MODE', None)
 
     def connect(self):
         host = current_app.config['ELASTICSEARCH_HOST']
@@ -65,6 +66,10 @@ class ElasticSearch(object):
     def index(self):
         return current_app.config['ELASTICSEARCH_INDEX']
 
+    @property
+    def compatibility_mode(self):
+        return current_app.config['ELASTICSEARCH_COMPATIBILITY_MODE']
+
 
 class _Model(dict):
 
@@ -80,9 +85,10 @@ class _Model(dict):
                 raise
             log.warn('Index creation failed. If you are running against '
                      'Bonsai Elasticsearch, this is expected and ignorable.')
+        mapping = {cls.__type__: {'properties': cls.__mapping__}}
         cls.es.conn.indices.put_mapping(index=cls.es.index,
                                         doc_type=cls.__type__,
-                                        body={'properties': cls.__mapping__})
+                                        body=mapping)
 
     @classmethod
     def drop_all(cls):
@@ -142,7 +148,17 @@ class _Model(dict):
         q = cls._build_query(**kwargs)
         if not q:
             return 0
-        del q['sort']
+
+        # Extract the query, and wrap it in the expected object. This has the
+        # effect of removing sort or paging parameters that aren't allowed by
+        # the count API.
+        q = {'query': q['query']}
+
+        # In elasticsearch prior to 1.0.0, the payload to `count` was a bare
+        # query.
+        if cls.es.compatibility_mode == 'pre-1.0.0':
+            q = q['query']
+
         res = cls.es.conn.count(index=cls.es.index,
                                 doc_type=cls.__type__,
                                 body=q)
