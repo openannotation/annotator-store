@@ -280,7 +280,7 @@ class TestStore(TestCase):
         for i in xrange(250):
             self._create_annotation(refresh=False)
 
-        es.conn.refresh(timesleep=0.01)
+        es.conn.indices.refresh(es.index)
 
         # by default return 20
         res = self._get_search_results()
@@ -302,7 +302,7 @@ class TestStore(TestCase):
         for i in xrange(250):
             self._create_annotation(refresh=False)
 
-        es.conn.refresh(timesleep=0.01)
+        es.conn.indices.refresh(es.index)
 
         res = self._get_search_results()
         assert_equal(len(res['rows']), 20)

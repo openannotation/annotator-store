@@ -1,11 +1,14 @@
+from __future__ import absolute_import
+
 import csv
 import json
 import logging
 import datetime
+import urlparse
 
 import iso8601
 
-import pyes
+import elasticsearch
 from flask import current_app
 from flask import _app_ctx_stack as stack
 from annotator.atoi import atoi
@@ -47,9 +50,8 @@ class ElasticSearch(object):
 
     def connect(self):
         host = current_app.config['ELASTICSEARCH_HOST']
-        # We specifically set decoder to prevent pyes from futzing with
-        # datetimes.
-        conn = pyes.ES(host, decoder=json.JSONDecoder)
+        netloc = urlparse.urlparse(host).netloc
+        conn = elasticsearch.Elasticsearch(hosts=[netloc])
         return conn
 
     @property
@@ -71,29 +73,35 @@ class _Model(dict):
     def create_all(cls):
         logging.info("creating index " + cls.es.index)
         try:
-            cls.es.conn.create_index_if_missing(cls.es.index)
-        except pyes.exceptions.ElasticSearchException:
+            cls.es.conn.indices.create(cls.es.index)
+        except elasticsearch.exceptions.RequestError as e:
+            # Reraise anything that isn't just a notification that the index
+            # already exists
+            if not e.error.startswith('IndexAlreadyExistsException'):
+                raise
             log.warn('Index creation failed. If you are running against '
                      'Bonsai Elasticsearch, this is expected and ignorable.')
-        cls.es.conn.put_mapping(cls.__type__,
-                                {'properties': cls.__mapping__},
-                                cls.es.index)
+        cls.es.conn.indices.put_mapping(index=cls.es.index,
+                                        doc_type=cls.__type__,
+                                        body={'properties': cls.__mapping__})
 
     @classmethod
     def drop_all(cls):
-        if cls.es.conn.exists_index(cls.es.index):
-            cls.es.conn.close_index(cls.es.index)
-        cls.es.conn.delete_index_if_exists(cls.es.index)
+        if cls.es.conn.indices.exists(cls.es.index):
+            cls.es.conn.indices.close(cls.es.index)
+            cls.es.conn.indices.delete(cls.es.index)
 
     # It would be lovely if this were called 'get', but the dict semantics
     # already define that method name.
     @classmethod
     def fetch(cls, id):
         try:
-            doc = cls.es.conn.get(cls.es.index, cls.__type__, id)
-        except pyes.exceptions.NotFoundException:
+            doc = cls.es.conn.get(index=cls.es.index,
+                                  doc_type=cls.__type__,
+                                  id=id)
+        except elasticsearch.exceptions.NotFoundError:
             return None
-        return cls(doc, id=id)
+        return cls(doc['_source'], id=id)
 
     @classmethod
     def _build_query(cls, offset=0, limit=20, **kwargs):
@@ -109,7 +117,9 @@ class _Model(dict):
         if not q:
             return []
         logging.debug("doing search: %s", q)
-        res = cls.es.conn.search_raw(q, cls.es.index, cls.__type__)
+        res = cls.es.conn.search(index=cls.es.index,
+                                 doc_type=cls.__type__,
+                                 body=q)
         docs = res['hits']['hits']
         return [cls(d['_source'], id=d['_id']) for d in docs]
 
@@ -119,11 +129,11 @@ class _Model(dict):
         if 'error' in q:
             return q
         try:
-            res = cls.es.conn.search_raw(q,
-                                         cls.es.index,
-                                         cls.__type__,
-                                         **params)
-        except pyes.exceptions.ElasticSearchException as e:
+            res = cls.es.conn.search(index=cls.es.index,
+                                     doc_type=cls.__type__,
+                                     body=q,
+                                     **params)
+        except elasticsearch.exceptions.ElasticsearchException as e:
             return e.result
         else:
             return res
@@ -133,7 +143,10 @@ class _Model(dict):
         q = cls._build_query(**kwargs)
         if not q:
             return 0
-        res = cls.es.conn.count(q['query'], cls.es.index, cls.__type__)
+        del q['sort']
+        res = cls.es.conn.count(index=cls.es.index,
+                                doc_type=cls.__type__,
+                                body=q)
         return res['count']
 
     def _set_id(self, rhs):
@@ -147,18 +160,18 @@ class _Model(dict):
     def save(self, refresh=True):
         _add_created(self)
         _add_updated(self)
-        res = self.es.conn.index(self, self.es.index, self.__type__, self.id)
+        res = self.es.conn.index(index=self.es.index,
+                                 doc_type=self.__type__,
+                                 id=self.id,
+                                 body=self,
+                                 refresh=refresh)
         self.id = res['_id']
-        if refresh:
-            # Can't simply call self.es.conn.indices.refresh(self.es.index)
-            # here, as that automatically makes a cluster health call
-            # afterwards that the Bonsai API refuses to service.
-            self.es.conn._send_request('POST',
-                                       '/{0}/_refresh'.format(self.es.index))
 
     def delete(self):
         if self.id:
-            self.es.conn.delete(self.es.index, self.__type__, self.id)
+            self.es.conn.delete(index=self.es.index,
+                                doc_type=self.__type__,
+                                id=self.id)
 
 
 def make_model(es):
