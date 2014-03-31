@@ -51,7 +51,8 @@ class ElasticSearch(object):
 
     def connect(self):
         host = current_app.config['ELASTICSEARCH_HOST']
-        netloc = urlparse.urlparse(host).netloc
+        parsed = urlparse.urlparse(host)
+        netloc = parsed.netloc if parsed.scheme else parsed.path
         conn = elasticsearch.Elasticsearch(hosts=[netloc])
         return conn
 
