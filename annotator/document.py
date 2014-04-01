@@ -46,7 +46,9 @@ class Document(es.Model):
                                   'query': {'terms': {'link.href': uris}}}},
              'sort': [{'updated': {'order': 'asc'}}]}
 
-        res = cls.es.conn.search_raw(q, cls.es.index, cls.__type__)
+        res = cls.es.conn.search(index=cls.es.index,
+                                 doc_type=cls.__type__,
+                                 body=q)
         return [cls(d['_source'], id=d['_id']) for d in res['hits']['hits']]
 
     def uris(self):

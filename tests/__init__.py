@@ -12,6 +12,10 @@ def create_app():
     app = Flask(__name__)
     app.config.from_pyfile(os.path.join(here, 'test.cfg'))
 
+    # Travis provides elasticsearch 0.90.x
+    if os.environ.get('TRAVIS') == 'true':
+        app.config['ELASTICSEARCH_COMPATIBILITY_MODE'] = 'pre-1.0.0'
+
     es.init_app(app)
 
     @app.before_request
@@ -22,16 +26,6 @@ def create_app():
     app.register_blueprint(store.store, url_prefix='/api')
 
     return app
-
-
-# pyes 0.19.1 has a bug where cluster.health sends the arguments in
-# a JSON request body instead of as query parameters. The fix is
-# already upstream, but here's a workaround for now. Remove this once
-# a new pyes is released and the dependency version is updated in
-# annotator-store.
-def wait_for_status(conn, level='yellow'):
-    params = dict(wait_for_status=level)
-    conn._send_request('GET', '/_cluster/health', params=params)
 
 
 class TestCase(object):
@@ -46,8 +40,8 @@ class TestCase(object):
         with self.app.app_context():
             annotation.Annotation.create_all()
             document.Document.create_all()
+            es.conn.cluster.health(wait_for_status='yellow')
         self.cli = self.app.test_client()
-        wait_for_status(es.get_conn(self.app))
 
     def teardown(self):
         with self.app.app_context():
