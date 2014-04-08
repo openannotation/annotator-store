@@ -1,5 +1,4 @@
 from setuptools import setup, find_packages
-import sys
 import os
 
 requires = [
@@ -8,9 +7,6 @@ requires = [
     'PyJWT==0.1.4',
     'iso8601==0.1.4',
 ]
-
-if sys.version_info < (2, 7):
-    requires.append('ordereddict==1.1')
 
 def read(*paths):
     """Build a file path from *paths* and return the contents."""
