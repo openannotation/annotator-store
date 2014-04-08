@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
 import sys
+import os
 
 requires = [
     'Flask==0.9',
@@ -10,6 +11,11 @@ requires = [
 
 if sys.version_info < (2, 7):
     requires.append('ordereddict==1.1')
+
+def read(*paths):
+    """Build a file path from *paths* and return the contents."""
+    with open(os.path.join(*paths), 'r') as f:
+        return f.read()
 
 setup(
     name = 'annotator',
@@ -26,6 +32,8 @@ setup(
     author = 'Rufus Pollock and Nick Stenning (Open Knowledge Foundation)',
     author_email = 'annotator@okfn.org',
     description = 'Database backend for the Annotator (http://annotateit.org)',
+    long_description = (read('README.rst') + '\n\n' +
+                        read('CHANGES.rst')),
     license = 'MIT',
     keywords = 'annotation web javascript',
 
