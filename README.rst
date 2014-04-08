@@ -1,15 +1,14 @@
 Annotator Store
 ===============
 
-This is a backend store for the
-`Annotator <http://okfnlabs.org/annotator>`__.
+This is a backend store for `Annotator <http://annotatorjs.org>`__.
 
 Getting going
 -------------
 
 You'll need a recent version of `Python <http://python.org>`__ (>=2.6)
-and `Elasticsearch <http://elasticsearch.org>`__ (>=1.0.0) installed
-(although see "Elasticsearch compatibility" below).
+and `ElasticSearch <http://elasticsearch.org>`__ (>=1.0.0) installed
+(although see "ElasticSearch compatibility" below).
 
 The quickest way to get going requires the ``pip`` and ``virtualenv``
 tools (``easy_install virtualenv`` will get them both). Run the
