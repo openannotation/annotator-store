@@ -27,14 +27,14 @@ setup(
     # metadata for upload to PyPI
     author = 'Rufus Pollock and Nick Stenning (Open Knowledge Foundation)',
     author_email = 'annotator@okfn.org',
-    description = 'Database backend for the Annotator (http://annotateit.org)',
+    description = 'Database backend for Annotator (http://annotatorjs.org)',
     long_description = (read('README.rst') + '\n\n' +
                         read('CHANGES.rst')),
     license = 'MIT',
     keywords = 'annotation web javascript',
 
-    url = 'http://okfnlabs.org/annotator/',
-    download_url = 'https://github.com/okfn/annotator-store',
+    url = 'http://annotatorjs.org/',
+    download_url = 'https://github.com/openannotation/annotator-store',
 
     classifiers = [
         'Development Status :: 4 - Beta',
