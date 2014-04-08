@@ -52,8 +52,25 @@ class ElasticSearch(object):
     def connect(self):
         host = current_app.config['ELASTICSEARCH_HOST']
         parsed = urlparse.urlparse(host)
-        netloc = parsed.netloc if parsed.scheme else parsed.path
-        conn = elasticsearch.Elasticsearch(hosts=[netloc])
+
+        connargs = {
+          'host': parsed.hostname,
+        }
+
+        username = parsed.username
+        password = parsed.password
+        if username is not None or password is not None:
+            connargs['http_auth'] = ((username or ''), (password or ''))
+
+        if parsed.port is not None:
+            connargs['port'] = parsed.port
+
+        if parsed.path:
+            connargs['url_prefix'] = parsed.path
+
+        conn = elasticsearch.Elasticsearch(
+            hosts=[connargs],
+            connection_class=elasticsearch.Urllib3HttpConnection)
         return conn
 
     @property

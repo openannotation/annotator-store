@@ -20,6 +20,15 @@ class TestElasticSearch(object):
         with app.app_context():
             assert_true(isinstance(es.conn, elasticsearch.Elasticsearch))
 
+    def test_auth(self):
+        app = Flask('testy')
+        app.config['ELASTICSEARCH_HOST'] = 'http://foo:bar@127.0.1.1:9202'
+        app.config['ELASTICSEARCH_INDEX'] = 'foobar'
+        es = ElasticSearch(app)
+        with app.app_context():
+            assert_equal(('foo', 'bar'),
+                         es.conn.transport.hosts[0]['http_auth'])
+
     def test_index(self):
         app = Flask('testy')
         app.config['ELASTICSEARCH_INDEX'] = 'foobar'
