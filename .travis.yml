@@ -6,7 +6,7 @@ python:
 services:
   - elasticsearch
 install:
-  - pip install .
+  - pip install -e .[testing]
   # Install the correct version of the elasticsearch lib for the version of
   # elasticsearch available on Travis (0.90.x)
   - pip install elasticsearch==0.4.5

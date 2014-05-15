@@ -21,7 +21,7 @@ setup(
     install_requires = requires,
     extras_require = {
         'docs': ['Sphinx'],
-        'testing': ['nose', 'coverage'],
+        'testing': ['mock', 'nose', 'coverage'],
     },
 
     # metadata for upload to PyPI
