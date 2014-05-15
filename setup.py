@@ -6,6 +6,7 @@ requires = [
     'elasticsearch',
     'PyJWT',
     'iso8601',
+    'six',
 ]
 
 def read(*paths):

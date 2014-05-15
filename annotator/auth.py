@@ -2,6 +2,7 @@ import datetime
 
 import iso8601
 import jwt
+import six
 
 DEFAULT_TTL = 86400
 
@@ -107,13 +108,18 @@ def encode_token(token, secret):
 
 def decode_token(token, secret='', ttl=DEFAULT_TTL, verify=True):
     try:
-        token = jwt.decode(str(token), secret, verify=verify)
+        if not type(token) is bytes:
+            if six.PY3:
+                token = bytes(token, 'utf-8')
+            else:
+                token = bytes(token)
+        token = jwt.decode(token, secret, verify=verify)
     except jwt.DecodeError:
         import sys
         exc_class, exc, tb = sys.exc_info()
         new_exc = TokenInvalid("error decoding JSON Web Token: %s" %
                                exc or exc_class)
-        raise new_exc.__class__, new_exc, tb
+        six.reraise(new_exc.__class__, new_exc, tb)
 
     if verify:
         issue_time = token.get('issuedAt')

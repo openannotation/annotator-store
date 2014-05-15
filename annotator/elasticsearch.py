@@ -4,11 +4,12 @@ import csv
 import json
 import logging
 import datetime
-import urlparse
 
 import iso8601
 
 import elasticsearch
+from six import iteritems
+from six.moves.urllib.parse import urlparse
 from annotator.atoi import atoi
 
 log = logging.getLogger(__name__)
@@ -39,7 +40,7 @@ class ElasticSearch(object):
 
     def _connect(self):
         host = self.host
-        parsed = urlparse.urlparse(host)
+        parsed = urlparse(host)
 
         connargs = {
           'host': parsed.hostname,
@@ -209,7 +210,7 @@ def _build_query(query, offset, limit):
         q = {'filtered': {'query': q, 'filter': f}}
 
     # Add a term query for each keyword
-    for k, v in query.iteritems():
+    for k, v in iteritems(query):
         q['filtered']['filter']['and'].append({'term': {k: v}})
 
     return {
@@ -225,7 +226,7 @@ def _build_query_raw(request):
     params = {}
 
     if request.method == 'GET':
-        for k, v in request.args.iteritems():
+        for k, v in iteritems(request.args):
             _update_query_raw(query, params, k, v)
 
         if 'query' not in query:
