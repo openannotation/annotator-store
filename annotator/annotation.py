@@ -1,7 +1,5 @@
 from annotator import authz, document, es
 
-from flask import current_app, g
-
 TYPE = 'annotation'
 MAPPING = {
     'annotator_schema_version': {'type': 'string'},
@@ -66,14 +64,18 @@ class Annotation(es.Model):
         super(Annotation, self).save(*args, **kwargs)
 
     @classmethod
-    def _build_query(cls, offset=0, limit=20, **kwargs):
-        q = super(Annotation, cls)._build_query(offset, limit, **kwargs)
+    def _build_query(cls, query=None, offset=None, limit=None,
+                     user=None, **kwargs):
+        if query is None:
+            query = {}
+
+        q = super(Annotation, cls)._build_query(query, offset, limit, **kwargs)
 
         # attempt to expand query to include uris for other representations
         # using information we may have on hand about the Document
-        if 'uri' in kwargs:
+        if 'uri' in query:
             term_filter = q['query']['filtered']['filter']
-            doc = document.Document.get_by_uri(kwargs['uri'])
+            doc = document.Document.get_by_uri(query['uri'])
             if doc:
                 new_terms = []
                 for term in term_filter['and']:
@@ -85,8 +87,9 @@ class Annotation(es.Model):
 
                 term_filter['and'] = new_terms
 
-        if current_app.config.get('AUTHZ_ON'):
-            f = authz.permissions_filter(g.user)
+        if es.authorization_enabled:
+            # Apply a filter to the results.
+            f = authz.permissions_filter(user)
             if not f:
                 return False  # Refuse to perform the query
             q['query'] = {'filtered': {'query': q['query'], 'filter': f}}
@@ -94,11 +97,11 @@ class Annotation(es.Model):
         return q
 
     @classmethod
-    def _build_query_raw(cls, request):
-        q, p = super(Annotation, cls)._build_query_raw(request)
+    def _build_query_raw(cls, request, user=None, **kwargs):
+        q, p = super(Annotation, cls)._build_query_raw(request, **kwargs)
 
-        if current_app.config.get('AUTHZ_ON'):
-            f = authz.permissions_filter(g.user)
+        if es.authorization_enabled:
+            f = authz.permissions_filter(user)
             if not f:
                 return {'error': 'Authorization error!', 'status': 400}, None
             q['query'] = {'filtered': {'query': q['query'], 'filter': f}}

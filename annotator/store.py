@@ -1,7 +1,22 @@
+"""
+This module implements a Flask-based JSON API to talk with the annotation store via the
+Annotation model.
+It defines these routes:
+  * Root
+  * Index
+  * Create
+  * Read
+  * Update
+  * Delete
+  * Search
+  * Raw ElasticSearch search
+See their descriptions in `root`'s definition for more detail.
+"""
+
 import json
 
 from flask import Blueprint, Response
-from flask import g
+from flask import current_app, g
 from flask import request
 from flask import url_for
 
@@ -238,15 +253,25 @@ def delete_annotation(id):
 # SEARCH
 @store.route('/search')
 def search_annotations():
-    kwargs = dict(request.args.items())
+    params = dict(request.args.items())
+    kwargs = dict()
 
-    if 'offset' in kwargs:
-        kwargs['offset'] = atoi(kwargs['offset'])
-    if 'limit' in kwargs:
-        kwargs['limit'] = atoi(kwargs['limit'], 20)
+    # Take limit and offset out of the parameters
+    if 'offset' in params:
+        kwargs['offset'] = atoi(params.pop('offset'), default=None)
+    if 'limit' in params:
+        kwargs['limit'] = atoi(params.pop('limit'), default=None)
+
+    # All remaining parameters are considered searched fields.
+    kwargs['query'] = params
+
+    if current_app.config.get('AUTHZ_ON'):
+        # Pass the current user to do permission filtering on results
+        kwargs['user'] = g.user
 
     results = g.annotation_class.search(**kwargs)
     total = g.annotation_class.count(**kwargs)
+
     return jsonify({'total': total,
                     'rows': results})
 
@@ -254,7 +279,11 @@ def search_annotations():
 # RAW ES SEARCH
 @store.route('/search_raw', methods=['GET', 'POST'])
 def search_annotations_raw():
-    res = g.annotation_class.search_raw(request)
+    kwargs = dict()
+    if current_app.config.get('AUTHZ_ON'):
+        kwargs['user'] = g.user
+
+    res = g.annotation_class.search_raw(request, **kwargs)
     return jsonify(res, status=res.get('status', 200))
 
 

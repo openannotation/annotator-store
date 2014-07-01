@@ -1,6 +1,5 @@
 from nose.tools import *
 from mock import MagicMock, patch
-from flask import Flask
 
 import elasticsearch
 
@@ -8,51 +7,45 @@ from annotator.elasticsearch import ElasticSearch, _Model
 
 class TestElasticSearch(object):
 
-    def test_noapp_error(self):
-        es = ElasticSearch()
-        assert_raises(RuntimeError, lambda: es.conn)
-
     def test_conn(self):
-        app = Flask('testy')
-        app.config['ELASTICSEARCH_HOST'] = 'http://127.0.1.1:9202'
-        app.config['ELASTICSEARCH_INDEX'] = 'foobar'
-        es = ElasticSearch(app)
-        with app.app_context():
-            assert_true(isinstance(es.conn, elasticsearch.Elasticsearch))
+        es = ElasticSearch()
+        es.host = 'http://127.0.1.1:9202'
+        es.index = 'foobar'
+        assert_true(isinstance(es.conn, elasticsearch.Elasticsearch))
 
     def test_auth(self):
-        app = Flask('testy')
-        app.config['ELASTICSEARCH_HOST'] = 'http://foo:bar@127.0.1.1:9202'
-        app.config['ELASTICSEARCH_INDEX'] = 'foobar'
-        es = ElasticSearch(app)
-        with app.app_context():
-            assert_equal(('foo', 'bar'),
-                         es.conn.transport.hosts[0]['http_auth'])
+        es = ElasticSearch()
+        es.host = 'http://foo:bar@127.0.1.1:9202'
+        es.index = 'foobar'
+        assert_equal(('foo', 'bar'),
+                     es.conn.transport.hosts[0]['http_auth'])
 
-    def test_index(self):
-        app = Flask('testy')
-        app.config['ELASTICSEARCH_INDEX'] = 'foobar'
-        es = ElasticSearch(app)
-        with app.app_context():
-            assert_equal(es.index, 'foobar')
+    def test_config(self):
+        es = ElasticSearch(
+                     host='http://127.0.1.1:9202',
+                     index='foobar',
+                     authorization_enabled=True,
+                     compatibility_mode='pre-1.0.0',
+        )
+        assert_equal(es.host, 'http://127.0.1.1:9202')
+        assert_equal(es.index, 'foobar')
+        assert_equal(es.authorization_enabled, True)
+        assert_equal(es.compatibility_mode, 'pre-1.0.0')
 
 class TestModel(object):
     def setup(self):
-        app = Flask('testy')
-        app.config['ELASTICSEARCH_HOST'] = 'http://127.0.1.1:9202'
-        app.config['ELASTICSEARCH_INDEX'] = 'foobar'
-        self.es = ElasticSearch(app)
+        es = ElasticSearch()
+        es.host = 'http://127.0.1.1:9202'
+        es.index = 'foobar'
+        self.es = es
 
         class MyModel(self.es.Model):
             __type__ = 'footype'
 
         self.Model = MyModel
 
-        self.ctx = app.app_context()
-        self.ctx.push()
-
     def teardown(self):
-        self.ctx.pop()
+        pass
 
     @patch('annotator.elasticsearch.elasticsearch.Elasticsearch')
     def test_fetch(self, es_mock):
