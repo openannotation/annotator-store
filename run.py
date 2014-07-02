@@ -39,7 +39,19 @@ def main():
         print("Perhaps you need to copy annotator.cfg.example to annotator.cfg", file=sys.stderr)
         sys.exit(1)
 
-    es.init_app(app)
+    if app.config.get('ELASTICSEARCH_HOST') is not None:
+        es.host = app.config['ELASTICSEARCH_HOST']
+
+    # We do need to set this one (the other settings have fine defaults)
+    default_index = app.name
+    es.index = app.config.get('ELASTICSEARCH_INDEX', default_index)
+
+    if app.config.get('AUTHZ_ON') is not None:
+        es.authorization_enabled = app.config['AUTHZ_ON']
+
+    if app.config.get('ELASTICSEARCH_COMPATIBILITY_MODE') is not None:
+        es.compatibility_mode = \
+            app.config['ELASTICSEARCH_COMPATIBILITY_MODE']
 
     with app.test_request_context():
         annotation.Annotation.create_all()

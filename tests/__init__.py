@@ -12,7 +12,9 @@ def create_app():
     app = Flask(__name__)
     app.config.from_pyfile(os.path.join(here, 'test.cfg'))
 
-    es.init_app(app)
+    es.host = app.config['ELASTICSEARCH_HOST']
+    es.index = app.config['ELASTICSEARCH_INDEX']
+    es.authorization_enabled = app.config['AUTHZ_ON']
 
     @app.before_request
     def before_request():
@@ -28,18 +30,15 @@ class TestCase(object):
     @classmethod
     def setup_class(cls):
         cls.app = create_app()
-        with cls.app.app_context():
-            annotation.Annotation.drop_all()
-            document.Document.drop_all()
+        annotation.Annotation.drop_all()
+        document.Document.drop_all()
 
     def setup(self):
-        with self.app.app_context():
-            annotation.Annotation.create_all()
-            document.Document.create_all()
-            es.conn.cluster.health(wait_for_status='yellow')
+        annotation.Annotation.create_all()
+        document.Document.create_all()
+        es.conn.cluster.health(wait_for_status='yellow')
         self.cli = self.app.test_client()
 
     def teardown(self):
-        with self.app.app_context():
-            annotation.Annotation.drop_all()
-            document.Document.drop_all()
+        annotation.Annotation.drop_all()
+        document.Document.drop_all()

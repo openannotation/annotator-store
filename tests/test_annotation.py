@@ -2,21 +2,14 @@ from nose.tools import *
 from mock import MagicMock
 from . import TestCase, helpers as h
 
-from flask import g
-
 from annotator import es
 from annotator.annotation import Annotation
 
 class TestAnnotation(TestCase):
     def setup(self):
         super(TestAnnotation, self).setup()
-        self.ctx = self.app.test_request_context(path='/api')
-        self.ctx.push()
-
-        g.user = None
 
     def teardown(self):
-        self.ctx.pop()
         super(TestAnnotation, self).teardown()
 
     def test_new(self):
@@ -59,7 +52,7 @@ class TestAnnotation(TestCase):
         newann.delete()
 
         noann = Annotation.fetch(1)
-        assert noann == None
+        assert_true(noann == None)
 
     def test_basics(self):
         user = "alice"
@@ -110,22 +103,22 @@ class TestAnnotation(TestCase):
         res = Annotation.count(limit=1)
         assert_equal(res, 3)
 
-        res = Annotation.search(uri=uri1)
+        res = Annotation.search(query={'uri':uri1})
         assert_equal(len(res), 2)
         assert_equal(res[0]['uri'], uri1)
         assert_equal(res[0]['id'], anno2.id)
 
-        res = Annotation.search(user=user1)
+        res = Annotation.search(query={'user':user1})
         assert_equal(len(res), 2)
         assert_equal(res[0]['user'], user1)
         assert_equal(res[0]['id'], anno3.id)
 
-        res = Annotation.search(user=user1, uri=uri2)
+        res = Annotation.search(query={'user':user1, 'uri':uri2})
         assert_equal(len(res), 1)
         assert_equal(res[0]['user'], user1)
         assert_equal(res[0]['id'], anno3.id)
 
-        res = Annotation.count(user=user1, uri=uri2)
+        res = Annotation.count(query={'user':user1, 'uri':uri2})
         assert_equal(res, 1)
 
     def test_search_permissions_null(self):
@@ -135,8 +128,8 @@ class TestAnnotation(TestCase):
         res = Annotation.search()
         assert_equal(len(res), 0)
 
-        g.user = h.MockUser('bob')
-        res = Annotation.search()
+        user = h.MockUser('bob')
+        res = Annotation.search(user=user)
         assert_equal(len(res), 0)
 
     def test_search_permissions_simple(self):
@@ -148,16 +141,16 @@ class TestAnnotation(TestCase):
         res = Annotation.search()
         assert_equal(len(res), 0)
 
-        g.user = h.MockUser('alice', 'testconsumer')
-        res = Annotation.search()
+        user = h.MockUser('alice', 'testconsumer')
+        res = Annotation.search(user=user)
         assert_equal(len(res), 0)
 
-        g.user = h.MockUser('bob')
-        res = Annotation.search()
+        user = h.MockUser('bob')
+        res = Annotation.search(user=user)
         assert_equal(len(res), 0)
 
-        g.user = h.MockUser('bob', 'testconsumer')
-        res = Annotation.search()
+        user = h.MockUser('bob', 'testconsumer')
+        res = Annotation.search(user=user)
         assert_equal(len(res), 1)
 
     def test_search_permissions_world(self):
@@ -169,16 +162,16 @@ class TestAnnotation(TestCase):
         res = Annotation.search()
         assert_equal(len(res), 1)
 
-        g.user = h.MockUser('alice', 'testconsumer')
-        res = Annotation.search()
+        user = h.MockUser('alice', 'testconsumer')
+        res = Annotation.search(user=user)
         assert_equal(len(res), 1)
 
-        g.user = h.MockUser('bob')
-        res = Annotation.search()
+        user = h.MockUser('bob')
+        res = Annotation.search(user=user)
         assert_equal(len(res), 1)
 
-        g.user = h.MockUser('bob', 'testconsumer')
-        res = Annotation.search()
+        user = h.MockUser('bob', 'testconsumer')
+        res = Annotation.search(user=user)
         assert_equal(len(res), 1)
 
     def test_search_permissions_authenticated(self):
@@ -190,12 +183,12 @@ class TestAnnotation(TestCase):
         res = Annotation.search()
         assert_equal(len(res), 0)
 
-        g.user = h.MockUser('alice', 'testconsumer')
-        res = Annotation.search()
+        user = h.MockUser('alice', 'testconsumer')
+        res = Annotation.search(user=user)
         assert_equal(len(res), 1)
 
-        g.user = h.MockUser('bob', 'anotherconsumer')
-        res = Annotation.search()
+        user = h.MockUser('bob', 'anotherconsumer')
+        res = Annotation.search(user=user)
         assert_equal(len(res), 1)
 
 
@@ -209,12 +202,12 @@ class TestAnnotation(TestCase):
         res = Annotation.search()
         assert_equal(len(res), 0)
 
-        g.user = h.MockUser('bob', 'testconsumer')
-        res = Annotation.search()
+        user = h.MockUser('bob', 'testconsumer')
+        res = Annotation.search(user=user)
         assert_equal(len(res), 1)
 
-        g.user = h.MockUser('alice', 'anotherconsumer')
-        res = Annotation.search()
+        user = h.MockUser('alice', 'anotherconsumer')
+        res = Annotation.search(user=user)
         assert_equal(len(res), 0)
 
     def test_search_permissions_owner(self):
@@ -226,8 +219,8 @@ class TestAnnotation(TestCase):
         res = Annotation.search()
         assert_equal(len(res), 0)
 
-        g.user = h.MockUser('alice', 'testconsumer')
-        res = Annotation.search()
+        user = h.MockUser('alice', 'testconsumer')
+        res = Annotation.search(user=user)
         assert_equal(len(res), 1)
 
     def test_search_permissions_malicious(self):
@@ -238,8 +231,8 @@ class TestAnnotation(TestCase):
         anno.save()
 
         # Any user whose username starts with "group:" must be refused any results
-        g.user = h.MockUser('group:anyone', 'testconsumer')
-        res = Annotation.search()
+        user = h.MockUser('group:anyone', 'testconsumer')
+        res = Annotation.search(user=user)
         assert_equal(len(res), 0)
 
     def test_search_permissions_admin(self):
@@ -248,10 +241,10 @@ class TestAnnotation(TestCase):
                           consumer='testconsumer')
         anno.save()
 
-        g.user = h.MockUser('bob', 'testconsumer')
-        g.user.is_admin = True
+        user = h.MockUser('bob', 'testconsumer')
+        user.is_admin = True
 
-        res = Annotation.search()
+        res = Annotation.search(user=user)
         assert_equal(len(res), 1)
 
     def test_cross_representations(self):
@@ -288,10 +281,12 @@ class TestAnnotation(TestCase):
 
         # now a query for annotations of the pdf should yield both annotations
 
-        g.user = h.MockUser('alice', 'testconsumer')
-        res = Annotation.search(uri='http://example.com/1234.pdf')
+        user = h.MockUser('alice', 'testconsumer')
+        res = Annotation.search(user=user,
+                                query={'uri':'http://example.com/1234.pdf'})
         assert_equal(len(res), 2)
 
         # and likewise for annotations of the html
-        res = Annotation.search(uri='http://example.com/1234')
+        res = Annotation.search(user=user,
+                                query={'uri':'http://example.com/1234'})
         assert_equal(len(res), 2)
