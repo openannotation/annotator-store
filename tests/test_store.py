@@ -4,6 +4,7 @@ from nose.tools import *
 from mock import patch
 
 from flask import json, g
+from six.moves import xrange
 
 from annotator import auth, es
 from annotator.annotation import Annotation
@@ -61,7 +62,7 @@ class TestStore(TestCase):
 
     def test_index(self):
         response = self.cli.get('/api/annotations', headers=self.headers)
-        assert response.data == "[]", "response should be empty list"
+        assert response.data == b"[]", "response should be empty list"
 
     def test_create(self):
         payload = json.dumps({'name': 'Foo'})
@@ -406,7 +407,7 @@ class TestStoreAuthz(TestCase):
                                 content_type='application/json',
                                 headers=self.charlie_headers)
         assert response.status_code == 401, "response should be 401 NOT AUTHORIZED"
-        assert 'permissions update' in response.data
+        assert b'permissions update' in response.data
 
         response = self.cli.put('/api/annotations/123',
                                 data=payload,

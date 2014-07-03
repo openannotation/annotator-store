@@ -5,6 +5,7 @@ import time
 from nose.tools import *
 from mock import Mock, patch
 
+from six import u
 from werkzeug import Headers
 
 from annotator import auth
@@ -45,11 +46,11 @@ class TestAuthBasics(object):
 
     def test_decode_token_unicode(self):
         tok = auth.encode_token({}, 'secret')
-        assert auth.decode_token(unicode(tok), 'secret'), "token should have been successfully decoded"
+        assert auth.decode_token(u(tok), 'secret'), "token should have been successfully decoded"
 
     def test_reject_inauthentic_token(self):
         tok = auth.encode_token({'userId': 'alice'}, 'secret')
-        tok += 'extrajunk'
+        tok += b'extrajunk'
         assert_raises(auth.TokenInvalid, auth.decode_token, tok, 'secret')
 
     def test_reject_notyetvalid_token(self):
@@ -92,5 +93,5 @@ class TestAuthenticator(object):
 
     def test_request_user_invalid(self):
         request = make_request(self.consumer)
-        request.headers['x-annotator-auth-token'] += 'LookMaIAmAHacker'
+        request.headers['x-annotator-auth-token'] += b'LookMaIAmAHacker'
         assert_equal(self.auth.request_user(request), None)

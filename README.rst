@@ -6,9 +6,9 @@ This is a backend store for `Annotator <http://annotatorjs.org>`__.
 Getting going
 -------------
 
-You'll need a recent version of `Python <http://python.org>`__ (>=2.6)
-and `ElasticSearch <http://elasticsearch.org>`__ (>=1.0.0) installed
-(although see "ElasticSearch compatibility" below).
+You'll need a recent version of `Python <http://python.org>`__ (Python 2 >=2.6
+or Python 3 >=3.3) and `ElasticSearch <http://elasticsearch.org>`__ (>=1.0.0)
+installed (see "ElasticSearch compatibility" below).
 
 The quickest way to get going requires the ``pip`` and ``virtualenv``
 tools (``easy_install virtualenv`` will get them both). Run the
