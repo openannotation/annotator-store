@@ -73,7 +73,7 @@ class _Model(dict):
 
     @classmethod
     def create_all(cls):
-        logging.info("creating index " + cls.es.index)
+        log.info("creating index " + cls.es.index)
         try:
             cls.es.conn.indices.create(cls.es.index)
         except elasticsearch.exceptions.RequestError as e:
@@ -125,7 +125,7 @@ class _Model(dict):
         q = cls._build_query(query=query, offset=offset, limit=limit, **kwargs)
         if not q:
             return []
-        logging.debug("doing search: %s", q)
+        log.debug("doing search: %s", q)
         res = cls.es.conn.search(index=cls.es.index,
                                  doc_type=cls.__type__,
                                  body=q)
