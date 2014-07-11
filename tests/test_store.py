@@ -72,11 +72,6 @@ class TestStore(TestCase):
                                  content_type='application/json',
                                  headers=self.headers)
 
-        # import re
-        # See http://bit.ly/gxJBHo for details of this change.
-        # assert response.status_code == 303, "response should be 303 SEE OTHER"
-        # assert re.match(r"http://localhost/store/\d+", response.headers['Location']), "response should redirect to read_annotation url"
-
         assert response.status_code == 200, "response should be 200 OK"
         data = json.loads(response.data)
         assert 'id' in data, "annotation id should be returned in response"
