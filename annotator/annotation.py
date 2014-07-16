@@ -64,10 +64,29 @@ class Annotation(elasticsearch.Model):
         super(Annotation, self).save(es, **kwargs)
 
     @classmethod
-    def _build_query(cls, es=None, query=None, offset=None, limit=None,
+    def search(cls, es, **kwargs):
+        # Pass es as es_ keyword argument for _build_query to receive it
+        res = super(Annotation, cls).search(es, es_=es, **kwargs)
+        return res
+
+    @classmethod
+    def count(cls, es, **kwargs):
+        # Pass es as es_ keyword argument for _build_query to receive it
+        res = super(Annotation, cls).count(es, es_=es, **kwargs)
+        return res
+
+    @classmethod
+    def search_raw(cls, es, request, **kwargs):
+        # Pass es as es_ keyword argument for _build_query_raw to receive it
+        res = super(Annotation, cls).search_raw(es, request, es_=es, **kwargs)
+        return res
+
+    @classmethod
+    def _build_query(cls, es_=None, query=None, offset=None, limit=None,
                      user=None, **kwargs):
         if query is None:
             query = {}
+        assert es_ is not None
 
         q = super(Annotation, cls)._build_query(query, offset, limit, **kwargs)
 
@@ -75,7 +94,7 @@ class Annotation(elasticsearch.Model):
         # using information we may have on hand about the Document
         if 'uri' in query:
             term_filter = q['query']['filtered']['filter']
-            doc = document.Document.get_by_uri(es, query['uri'])
+            doc = document.Document.get_by_uri(es_, query['uri'])
             if doc:
                 new_terms = []
                 for term in term_filter['and']:
@@ -87,7 +106,7 @@ class Annotation(elasticsearch.Model):
 
                 term_filter['and'] = new_terms
 
-        if es.authorization_enabled:
+        if es_.authorization_enabled:
             # Apply a filter to the results.
             f = authz.permissions_filter(user)
             if not f:
@@ -97,10 +116,12 @@ class Annotation(elasticsearch.Model):
         return q
 
     @classmethod
-    def _build_query_raw(cls, request, es=None, user=None, **kwargs):
+    def _build_query_raw(cls, request, es_=None, user=None, **kwargs):
+        assert es_ is not None
+        
         q, p = super(Annotation, cls)._build_query_raw(request, **kwargs)
 
-        if es.authorization_enabled:
+        if es_.authorization_enabled:
             f = authz.permissions_filter(user)
             if not f:
                 return {'error': 'Authorization error!', 'status': 400}, None
