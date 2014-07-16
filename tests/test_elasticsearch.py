@@ -3,7 +3,7 @@ from mock import MagicMock, patch
 
 import elasticsearch
 
-from annotator.elasticsearch import ElasticSearch, _Model
+from annotator.elasticsearch import ElasticSearch, Model
 
 class TestElasticSearch(object):
 
@@ -39,7 +39,7 @@ class TestModel(object):
         es.index = 'foobar'
         self.es = es
 
-        class MyModel(self.es.Model):
+        class MyModel(Model):
             __type__ = 'footype'
 
         self.Model = MyModel
@@ -51,7 +51,7 @@ class TestModel(object):
     def test_fetch(self, es_mock):
         conn = es_mock.return_value
         conn.get.return_value = {'_source': {'foo': 'bar'}}
-        o = self.Model.fetch(123)
+        o = self.Model.fetch(self.es, 123)
         assert_equal(o['foo'], 'bar')
         assert_equal(o['id'], 123)
         assert_true(isinstance(o, self.Model))
@@ -62,5 +62,5 @@ class TestModel(object):
         def raise_exc(*args, **kwargs):
             raise elasticsearch.exceptions.NotFoundError('foo')
         conn.get.side_effect = raise_exc
-        o = self.Model.fetch(123)
+        o = self.Model.fetch(self.es, 123)
         assert_equal(o, None)

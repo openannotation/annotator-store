@@ -36,8 +36,6 @@ class ElasticSearch(object):
         self.authorization_enabled = authorization_enabled
         self.compatibility_mode = compatibility_mode
 
-        self.Model = make_model(self)
-
     def _connect(self):
         host = self.host
         parsed = urlparse(host)
@@ -69,39 +67,40 @@ class ElasticSearch(object):
         return self._connection
 
 
-class _Model(dict):
+class Model(dict):
 
     @classmethod
-    def create_all(cls):
-        logging.info("creating index " + cls.es.index)
+    def create_all(cls, es):
+        logging.info("creating index " + es.index)
         try:
-            cls.es.conn.indices.create(cls.es.index)
+            es.conn.indices.create(es.index)
         except elasticsearch.exceptions.RequestError as e:
             # Reraise anything that isn't just a notification that the index
             # already exists
             if not e.error.startswith('IndexAlreadyExistsException'):
                 raise
-            log.warn('Index creation failed. If you are running against '
-                     'Bonsai Elasticsearch, this is expected and ignorable.')
+            log.warn('Index creation failed as index already exists. If you '
+                     'are running against Bonsai Elasticsearch, this is '
+                     'expected and ignorable.')
         mapping = {cls.__type__: {'properties': cls.__mapping__}}
-        cls.es.conn.indices.put_mapping(index=cls.es.index,
-                                        doc_type=cls.__type__,
-                                        body=mapping)
+        es.conn.indices.put_mapping(index=es.index,
+                                    doc_type=cls.__type__,
+                                    body=mapping)
 
     @classmethod
-    def drop_all(cls):
-        if cls.es.conn.indices.exists(cls.es.index):
-            cls.es.conn.indices.close(cls.es.index)
-            cls.es.conn.indices.delete(cls.es.index)
+    def drop_all(cls, es):
+        if es.conn.indices.exists(es.index):
+            es.conn.indices.close(es.index)
+            es.conn.indices.delete(es.index)
 
     # It would be lovely if this were called 'get', but the dict semantics
     # already define that method name.
     @classmethod
-    def fetch(cls, id):
+    def fetch(cls, es, id):
         try:
-            doc = cls.es.conn.get(index=cls.es.index,
-                                  doc_type=cls.__type__,
-                                  id=id)
+            doc = es.conn.get(index=es.index,
+                              doc_type=cls.__type__,
+                              id=id)
         except elasticsearch.exceptions.NotFoundError:
             return None
         return cls(doc['_source'], id=id)
@@ -121,35 +120,37 @@ class _Model(dict):
         return _build_query_raw(request)
 
     @classmethod
-    def search(cls, query=None, offset=0, limit=RESULTS_DEFAULT_SIZE, **kwargs):
-        q = cls._build_query(query=query, offset=offset, limit=limit, **kwargs)
+    def search(cls, es, query=None, offset=0, limit=RESULTS_DEFAULT_SIZE,
+               **kwargs):
+        q = cls._build_query(es=es, query=query, offset=offset, limit=limit,
+                             **kwargs)
         if not q:
             return []
         logging.debug("doing search: %s", q)
-        res = cls.es.conn.search(index=cls.es.index,
-                                 doc_type=cls.__type__,
-                                 body=q)
+        res = es.conn.search(index=es.index,
+                             doc_type=cls.__type__,
+                             body=q)
         docs = res['hits']['hits']
         return [cls(d['_source'], id=d['_id']) for d in docs]
 
     @classmethod
-    def search_raw(cls, request, **kwargs):
-        q, params = cls._build_query_raw(request, **kwargs)
+    def search_raw(cls, es, request, **kwargs):
+        q, params = cls._build_query_raw(request, es=es, **kwargs)
         if 'error' in q:
             return q
         try:
-            res = cls.es.conn.search(index=cls.es.index,
-                                     doc_type=cls.__type__,
-                                     body=q,
-                                     **params)
+            res = es.conn.search(index=es.index,
+                                 doc_type=cls.__type__,
+                                 body=q,
+                                 **params)
         except elasticsearch.exceptions.ElasticsearchException as e:
             return e.result
         else:
             return res
 
     @classmethod
-    def count(cls, **kwargs):
-        q = cls._build_query(**kwargs)
+    def count(cls, es, **kwargs):
+        q = cls._build_query(es=es, **kwargs)
         if not q:
             return 0
 
@@ -160,12 +161,12 @@ class _Model(dict):
 
         # In elasticsearch prior to 1.0.0, the payload to `count` was a bare
         # query.
-        if cls.es.compatibility_mode == 'pre-1.0.0':
+        if es.compatibility_mode == 'pre-1.0.0':
             q = q['query']
 
-        res = cls.es.conn.count(index=cls.es.index,
-                                doc_type=cls.__type__,
-                                body=q)
+        res = es.conn.count(index=es.index,
+                            doc_type=cls.__type__,
+                            body=q)
         return res['count']
 
     def _set_id(self, rhs):
@@ -176,25 +177,21 @@ class _Model(dict):
 
     id = property(_get_id, _set_id)
 
-    def save(self, refresh=True):
+    def save(self, es, refresh=True):
         _add_created(self)
         _add_updated(self)
-        res = self.es.conn.index(index=self.es.index,
-                                 doc_type=self.__type__,
-                                 id=self.id,
-                                 body=self,
-                                 refresh=refresh)
+        res = es.conn.index(index=es.index,
+                            doc_type=self.__type__,
+                            id=self.id,
+                            body=self,
+                            refresh=refresh)
         self.id = res['_id']
 
-    def delete(self):
+    def delete(self, es):
         if self.id:
-            self.es.conn.delete(index=self.es.index,
-                                doc_type=self.__type__,
-                                id=self.id)
-
-
-def make_model(es):
-    return type('Model', (_Model,), {'es': es})
+            es.conn.delete(index=es.index,
+                           doc_type=self.__type__,
+                           id=self.id)
 
 
 def _csv_split(s, delimiter=','):

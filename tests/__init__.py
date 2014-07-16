@@ -1,12 +1,12 @@
 import os
 from flask import Flask, g, request
 
-from annotator import es, auth, authz, annotation, store, document
-
+from annotator import auth, authz, annotation, document, elasticsearch, store
+from annotator.store import es
 from .helpers import MockUser, MockConsumer
 
-here = os.path.dirname(__file__)
 
+here = os.path.dirname(__file__)
 
 def create_app():
     app = Flask(__name__)
@@ -30,15 +30,15 @@ class TestCase(object):
     @classmethod
     def setup_class(cls):
         cls.app = create_app()
-        annotation.Annotation.drop_all()
-        document.Document.drop_all()
+        annotation.Annotation.drop_all(es)
+        document.Document.drop_all(es)
 
     def setup(self):
-        annotation.Annotation.create_all()
-        document.Document.create_all()
+        annotation.Annotation.create_all(es)
+        document.Document.create_all(es)
         es.conn.cluster.health(wait_for_status='yellow')
         self.cli = self.app.test_client()
 
     def teardown(self):
-        annotation.Annotation.drop_all()
-        document.Document.drop_all()
+        annotation.Annotation.drop_all(es)
+        document.Document.drop_all(es)
