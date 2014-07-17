@@ -106,7 +106,7 @@ class Model(dict):
         return cls(doc['_source'], id=id)
 
     @classmethod
-    def _build_query(cls, query=None, offset=None, limit=None, **kwargs):
+    def _build_query(cls, es, query=None, offset=None, limit=None, **kwargs):
         if offset is None:
             offset = 0
         if limit is None:
@@ -116,13 +116,13 @@ class Model(dict):
         return _build_query(query, offset, limit)
 
     @classmethod
-    def _build_query_raw(cls, request, **kwargs):
+    def _build_query_raw(cls, es, request, **kwargs):
         return _build_query_raw(request)
 
     @classmethod
     def search(cls, es, query=None, offset=0, limit=RESULTS_DEFAULT_SIZE,
                **kwargs):
-        q = cls._build_query(query=query, offset=offset, limit=limit,
+        q = cls._build_query(es, query=query, offset=offset, limit=limit,
                              **kwargs)
         if not q:
             return []
@@ -135,7 +135,7 @@ class Model(dict):
 
     @classmethod
     def search_raw(cls, es, request, **kwargs):
-        q, params = cls._build_query_raw(request, **kwargs)
+        q, params = cls._build_query_raw(es, request, **kwargs)
         if 'error' in q:
             return q
         try:
@@ -150,7 +150,7 @@ class Model(dict):
 
     @classmethod
     def count(cls, es, **kwargs):
-        q = cls._build_query(**kwargs)
+        q = cls._build_query(es, **kwargs)
         if not q:
             return 0
 
