@@ -1,4 +1,4 @@
-from annotator import elasticsearch
+from annotator import es
 
 TYPE = 'document'
 MAPPING = {
@@ -25,18 +25,18 @@ MAPPING = {
 }
 
 
-class Document(elasticsearch.Model):
+class Document(es.Model):
     __type__ = TYPE
     __mapping__ = MAPPING
 
     @classmethod
-    def get_by_uri(cls, es, uri):
+    def get_by_uri(cls, uri):
         """Returns the first document match for a given URI."""
-        results = cls.get_all_by_uris(es, [uri])
+        results = cls.get_all_by_uris([uri])
         return results[0] if len(results) > 0 else []
 
     @classmethod
-    def get_all_by_uris(cls, es, uris):
+    def get_all_by_uris(cls, uris):
         """
         Returns a list of documents that have any of the supplied URIs.
 
@@ -46,9 +46,9 @@ class Document(elasticsearch.Model):
                                   'query': {'terms': {'link.href': uris}}}},
              'sort': [{'updated': {'order': 'asc'}}]}
 
-        res = es.conn.search(index=es.index,
-                             doc_type=cls.__type__,
-                             body=q)
+        res = cls.es.conn.search(index=cls.es.index,
+                                 doc_type=cls.__type__,
+                                 body=q)
         return [cls(d['_source'], id=d['_id']) for d in res['hits']['hits']]
 
     def uris(self):

@@ -20,11 +20,8 @@ from flask import current_app, g
 from flask import request
 from flask import url_for
 
-from annotator.elasticsearch import ElasticSearch
 from annotator.atoi import atoi
 from annotator.annotation import Annotation
-
-es = ElasticSearch()
 
 store = Blueprint('store', __name__)
 
@@ -137,7 +134,7 @@ def root():
 # INDEX
 @store.route('/annotations')
 def index():
-    annotations = g.annotation_class.search(es)
+    annotations = g.annotation_class.search()
     return jsonify(annotations)
 
 # CREATE
@@ -161,11 +158,11 @@ def create_annotation():
             g.before_annotation_create(annotation)
 
         if hasattr(g, 'after_annotation_create'):
-            annotation.save(es, refresh=False)
+            annotation.save(refresh=False)
             g.after_annotation_create(annotation)
 
         refresh = request.args.get('refresh') != 'false'
-        annotation.save(es, refresh=refresh)
+        annotation.save(refresh=refresh)
 
         return jsonify(annotation)
     else:
@@ -176,7 +173,7 @@ def create_annotation():
 # READ
 @store.route('/annotations/<id>')
 def read_annotation(id):
-    annotation = g.annotation_class.fetch(es, id)
+    annotation = g.annotation_class.fetch(id)
     if not annotation:
         return jsonify('Annotation not found!', status=404)
 
@@ -190,7 +187,7 @@ def read_annotation(id):
 # UPDATE
 @store.route('/annotations/<id>', methods=['POST', 'PUT'])
 def update_annotation(id):
-    annotation = g.annotation_class.fetch(es, id)
+    annotation = g.annotation_class.fetch(id)
     if not annotation:
         return jsonify('Annotation not found! No update performed.',
                        status=404)
@@ -221,7 +218,7 @@ def update_annotation(id):
             g.before_annotation_update(annotation)
 
         refresh = request.args.get('refresh') != 'false'
-        annotation.save(es, refresh=refresh)
+        annotation.save(refresh=refresh)
 
         if hasattr(g, 'after_annotation_update'):
             g.after_annotation_update(annotation)
@@ -232,7 +229,7 @@ def update_annotation(id):
 # DELETE
 @store.route('/annotations/<id>', methods=['DELETE'])
 def delete_annotation(id):
-    annotation = g.annotation_class.fetch(es, id)
+    annotation = g.annotation_class.fetch(id)
 
     if not annotation:
         return jsonify('Annotation not found. No delete performed.',
@@ -245,7 +242,7 @@ def delete_annotation(id):
     if hasattr(g, 'before_annotation_delete'):
         g.before_annotation_delete(annotation)
 
-    annotation.delete(es)
+    annotation.delete()
 
     if hasattr(g, 'after_annotation_delete'):
         g.after_annotation_delete(annotation)
@@ -272,8 +269,8 @@ def search_annotations():
         # Pass the current user to do permission filtering on results
         kwargs['user'] = g.user
 
-    results = g.annotation_class.search(es, **kwargs)
-    total = g.annotation_class.count(es, **kwargs)
+    results = g.annotation_class.search(**kwargs)
+    total = g.annotation_class.count(**kwargs)
 
     return jsonify({'total': total,
                     'rows': results})
@@ -286,7 +283,7 @@ def search_annotations_raw():
     if current_app.config.get('AUTHZ_ON'):
         kwargs['user'] = g.user
 
-    res = g.annotation_class.search_raw(es, request, **kwargs)
+    res = g.annotation_class.search_raw(request, **kwargs)
     return jsonify(res, status=res.get('status', 200))
 
 

@@ -1,7 +1,7 @@
 from flask import g
 from nose.tools import *
 
-from . import TestCase, es
+from . import TestCase
 from annotator.document import Document
 
 class TestDocument(TestCase):
@@ -35,8 +35,8 @@ class TestDocument(TestCase):
                 }
             ],
         })
-        d.save(es)
-        d = Document.fetch(es, "1")
+        d.save()
+        d = Document.fetch("1")
         assert_equal(d["title"], "Annotations: The Missing Manual")
         assert_equal(len(d['link']), 2)
         assert_equal(d['link'][0]['href'], "https://peerj.com/articles/53/")
@@ -48,12 +48,12 @@ class TestDocument(TestCase):
 
     def test_delete(self):
         ann = Document(id=1)
-        ann.save(es)
+        ann.save()
 
-        newdoc = Document.fetch(es, 1)
-        newdoc.delete(es)
+        newdoc = Document.fetch(1)
+        newdoc.delete()
 
-        nodoc = Document.fetch(es, 1)
+        nodoc = Document.fetch(1)
         assert nodoc == None
 
     def test_search(self):
@@ -71,8 +71,8 @@ class TestDocument(TestCase):
                 }
             ],
         })
-        d.save(es)
-        res = Document.search(es, title='document')
+        d.save()
+        res = Document.search(title='document')
         assert_equal(len(res), 1)
 
     def test_get_by_uri(self):
@@ -93,7 +93,7 @@ class TestDocument(TestCase):
                 },
             ],
         })
-        d.save(es)
+        d.save()
 
         d = Document({
             "id": "2",
@@ -109,7 +109,7 @@ class TestDocument(TestCase):
                 },
             ],
         })
-        d.save(es)
+        d.save()
 
         d = Document({
             "id": "3",
@@ -121,9 +121,9 @@ class TestDocument(TestCase):
                 }
             ],
         })
-        d.save(es)
+        d.save()
 
-        doc = Document.get_by_uri(es, "https://peerj.com/articles/53/")
+        doc = Document.get_by_uri("https://peerj.com/articles/53/")
         assert doc
         assert_equal(doc['title'], "document1") 
 
@@ -140,7 +140,7 @@ class TestDocument(TestCase):
                 },
             ]
         })
-        d.save(es)
+        d.save()
 
         d = Document({
             "id": "2",
@@ -152,9 +152,9 @@ class TestDocument(TestCase):
                 }
             ]
         })
-        d.save(es)
+        d.save()
 
-        docs = Document.get_all_by_uris(es, ["https://peerj.com/articles/53/", "https://peerj.com/articles/53.pdf"])
+        docs = Document.get_all_by_uris(["https://peerj.com/articles/53/", "https://peerj.com/articles/53.pdf"])
         assert_equal(len(docs), 2)
 
     def test_uris(self):
@@ -192,9 +192,9 @@ class TestDocument(TestCase):
                 }
             ],
         })
-        d.save(es)
+        d.save()
 
-        d = Document.fetch(es, 1)
+        d = Document.fetch(1)
         assert d
         assert_equal(len(d['link']), 2)
 
@@ -208,14 +208,14 @@ class TestDocument(TestCase):
                 "type": "application/vnd.ms-word.document"
             }
         ])
-        d.save(es)
+        d.save()
 
         assert_equal(len(d['link']), 3)
-        d = Document.fetch(es, 1)
+        d = Document.fetch(1)
         assert d
         assert_equal(len(d['link']), 3)
 
-        doc = Document.get_by_uri(es, "https://peerj.com/articles/53/")
+        doc = Document.get_by_uri("https://peerj.com/articles/53/")
         assert doc
         assert_equal(len(doc['link']), 3)
 
