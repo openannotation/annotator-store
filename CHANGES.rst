@@ -1,6 +1,13 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+- Make flask an optional dependency
+- Remove the global es object in favor of explicitly passing it
+- Python 3 compatibility
+
 0.11.1
 ------
 
