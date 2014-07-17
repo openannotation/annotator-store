@@ -1,4 +1,4 @@
-from annotator import authz, document, es
+from annotator import authz, document, elasticsearch
 
 TYPE = 'annotation'
 MAPPING = {
@@ -35,12 +35,12 @@ MAPPING = {
 }
 
 
-class Annotation(es.Model):
+class Annotation(elasticsearch.Model):
 
     __type__ = TYPE
     __mapping__ = MAPPING
 
-    def save(self, *args, **kwargs):
+    def save(self, es, **kwargs):
         _add_default_permissions(self)
 
         # If the annotation includes document metadata look to see if we have
@@ -50,32 +50,33 @@ class Annotation(es.Model):
         if 'document' in self:
             d = self['document']
             uris = [link['href'] for link in d['link']]
-            docs = document.Document.get_all_by_uris(uris)
+            docs = document.Document.get_all_by_uris(es, uris)
 
             if len(docs) == 0:
                 doc = document.Document(d)
-                doc.save()
+                doc.save(es)
             else:
                 doc = docs[0]
                 links = d.get('link', [])
                 doc.merge_links(links)
-                doc.save()
+                doc.save(es)
 
-        super(Annotation, self).save(*args, **kwargs)
+        super(Annotation, self).save(es, **kwargs)
 
     @classmethod
-    def _build_query(cls, query=None, offset=None, limit=None,
+    def _build_query(cls, es, query=None, offset=None, limit=None,
                      user=None, **kwargs):
         if query is None:
             query = {}
 
-        q = super(Annotation, cls)._build_query(query, offset, limit, **kwargs)
+        q = super(Annotation, cls)._build_query(es, query, offset, limit,
+                                                **kwargs)
 
         # attempt to expand query to include uris for other representations
         # using information we may have on hand about the Document
         if 'uri' in query:
             term_filter = q['query']['filtered']['filter']
-            doc = document.Document.get_by_uri(query['uri'])
+            doc = document.Document.get_by_uri(es, query['uri'])
             if doc:
                 new_terms = []
                 for term in term_filter['and']:
@@ -97,8 +98,8 @@ class Annotation(es.Model):
         return q
 
     @classmethod
-    def _build_query_raw(cls, request, user=None, **kwargs):
-        q, p = super(Annotation, cls)._build_query_raw(request, **kwargs)
+    def _build_query_raw(cls, es, request, user=None, **kwargs):
+        q, p = super(Annotation, cls)._build_query_raw(es, request, **kwargs)
 
         if es.authorization_enabled:
             f = authz.permissions_filter(user)

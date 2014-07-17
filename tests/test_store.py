@@ -6,9 +6,9 @@ from mock import patch
 from flask import json, g
 from six.moves import xrange
 
-from annotator import auth, es
+from annotator import auth
 from annotator.annotation import Annotation
-
+from annotator.store import es
 
 class TestStore(TestCase):
     def setup(self):
@@ -34,11 +34,11 @@ class TestStore(TestCase):
         }
         opts.update(kwargs)
         ann = Annotation(**opts)
-        ann.save(refresh=refresh)
+        ann.save(es, refresh=refresh)
         return ann
 
     def _get_annotation(self, id_):
-        return Annotation.fetch(id_)
+        return Annotation.fetch(es, id_)
 
     def test_cors_preflight(self):
         response = self.cli.open('/api/annotations', method="OPTIONS")
@@ -131,7 +131,7 @@ class TestStore(TestCase):
                                  data="{}",
                                  content_type='application/json',
                                  headers=self.headers)
-        ann_mock.return_value.save.assert_called_once_with(refresh=True)
+        ann_mock.return_value.save.assert_called_once_with(es, refresh=True)
 
     @patch('annotator.store.json')
     @patch('annotator.store.Annotation')
@@ -141,7 +141,7 @@ class TestStore(TestCase):
                                  data="{}",
                                  content_type='application/json',
                                  headers=self.headers)
-        ann_mock.return_value.save.assert_called_once_with(refresh=False)
+        ann_mock.return_value.save.assert_called_once_with(es, refresh=False)
 
     def test_read(self):
         kwargs = dict(text=u"Foo", id='123')
@@ -349,7 +349,7 @@ class TestStoreAuthz(TestCase):
                          consumer=self.user.consumer.key,
                          text='Foobar',
                          permissions=self.permissions)
-        ann.save()
+        ann.save(es)
 
         for u in ['alice', 'bob', 'charlie']:
             token = auth.encode_token({'consumerKey': self.user.consumer.key, 'userId': u}, self.user.consumer.secret)
@@ -420,7 +420,7 @@ class TestStoreAuthz(TestCase):
                          user='foo',
                          consumer=self.user.consumer.key,
                          permissions={'update': ['group:__consumer__']})
-        ann.save()
+        ann.save(es)
 
         payload = json.dumps({
             'id': 123,
