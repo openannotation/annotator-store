@@ -54,6 +54,156 @@ class Annotation(es.Model):
 
         super(Annotation, self).save(*args, **kwargs)
 
+
+    @property
+    def jsonld(self):
+        """The JSON-LD formatted RDF representation of the annotation."""
+        context = {}
+        context.update(self.jsonld_namespaces)
+        if self.jsonld_baseurl:
+            context['@base'] = self.jsonld_baseurl
+
+        annotation = {
+            '@id': self['id'],
+            '@context': context,
+            '@type': 'oa:Annotation',
+            'oa:hasBody': self.hasBody,
+            'oa:hasTarget': self.hasTarget,
+            'oa:annotatedBy': self.annotatedBy,
+            'oa:annotatedAt': self.annotatedAt,
+            'oa:serializedBy': self.serializedBy,
+            'oa:serializedAt': self.serializedAt,
+            'oa:motivatedBy': self.motivatedBy,
+        }
+        return annotation
+
+    jsonld_namespaces = {
+        'annotator': 'http://annotatorjs.org/ns/',
+        'oa':  'http://www.w3.org/ns/oa#',
+        'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+        'cnt': 'http://www.w3.org/2011/content#',
+        'dc': 'http://purl.org/dc/elements/1.1/',
+        'dctypes': 'http://purl.org/dc/dcmitype/',
+        'prov': 'http://www.w3.org/ns/prov#',
+        'xsd': 'http://www.w3.org/2001/XMLSchema#',
+    }
+
+    jsonld_baseurl = ''
+
+    @property
+    def hasBody(self):
+        """Return all annotation bodies: the text comment and each tag"""
+        bodies = []
+        bodies += self.textual_bodies
+        bodies += self.tags
+        return bodies
+
+    @property
+    def textual_bodies(self):
+        """A list with a single text body or an empty list"""
+        if not 'text' in self or not self['text']:
+            # Note that we treat an empty text as not having text at all.
+            return []
+        body = {
+            '@type': 'dctypes:Text',
+            '@type': 'cnt:ContentAsText',
+            'dc:format': 'text/plain',
+            'cnt:chars': self['text'],
+        }
+        return [body]
+
+    @property
+    def tags(self):
+        """A list of oa:Tag items"""
+        if not 'tags' in self:
+            return []
+        return [
+            {
+                '@type': 'oa:Tag',
+                '@type': 'cnt:ContentAsText',
+                'dc:format': 'text/plain',
+                'cnt:chars': tag,
+            }
+            for tag in self['tags']
+        ]
+
+    @property
+    def motivatedBy(self):
+        """Motivations for the annotation.
+
+           Currently any combination of commenting and/or tagging.
+        """
+        motivations = []
+        if self.textual_bodies:
+            motivations.append({'@id': 'oa:commenting'})
+        if self.tags:
+            motivations.append({'@id': 'oa:tagging'})
+        return motivations
+
+    @property
+    def hasTarget(self):
+        """The targets of the annotation.
+
+           Returns a selector for each range of the page content that was
+           selected, or if a range is absent the url of the page itself.
+        """
+        targets = []
+        if self.get('ranges') and self['ranges']:
+            # Build the selector for each quote
+            for rangeSelector in self['ranges']:
+                selector = {
+                    '@type': 'annotator:TextRangeSelector',
+                    'annotator:startContainer': rangeSelector['start'],
+                    'annotator:endContainer': rangeSelector['end'],
+                    'annotator:startOffset': rangeSelector['startOffset'],
+                    'annotator:endOffset': rangeSelector['endOffset'],
+                }
+                target = {
+                    '@type': 'oa:SpecificResource',
+                    'oa:hasSource': {'@id': self['uri']},
+                    'oa:hasSelector': selector,
+                }
+                targets.append(target)
+        else:
+            # The annotation targets the page as a whole
+            targets.append({'@id': self['uri']})
+        return targets
+
+    @property
+    def annotatedBy(self):
+        """The user that created the annotation."""
+        return self['user'] # todo: semantify, using foaf or so?
+
+    @property
+    def annotatedAt(self):
+        """The annotation's creation date"""
+        return {
+            '@value': self['created'],
+            '@type': 'xsd:dateTime',
+        }
+
+    @property
+    def serializedBy(self):
+        """The software used for serializing."""
+        return {
+            '@id': 'annotator:annotator-store',
+            '@type': 'prov:Software-agent',
+            'foaf:name': 'annotator-store',
+            'foaf:homepage': {'@id': 'http://annotatorjs.org'},
+        } # todo: add version number
+
+    @property
+    def serializedAt(self):
+        """The last time the serialization changed."""
+        # Following the spec[1], we do not use the current time, but the last
+        # time the annotation graph has been updated.
+        # [1]: https://hypothes.is/a/R6uHQyVTQYqBc4-1V9X56Q
+        return {
+            '@value': self['updated'],
+            '@type': 'xsd:dateTime',
+        }
+
+
     @classmethod
     def search_raw(cls, query=None, params=None, raw_result=False,
                    user=None, authorization_enabled=None):
