@@ -83,7 +83,14 @@ class _Model(dict):
                 raise
             log.warn('Index creation failed. If you are running against '
                      'Bonsai Elasticsearch, this is expected and ignorable.')
-        mapping = {cls.__type__: {'properties': cls.__mapping__}}
+        mapping = {
+            cls.__type__: {
+                '_source': {
+                    'excludes': ['id'],
+                },
+                'properties': cls.__mapping__
+            }
+        }
         cls.es.conn.indices.put_mapping(index=cls.es.index,
                                         doc_type=cls.__type__,
                                         body=mapping)

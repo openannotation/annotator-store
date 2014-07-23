@@ -502,7 +502,7 @@ class TestStoreAuthz(TestCase):
         # Logged in as Bob: 1 result
         results = self._get_search_raw_results(headers=self.bob_headers)
         assert results['hits']['total'] == 1
-        assert results['hits']['hits'][0]['_source']['id'] == self.anno_id
+        assert results['hits']['hits'][0]['_id'] == self.anno_id
 
         # Logged in as Charlie: 0 results
         results = self._get_search_raw_results(headers=self.charlie_headers)
