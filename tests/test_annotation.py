@@ -58,8 +58,8 @@ class TestAnnotation(TestCase):
         user = "alice"
         ann = Annotation(text="Hello there", user=user)
         ann['ranges'] = []
-        ann['ranges'].append({})
-        ann['ranges'].append({})
+        ann['ranges'].append({'startOffset': 3})
+        ann['ranges'].append({'startOffset': 5})
         ann['document'] = {
             'title': 'Annotation for Dummies',
             'link': [
