@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from annotator import authz, document, es
 
 TYPE = 'annotation'
@@ -63,18 +65,19 @@ class Annotation(es.Model):
         if self.jsonld_baseurl:
             context['@base'] = self.jsonld_baseurl
 
-        annotation = {
-            '@id': self['id'],
-            '@context': context,
-            '@type': 'oa:Annotation',
-            'oa:hasBody': self.hasBody,
-            'oa:hasTarget': self.hasTarget,
-            'oa:annotatedBy': self.annotatedBy,
-            'oa:annotatedAt': self.annotatedAt,
-            'oa:serializedBy': self.serializedBy,
-            'oa:serializedAt': self.serializedAt,
-            'oa:motivatedBy': self.motivatedBy,
-        }
+        # The JSON-LD spec recommends to put @context at the top of the
+        # document, so we'll be nice and use and ordered dictionary.
+        annotation = OrderedDict()
+        annotation['@context'] = context,
+        annotation['@id'] = self['id']
+        annotation['@type'] = 'oa:Annotation'
+        annotation['oa:hasBody'] = self.hasBody
+        annotation['oa:hasTarget'] = self.hasTarget
+        annotation['oa:annotatedBy'] = self.annotatedBy
+        annotation['oa:annotatedAt'] = self.annotatedAt
+        annotation['oa:serializedBy'] = self.serializedBy
+        annotation['oa:serializedAt'] = self.serializedAt
+        annotation['oa:motivatedBy'] = self.motivatedBy
         return annotation
 
     jsonld_namespaces = {
