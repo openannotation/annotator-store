@@ -25,7 +25,7 @@ from annotator.annotation import Annotation
 
 store = Blueprint('store', __name__)
 
-CREATE_FILTER_FIELDS = ('updated', 'created', 'consumer')
+CREATE_FILTER_FIELDS = ('updated', 'created', 'consumer', 'id')
 UPDATE_FILTER_FIELDS = ('updated', 'created', 'user', 'consumer')
 
 

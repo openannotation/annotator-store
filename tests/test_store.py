@@ -123,6 +123,30 @@ class TestStore(TestCase):
         assert ann['user'] == self.user.id, "annotation 'user' field should not be futzable by API"
         assert ann['consumer'] == self.user.consumer.key, "annotation 'consumer' field should not be used by API"
 
+    def test_create_should_not_update(self):
+        response = self.cli.post('/api/annotations',
+                                 data=json.dumps({'name': 'foo'}),
+                                 content_type='application/json',
+                                 headers=self.headers)
+        data = json.loads(response.data)
+        id_ = data['id']
+
+        # Try and update the annotation using the create API
+        response = self.cli.post('/api/annotations',
+                                 data=json.dumps({'name': 'bar', 'id': id_}),
+                                 content_type='application/json',
+                                 headers=self.headers)
+        data = json.loads(response.data)
+
+
+        assert id_ != data['id'], "create should always create a new annotation"
+
+        ann1 = self._get_annotation(id_)
+        ann2 = self._get_annotation(data['id'])
+
+        assert ann1['name'] == 'foo', "annotation name should be 'foo'"
+        assert ann2['name'] == 'bar', "annotation name should be 'bar'"
+
     @patch('annotator.store.json')
     @patch('annotator.store.Annotation')
     def test_create_refresh(self, ann_mock, json_mock):
