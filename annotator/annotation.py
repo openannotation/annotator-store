@@ -104,7 +104,7 @@ class Annotation(es.Model):
     @property
     def textual_bodies(self):
         """A list with a single text body or an empty list"""
-        if not 'text' in self or not self['text']:
+        if not self.get('text'):
             # Note that we treat an empty text as not having text at all.
             return []
         body = {
@@ -151,7 +151,9 @@ class Annotation(es.Model):
            selected, or if a range is absent the url of the page itself.
         """
         targets = []
-        if self.get('ranges') and self['ranges']:
+        if not 'uri' in self:
+            return targets
+        if self.get('ranges'):
             # Build the selector for each quote
             for rangeSelector in self['ranges']:
                 selector = {
@@ -175,15 +177,16 @@ class Annotation(es.Model):
     @property
     def annotatedBy(self):
         """The user that created the annotation."""
-        return self['user'] # todo: semantify, using foaf or so?
+        return self.get('user') or [] # todo: semantify, using foaf or so?
 
     @property
     def annotatedAt(self):
         """The annotation's creation date"""
-        return {
-            '@value': self['created'],
-            '@type': 'xsd:dateTime',
-        }
+        if self.get('created'):
+            return {
+                '@value': self['created'],
+                '@type': 'xsd:dateTime',
+            }
 
     @property
     def serializedBy(self):
@@ -201,10 +204,11 @@ class Annotation(es.Model):
         # Following the spec[1], we do not use the current time, but the last
         # time the annotation graph has been updated.
         # [1]: https://hypothes.is/a/R6uHQyVTQYqBc4-1V9X56Q
-        return {
-            '@value': self['updated'],
-            '@type': 'xsd:dateTime',
-        }
+        if self.get('updated'):
+            return {
+                '@value': self['updated'],
+                '@type': 'xsd:dateTime',
+            }
 
 
     @classmethod
