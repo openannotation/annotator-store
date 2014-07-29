@@ -91,7 +91,7 @@ class Annotation(es.Model):
         # The JSON-LD spec recommends to put @context at the top of the
         # document, so we'll be nice and use and ordered dictionary.
         annotation = OrderedDict()
-        annotation['@context'] = context,
+        annotation['@context'] = context
         annotation['@id'] = self['id']
         annotation['@type'] = 'oa:Annotation'
         annotation['oa:hasBody'] = self.has_body
@@ -118,8 +118,7 @@ class Annotation(es.Model):
             # Note that we treat an empty text as not having text at all.
             return []
         body = {
-            '@type': 'dctypes:Text',
-            '@type': 'cnt:ContentAsText',
+            '@type': ['dctypes:Text', 'cnt:ContentAsText'],
             'dc:format': 'text/plain',
             'cnt:chars': self['text'],
         }
@@ -132,8 +131,7 @@ class Annotation(es.Model):
             return []
         return [
             {
-                '@type': 'oa:Tag',
-                '@type': 'cnt:ContentAsText',
+                '@type': ['oa:Tag', 'cnt:ContentAsText'],
                 'dc:format': 'text/plain',
                 'cnt:chars': tag,
             }
@@ -148,9 +146,9 @@ class Annotation(es.Model):
         """
         motivations = []
         if self.textual_bodies:
-            motivations.append({'@id': 'oa:commenting'})
+            motivations.append('oa:commenting')
         if self.tags:
-            motivations.append({'@id': 'oa:tagging'})
+            motivations.append('oa:tagging')
         return motivations
 
     @property
