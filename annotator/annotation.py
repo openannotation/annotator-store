@@ -1,4 +1,14 @@
-from collections import OrderedDict
+import logging
+log = logging.getLogger(__name__)
+try:
+    from collections import OrderedDict
+except ImportError:
+    try:
+        from ordereddict import OrderedDict
+    except ImportError:
+        log.warn("No OrderedDict available, JSON-LD content will be unordered. "
+                 "Use Python>=2.7 or install ordereddict module to fix.")
+        OrderedDict = dict
 
 from annotator import authz, document, es
 
