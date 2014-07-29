@@ -55,17 +55,6 @@ class Annotation(es.Model):
 
     jsonld_baseurl = ''
 
-    jsonld_namespaces = {
-        'annotator': 'http://annotatorjs.org/ns/',
-        'oa':  'http://www.w3.org/ns/oa#',
-        'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-        'cnt': 'http://www.w3.org/2011/content#',
-        'dc': 'http://purl.org/dc/elements/1.1/',
-        'dctypes': 'http://purl.org/dc/dcmitype/',
-        'prov': 'http://www.w3.org/ns/prov#',
-        'xsd': 'http://www.w3.org/2001/XMLSchema#',
-    }
-
     def save(self, *args, **kwargs):
         _add_default_permissions(self)
 
@@ -83,10 +72,14 @@ class Annotation(es.Model):
     @property
     def jsonld(self):
         """The JSON-LD formatted RDF representation of the annotation."""
-        context = {}
-        context.update(self.jsonld_namespaces)
+
+        context = [
+            "http://www.w3.org/ns/oa-context-20130208.json",
+            {'annotator': 'http://annotatorjs.org/ns/'}
+        ]
+
         if self.jsonld_baseurl:
-            context['@base'] = self.jsonld_baseurl
+            context.append({'@base': self.jsonld_baseurl})
 
         # The JSON-LD spec recommends to put @context at the top of the
         # document, so we'll be nice and use and ordered dictionary.
@@ -94,13 +87,13 @@ class Annotation(es.Model):
         annotation['@context'] = context
         annotation['@id'] = self['id']
         annotation['@type'] = 'oa:Annotation'
-        annotation['oa:hasBody'] = self.has_body
-        annotation['oa:hasTarget'] = self.has_target
-        annotation['oa:annotatedBy'] = self.annotated_by
-        annotation['oa:annotatedAt'] = self.annotated_at
-        annotation['oa:serializedBy'] = self.serialized_by
-        annotation['oa:serializedAt'] = self.serialized_at
-        annotation['oa:motivatedBy'] = self.motivated_by
+        annotation['hasBody'] = self.has_body
+        annotation['hasTarget'] = self.has_target
+        annotation['annotatedBy'] = self.annotated_by
+        annotation['annotatedAt'] = self.annotated_at
+        annotation['serializedBy'] = self.serialized_by
+        annotation['serializedAt'] = self.serialized_at
+        annotation['motivatedBy'] = self.motivated_by
         return annotation
 
     @property
@@ -173,13 +166,13 @@ class Annotation(es.Model):
                 }
                 target = {
                     '@type': 'oa:SpecificResource',
-                    'oa:hasSource': {'@id': self['uri']},
-                    'oa:hasSelector': selector,
+                    'hasSource': self['uri'],
+                    'hasSelector': selector,
                 }
                 targets.append(target)
         else:
             # The annotation targets the page as a whole
-            targets.append({'@id': self['uri']})
+            targets.append(self['uri'])
         return targets
 
     @property
@@ -191,10 +184,7 @@ class Annotation(es.Model):
     def annotated_at(self):
         """The annotation's creation date"""
         if self.get('created'):
-            return {
-                '@value': self['created'],
-                '@type': 'xsd:dateTime',
-            }
+            return self['created']
 
     @property
     def serialized_by(self):
@@ -213,10 +203,7 @@ class Annotation(es.Model):
         # time the annotation graph has been updated.
         # [1]: https://hypothes.is/a/R6uHQyVTQYqBc4-1V9X56Q
         if self.get('updated'):
-            return {
-                '@value': self['updated'],
-                '@type': 'xsd:dateTime',
-            }
+            return self['updated']
 
 
     @classmethod
