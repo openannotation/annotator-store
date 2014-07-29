@@ -53,6 +53,19 @@ class Annotation(es.Model):
     __type__ = TYPE
     __mapping__ = MAPPING
 
+    jsonld_baseurl = ''
+
+    jsonld_namespaces = {
+        'annotator': 'http://annotatorjs.org/ns/',
+        'oa':  'http://www.w3.org/ns/oa#',
+        'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+        'cnt': 'http://www.w3.org/2011/content#',
+        'dc': 'http://purl.org/dc/elements/1.1/',
+        'dctypes': 'http://purl.org/dc/dcmitype/',
+        'prov': 'http://www.w3.org/ns/prov#',
+        'xsd': 'http://www.w3.org/2001/XMLSchema#',
+    }
+
     def save(self, *args, **kwargs):
         _add_default_permissions(self)
 
@@ -81,30 +94,17 @@ class Annotation(es.Model):
         annotation['@context'] = context,
         annotation['@id'] = self['id']
         annotation['@type'] = 'oa:Annotation'
-        annotation['oa:hasBody'] = self.hasBody
-        annotation['oa:hasTarget'] = self.hasTarget
-        annotation['oa:annotatedBy'] = self.annotatedBy
-        annotation['oa:annotatedAt'] = self.annotatedAt
-        annotation['oa:serializedBy'] = self.serializedBy
-        annotation['oa:serializedAt'] = self.serializedAt
-        annotation['oa:motivatedBy'] = self.motivatedBy
+        annotation['oa:hasBody'] = self.has_body
+        annotation['oa:hasTarget'] = self.has_target
+        annotation['oa:annotatedBy'] = self.annotated_by
+        annotation['oa:annotatedAt'] = self.annotated_at
+        annotation['oa:serializedBy'] = self.serialized_by
+        annotation['oa:serializedAt'] = self.serialized_at
+        annotation['oa:motivatedBy'] = self.motivated_by
         return annotation
 
-    jsonld_namespaces = {
-        'annotator': 'http://annotatorjs.org/ns/',
-        'oa':  'http://www.w3.org/ns/oa#',
-        'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-        'cnt': 'http://www.w3.org/2011/content#',
-        'dc': 'http://purl.org/dc/elements/1.1/',
-        'dctypes': 'http://purl.org/dc/dcmitype/',
-        'prov': 'http://www.w3.org/ns/prov#',
-        'xsd': 'http://www.w3.org/2001/XMLSchema#',
-    }
-
-    jsonld_baseurl = ''
-
     @property
-    def hasBody(self):
+    def has_body(self):
         """Return all annotation bodies: the text comment and each tag"""
         bodies = []
         bodies += self.textual_bodies
@@ -141,7 +141,7 @@ class Annotation(es.Model):
         ]
 
     @property
-    def motivatedBy(self):
+    def motivated_by(self):
         """Motivations for the annotation.
 
            Currently any combination of commenting and/or tagging.
@@ -154,7 +154,7 @@ class Annotation(es.Model):
         return motivations
 
     @property
-    def hasTarget(self):
+    def has_target(self):
         """The targets of the annotation.
 
            Returns a selector for each range of the page content that was
@@ -185,12 +185,12 @@ class Annotation(es.Model):
         return targets
 
     @property
-    def annotatedBy(self):
+    def annotated_by(self):
         """The user that created the annotation."""
         return self.get('user') or [] # todo: semantify, using foaf or so?
 
     @property
-    def annotatedAt(self):
+    def annotated_at(self):
         """The annotation's creation date"""
         if self.get('created'):
             return {
@@ -199,7 +199,7 @@ class Annotation(es.Model):
             }
 
     @property
-    def serializedBy(self):
+    def serialized_by(self):
         """The software used for serializing."""
         return {
             '@id': 'annotator:annotator-store',
@@ -209,7 +209,7 @@ class Annotation(es.Model):
         } # todo: add version number
 
     @property
-    def serializedAt(self):
+    def serialized_at(self):
         """The last time the serialization changed."""
         # Following the spec[1], we do not use the current time, but the last
         # time the annotation graph has been updated.
