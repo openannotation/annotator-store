@@ -178,14 +178,6 @@ class _Model(dict):
                                 body=q)
         return res['count']
 
-    def _set_id(self, rhs):
-        self['id'] = rhs
-
-    def _get_id(self):
-        return self.get('id')
-
-    id = property(_get_id, _set_id)
-
     def save(self, refresh=True):
         _add_created(self)
         _add_updated(self)
@@ -200,13 +192,13 @@ class _Model(dict):
                                  body=self,
                                  op_type=op_type,
                                  refresh=refresh)
-        self.id = res['_id']
+        self['id'] = res['_id']
 
     def delete(self):
-        if self.id:
+        if 'id' in self:
             self.es.conn.delete(index=self.es.index,
                                 doc_type=self.__type__,
-                                id=self.id)
+                                id=self['id'])
 
 
 def make_model(es):

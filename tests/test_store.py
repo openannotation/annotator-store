@@ -299,7 +299,7 @@ class TestStore(TestCase):
         assert_equal(res['total'], 2)
         assert_equal(len(res['rows']), 2)
         assert_equal(res['rows'][0]['uri'], uri1)
-        assert_true(res['rows'][0]['id'] in [anno.id, anno2.id])
+        assert_true(res['rows'][0]['id'] in [anno['id'], anno2['id']])
 
     def test_search_limit(self):
         for i in xrange(250):
