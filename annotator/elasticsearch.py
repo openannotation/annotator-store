@@ -189,9 +189,16 @@ class _Model(dict):
     def save(self, refresh=True):
         _add_created(self)
         _add_updated(self)
+
+        if not 'id' in self:
+            op_type = 'create'
+        else:
+            op_type = 'index'
+
         res = self.es.conn.index(index=self.es.index,
                                  doc_type=self.__type__,
                                  body=self,
+                                 op_type=op_type,
                                  refresh=refresh)
         self.id = res['_id']
 
