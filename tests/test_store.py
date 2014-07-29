@@ -383,6 +383,24 @@ class TestStoreAuthz(TestCase):
         self.ctx.pop()
         super(TestStoreAuthz, self).teardown()
 
+    def test_index(self):
+        # Test unauthenticated
+        response = self.cli.get('/api/annotations')
+        results = json.loads(response.data)
+        assert results == [], "unauthenticated user should get an empty list"
+
+        # Test as bob (authorized to read)
+        response = self.cli.get('/api/annotations',
+                           headers=self.bob_headers)
+        results = json.loads(response.data)
+        assert results and results[0]['id'] == self.anno_id, "bob should see his own annotation"
+
+        # Test as charlie (unauthorized)
+        response = self.cli.get('/api/annotations',
+                           headers=self.charlie_headers)
+        results = json.loads(response.data)
+        assert results == []
+
     def test_read(self):
         response = self.cli.get('/api/annotations/123')
         assert response.status_code == 401, "response should be 401 NOT AUTHORIZED"
