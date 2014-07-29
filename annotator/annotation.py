@@ -53,7 +53,7 @@ class Annotation(es.Model):
     __type__ = TYPE
     __mapping__ = MAPPING
 
-    jsonld_baseurl = ''
+    jsonld_baseurl = None
 
     def save(self, *args, **kwargs):
         _add_default_permissions(self)
@@ -78,7 +78,7 @@ class Annotation(es.Model):
             {'annotator': 'http://annotatorjs.org/ns/'}
         ]
 
-        if self.jsonld_baseurl:
+        if self.jsonld_baseurl is not None:
             context.append({'@base': self.jsonld_baseurl})
 
         # The JSON-LD spec recommends to put @context at the top of the
