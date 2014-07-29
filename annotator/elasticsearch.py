@@ -85,6 +85,9 @@ class _Model(dict):
                      'Bonsai Elasticsearch, this is expected and ignorable.')
         mapping = {
             cls.__type__: {
+                '_id': {
+                    'path': 'id',
+                },
                 '_source': {
                     'excludes': ['id'],
                 },
@@ -188,7 +191,6 @@ class _Model(dict):
         _add_updated(self)
         res = self.es.conn.index(index=self.es.index,
                                  doc_type=self.__type__,
-                                 id=self.id,
                                  body=self,
                                  refresh=refresh)
         self.id = res['_id']

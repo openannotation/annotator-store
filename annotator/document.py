@@ -2,6 +2,7 @@ from annotator import es
 
 TYPE = 'document'
 MAPPING = {
+    'id': {'type': 'string', 'index': 'no'},
     'annotator_schema_version': {'type': 'string'},
     'created': {'type': 'date'},
     'updated': {'type': 'date'},
