@@ -134,7 +134,13 @@ def root():
 # INDEX
 @store.route('/annotations')
 def index():
-    annotations = g.annotation_class.search()
+    if current_app.config.get('AUTHZ_ON'):
+        # Pass the current user to do permission filtering on results
+        user = g.user
+    else:
+        user = None
+
+    annotations = g.annotation_class.search(user=user)
     return jsonify(annotations)
 
 # CREATE
