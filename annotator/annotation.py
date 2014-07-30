@@ -178,7 +178,12 @@ class Annotation(es.Model):
     @property
     def annotated_by(self):
         """The user that created the annotation."""
-        return self.get('user') or [] # todo: semantify, using foaf or so?
+        if not self.get('user'):
+            return []
+        return {
+            '@type': 'foaf:Agent', # It could be either a person or a bot
+            'foaf:name': self['user'],
+        }
 
     @property
     def annotated_at(self):
