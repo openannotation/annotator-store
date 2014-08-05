@@ -91,7 +91,8 @@ class _Model(dict):
                 '_source': {
                     'excludes': ['id'],
                 },
-                'properties': cls.__mapping__
+                'analyzer': 'keyword',
+                'properties': cls.__mapping__,
             }
         }
         cls.es.conn.indices.put_mapping(index=cls.es.index,
