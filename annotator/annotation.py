@@ -6,17 +6,17 @@ MAPPING = {
     'annotator_schema_version': {'type': 'string'},
     'created': {'type': 'date'},
     'updated': {'type': 'date'},
-    'quote': {'type': 'string'},
+    'quote': {'type': 'string', 'analyzer': 'standard'},
     'tags': {'type': 'string', 'index_name': 'tag'},
-    'text': {'type': 'string'},
-    'uri': {'type': 'string', 'index': 'not_analyzed'},
-    'user': {'type': 'string', 'index': 'not_analyzed'},
-    'consumer': {'type': 'string', 'index': 'not_analyzed'},
+    'text': {'type': 'string', 'analyzer': 'standard'},
+    'uri': {'type': 'string'},
+    'user': {'type': 'string'},
+    'consumer': {'type': 'string'},
     'ranges': {
         'index_name': 'range',
         'properties': {
-            'start': {'type': 'string', 'index': 'not_analyzed'},
-            'end': {'type': 'string', 'index': 'not_analyzed'},
+            'start': {'type': 'string'},
+            'end': {'type': 'string'},
             'startOffset': {'type': 'integer'},
             'endOffset': {'type': 'integer'},
         }
@@ -24,10 +24,10 @@ MAPPING = {
     'permissions': {
         'index_name': 'permission',
         'properties': {
-            'read': {'type': 'string', 'index': 'not_analyzed'},
-            'update': {'type': 'string', 'index': 'not_analyzed'},
-            'delete': {'type': 'string', 'index': 'not_analyzed'},
-            'admin': {'type': 'string', 'index': 'not_analyzed'}
+            'read': {'type': 'string'},
+            'update': {'type': 'string'},
+            'delete': {'type': 'string'},
+            'admin': {'type': 'string'}
         }
     },
     'document': {
