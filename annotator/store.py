@@ -19,6 +19,7 @@ from flask import Blueprint, Response
 from flask import current_app, g
 from flask import request
 from flask import url_for
+from six import iteritems
 
 from annotator.atoi import atoi
 from annotator.annotation import Annotation
@@ -285,11 +286,18 @@ def search_annotations():
 # RAW ES SEARCH
 @store.route('/search_raw', methods=['GET', 'POST'])
 def search_annotations_raw():
+
+    try:
+        query, params = _build_query_raw(request)
+    except ValueError:
+        return jsonify('Could not parse request payload!',
+                       status=400)
+
     kwargs = dict()
     if current_app.config.get('AUTHZ_ON'):
         kwargs['user'] = g.user
 
-    res = g.annotation_class.search_raw(request, **kwargs)
+    res = g.annotation_class.search_raw(query, params, **kwargs)
     return jsonify(res, status=res.get('status', 200))
 
 
@@ -329,3 +337,73 @@ def _failed_authz_response(msg=''):
                        user=user,
                        consumer=consumer),
                    status=401)
+
+
+def _build_query_raw(request):
+    query = {}
+    params = {}
+
+    if request.method == 'GET':
+        for k, v in iteritems(request.args):
+            _update_query_raw(query, params, k, v)
+
+        if 'query' not in query:
+            query['query'] = {'match_all': {}}
+
+    elif request.method == 'POST':
+
+        try:
+            query = json.loads(request.json or
+                               request.data or
+                               request.form.keys()[0])
+        except (ValueError, IndexError):
+            raise ValueError
+
+        params = request.args
+
+    for o in (params, query):
+        if 'from' in o:
+            o['from'] = max(0, atoi(o['from']))
+        if 'size' in o:
+            o['size'] = min(RESULTS_MAX_SIZE, max(0, atoi(o['size'])))
+
+    return query, params
+
+
+def _update_query_raw(qo, params, k, v):
+    if 'query' not in qo:
+        qo['query'] = {}
+    q = qo['query']
+
+    if 'query_string' not in q:
+        q['query_string'] = {}
+    qs = q['query_string']
+
+    if k == 'q':
+        qs['query'] = v
+
+    elif k == 'df':
+        qs['default_field'] = v
+
+    elif k in ('explain', 'track_scores', 'from', 'size', 'timeout',
+               'lowercase_expanded_terms', 'analyze_wildcard'):
+        qo[k] = v
+
+    elif k == 'fields':
+        qo[k] = _csv_split(v)
+
+    elif k == 'sort':
+        if 'sort' not in qo:
+            qo[k] = []
+
+        split = _csv_split(v, ':')
+
+        if len(split) == 1:
+            qo[k].append(split[0])
+        else:
+            fld = ':'.join(split[0:-1])
+            drn = split[-1]
+            qo[k].append({fld: drn})
+
+    elif k == 'search_type':
+        params[k] = v

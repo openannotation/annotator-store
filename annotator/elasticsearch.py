@@ -143,14 +143,15 @@ class _Model(dict):
         return [cls(d['_source'], id=d['_id']) for d in docs]
 
     @classmethod
-    def search_raw(cls, request, **kwargs):
-        q, params = cls._build_query_raw(request, **kwargs)
-        if 'error' in q:
-            return q
+    def search_raw(cls, query=None, params=None, **kwargs):
+        if query is None:
+            query = {}
+        if params is None:
+            params = {}
         try:
             res = cls.es.conn.search(index=cls.es.index,
                                      doc_type=cls.__type__,
-                                     body=q,
+                                     body=query,
                                      **params)
         except elasticsearch.exceptions.ElasticsearchException as e:
             return e.result
@@ -227,78 +228,6 @@ def _build_query(query, offset, limit):
         'size': min(RESULTS_MAX_SIZE, max(0, limit)),
         'query': q
     }
-
-
-def _build_query_raw(request):
-    query = {}
-    params = {}
-
-    if request.method == 'GET':
-        for k, v in iteritems(request.args):
-            _update_query_raw(query, params, k, v)
-
-        if 'query' not in query:
-            query['query'] = {'match_all': {}}
-
-    elif request.method == 'POST':
-
-        try:
-            query = json.loads(request.json or
-                               request.data or
-                               request.form.keys()[0])
-        except (ValueError, IndexError):
-            return ({'error': 'Could not parse request payload!',
-                     'status': 400},
-                    None)
-
-        params = request.args
-
-    for o in (params, query):
-        if 'from' in o:
-            o['from'] = max(0, atoi(o['from']))
-        if 'size' in o:
-            o['size'] = min(RESULTS_MAX_SIZE, max(0, atoi(o['size'])))
-
-    return query, params
-
-
-def _update_query_raw(qo, params, k, v):
-    if 'query' not in qo:
-        qo['query'] = {}
-    q = qo['query']
-
-    if 'query_string' not in q:
-        q['query_string'] = {}
-    qs = q['query_string']
-
-    if k == 'q':
-        qs['query'] = v
-
-    elif k == 'df':
-        qs['default_field'] = v
-
-    elif k in ('explain', 'track_scores', 'from', 'size', 'timeout',
-               'lowercase_expanded_terms', 'analyze_wildcard'):
-        qo[k] = v
-
-    elif k == 'fields':
-        qo[k] = _csv_split(v)
-
-    elif k == 'sort':
-        if 'sort' not in qo:
-            qo[k] = []
-
-        split = _csv_split(v, ':')
-
-        if len(split) == 1:
-            qo[k].append(split[0])
-        else:
-            fld = ':'.join(split[0:-1])
-            drn = split[-1]
-            qo[k].append({fld: drn})
-
-    elif k == 'search_type':
-        params[k] = v
 
 
 def _add_created(ann):
