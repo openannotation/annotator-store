@@ -331,3 +331,24 @@ class TestAnnotation(TestCase):
         res = Annotation.search(user=user,
                                 query={'uri':'http://example.com/1234'})
         assert_equal(len(res), 2)
+
+    def test_case_sensitivity(self):
+        """Indexing and search should not apply lowercase to strings
+           (this requirement might be changed sometime)
+        """
+        # https://github.com/openannotation/annotator-store/issues/73
+        anno = Annotation(uri='http://example.com/1234',
+                          text='Foobar',
+                          user='alice',
+                          consumer='testconsumer',
+                          custom_field='CaseSensitive')
+        anno.save()
+
+        user = h.MockUser('alice', 'testconsumer')
+        res = Annotation.search(user=user,
+                                query={'custom_field':'CaseSensitive'})
+        assert_equal(len(res), 1)
+
+        res = Annotation.search(user=user,
+                                query={'custom_field':'casesensitive'})
+        assert_equal(len(res), 0)
