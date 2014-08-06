@@ -148,15 +148,11 @@ class _Model(dict):
             query = {}
         if params is None:
             params = {}
-        try:
-            res = cls.es.conn.search(index=cls.es.index,
-                                     doc_type=cls.__type__,
-                                     body=query,
-                                     **params)
-        except elasticsearch.exceptions.ElasticsearchException as e:
-            return e.result
-        else:
-            return res
+        res = cls.es.conn.search(index=cls.es.index,
+                                    doc_type=cls.__type__,
+                                    body=query,
+                                    **params)
+        return res
 
     @classmethod
     def count(cls, **kwargs):

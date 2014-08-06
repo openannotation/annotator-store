@@ -12,9 +12,11 @@ It defines these routes:
   * Raw ElasticSearch search
 See their descriptions in `root`'s definition for more detail.
 """
+from __future__ import absolute_import
 
 import json
 
+from elasticsearch.exceptions import TransportError
 from flask import Blueprint, Response
 from flask import current_app, g
 from flask import request
@@ -297,7 +299,15 @@ def search_annotations_raw():
     if current_app.config.get('AUTHZ_ON'):
         kwargs['user'] = g.user
 
-    res = g.annotation_class.search_raw(query, params, **kwargs)
+    try:
+        res = g.annotation_class.search_raw(query, params, **kwargs)
+    except TransportError as err:
+        if err.status_code is not 'N/A':
+            status_code = err.status_code
+        else:
+            status_code = 500
+        return jsonify(err.error,
+                       status=status_code)
     return jsonify(res, status=res.get('status', 200))
 
 
