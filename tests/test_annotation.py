@@ -247,6 +247,55 @@ class TestAnnotation(TestCase):
         res = Annotation.search(user=user)
         assert_equal(len(res), 1)
 
+    def test_search_raw(self):
+        perms = {'read': ['group:__world__']}
+        uri1 = u'http://xyz.com'
+        uri2 = u'urn:uuid:xxxxx'
+        user1 = u'levin'
+        user2 = u'anna'
+        anno1 = Annotation(uri=uri1, text=uri1, user=user1, permissions=perms)
+        anno2 = Annotation(uri=uri1, text=uri1 + uri1, user=user2, permissions=perms)
+        anno3 = Annotation(uri=uri2, text=uri2, user=user1, permissions=perms)
+        anno1.save()
+        anno2.save()
+        anno3.save()
+
+        res = Annotation.search_raw()
+        assert_true('hits' in res)
+        hits = res['hits']['hits']
+        assert_equal(len(hits), 3)
+
+        query = {
+            'query': {
+                'filtered': {
+                    'filter': {
+                        'term': {
+                            'user': user1
+                        }
+                    }
+                }
+            }
+        }
+        params = {
+            '_source': False
+        }
+
+        res = Annotation.search_raw(query=query)
+        hits = res['hits']['hits']
+        assert_equal(len(hits), 2)
+        assert_true('_source' in hits[0])
+
+        res = Annotation.search_raw(params=params)
+        hits = res['hits']['hits']
+        assert_equal(len(hits), 3)
+        assert_true('_source' not in hits[0])
+
+        res = Annotation.search_raw(query=query, params=params)
+        hits = res['hits']['hits']
+        assert_equal(len(hits), 2)
+        assert_true('_source' not in hits[0])
+
+
     def test_cross_representations(self):
 
         # create an annotation for an html document which we can
