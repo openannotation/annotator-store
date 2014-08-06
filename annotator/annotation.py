@@ -65,10 +65,13 @@ class Annotation(es.Model):
         super(Annotation, self).save(*args, **kwargs)
 
     @classmethod
-    def search_raw(cls, query=None, params=None, user=None, **kwargs):
+    def search_raw(cls, query=None, params=None, user=None,
+                   authorization_enabled=None, **kwargs):
         if query is None:
             query = {}
-        if es.authorization_enabled:
+        if authorization_enabled is None:
+            authorization_enabled = es.authorization_enabled
+        if authorization_enabled:
             f = authz.permissions_filter(user)
             if not f:
                 raise RunTimeError("Authorization filter creation failed")
