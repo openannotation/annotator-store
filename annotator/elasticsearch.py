@@ -232,15 +232,15 @@ def _csv_split(s, delimiter=','):
 
 def _build_query(query, offset, limit):
     # Base query is a filtered match_all
-    q = {'match_all': {}}
-
-    if query:
-        f = {'and': []}
-        q = {'filtered': {'query': q, 'filter': f}}
+    match_clauses = [
+        # We start with a single match_all because Elasticsearch considers an
+        # empty conjunction to be false..
+        {'match_all': {}}
+    ]
 
     # Add a term query for each keyword
     for k, v in iteritems(query):
-        q['filtered']['filter']['and'].append({'term': {k: v}})
+        match_clauses.append({'match': {k: v}})
 
     return {
         'sort': [{'updated': {
@@ -255,7 +255,7 @@ def _build_query(query, offset, limit):
         }}],
         'from': max(0, offset),
         'size': min(RESULTS_MAX_SIZE, max(0, limit)),
-        'query': q
+        'query': {'bool': {'must': match_clauses}}
     }
 
 
