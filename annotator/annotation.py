@@ -67,6 +67,14 @@ class Annotation(es.Model):
     @classmethod
     def search_raw(cls, query=None, params=None, user=None,
                    authorization_enabled=None, **kwargs):
+        """Perform a raw Elasticsearch query
+
+        Keyword arguments:
+        query -- Query to send to Elasticsearch
+        params -- Extra keyword arguments to pass to Elasticsearch.search
+        user -- The user to filter the results for according to permissions
+        authorization_enabled -- Overrides Annotation.es.authorization_enabled
+        """
         if query is None:
             query = {}
         if authorization_enabled is None:
