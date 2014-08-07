@@ -490,19 +490,17 @@ class TestStoreAuthz(TestCase):
     def test_search_raw_public(self):
         # Not logged in: no results
         results = self._get_search_raw_results()
-        assert results['hits']['total'] == 0
-        assert results['hits']['hits'] == []
+        assert results == []
 
     def test_search_raw_authorized(self):
         # Logged in as Bob: 1 result
         results = self._get_search_raw_results(headers=self.bob_headers)
-        assert results['hits']['total'] == 1
-        assert results['hits']['hits'][0]['_id'] == self.anno_id
+        assert len(results) == 1
+        assert results[0]['id'] == self.anno_id
 
         # Logged in as Charlie: 0 results
         results = self._get_search_raw_results(headers=self.charlie_headers)
-        assert results['hits']['total'] == 0
-        assert results['hits']['hits'] == []
+        assert results == []
 
     def _get_search_results(self, qs='', **kwargs):
         res = self.cli.get('/api/search?{qs}'.format(qs=qs), **kwargs)

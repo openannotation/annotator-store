@@ -149,10 +149,11 @@ class _Model(dict):
         if params is None:
             params = {}
         res = cls.es.conn.search(index=cls.es.index,
-                                    doc_type=cls.__type__,
-                                    body=query,
-                                    **params)
-        return res
+                                 doc_type=cls.__type__,
+                                 body=query,
+                                 **params)
+        docs = res['hits']['hits']
+        return [cls(d['_source'], id=d['_id']) for d in docs]
 
     @classmethod
     def count(cls, **kwargs):

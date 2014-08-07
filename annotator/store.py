@@ -308,7 +308,7 @@ def search_annotations_raw():
             status_code = 500
         return jsonify(err.error,
                        status=status_code)
-    return jsonify(res, status=res.get('status', 200))
+    return jsonify(res)
 
 
 def _filter_input(obj, fields):
