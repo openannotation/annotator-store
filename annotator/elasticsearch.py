@@ -143,7 +143,7 @@ class _Model(dict):
         return [cls(d['_source'], id=d['_id']) for d in docs]
 
     @classmethod
-    def search_raw(cls, query=None, params=None, **kwargs):
+    def search_raw(cls, query=None, params=None, raw_result=False, **kwargs):
         if query is None:
             query = {}
         if params is None:
@@ -152,8 +152,10 @@ class _Model(dict):
                                  doc_type=cls.__type__,
                                  body=query,
                                  **params)
-        docs = res['hits']['hits']
-        return [cls(d['_source'], id=d['_id']) for d in docs]
+        if not raw_result:
+            docs = res['hits']['hits']
+            res = [cls(d['_source'], id=d['_id']) for d in docs]
+        return res
 
     @classmethod
     def count(cls, **kwargs):

@@ -300,7 +300,8 @@ def search_annotations_raw():
         kwargs['user'] = g.user
 
     try:
-        res = g.annotation_class.search_raw(query, params, **kwargs)
+        res = g.annotation_class.search_raw(query, params, raw_result=True,
+                                            **kwargs)
     except TransportError as err:
         if err.status_code is not 'N/A':
             status_code = err.status_code
@@ -308,7 +309,7 @@ def search_annotations_raw():
             status_code = 500
         return jsonify(err.error,
                        status=status_code)
-    return jsonify(res)
+    return jsonify(res, status=res.get('status', 200))
 
 
 def _filter_input(obj, fields):
