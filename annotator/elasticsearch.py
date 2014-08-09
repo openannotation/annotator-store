@@ -144,6 +144,15 @@ class _Model(dict):
 
     @classmethod
     def search_raw(cls, query=None, params=None, raw_result=False, **kwargs):
+        """Perform a raw Elasticsearch query
+
+        Any ElasticsearchExceptions are to be caught by the caller.
+
+        Keyword arguments:
+        query -- Query to send to Elasticsearch
+        params -- Extra keyword arguments to pass to Elasticsearch.search
+        raw_result -- Return Elasticsearch's response as is
+        """
         if query is None:
             query = {}
         if params is None:

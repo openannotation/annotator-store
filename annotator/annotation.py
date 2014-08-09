@@ -69,11 +69,14 @@ class Annotation(es.Model):
                    authorization_enabled=None, **kwargs):
         """Perform a raw Elasticsearch query
 
+        Any ElasticsearchExceptions are to be caught by the caller.
+
         Keyword arguments:
         query -- Query to send to Elasticsearch
         params -- Extra keyword arguments to pass to Elasticsearch.search
         user -- The user to filter the results for according to permissions
         authorization_enabled -- Overrides Annotation.es.authorization_enabled
+        raw_result -- Return Elasticsearch's response as is
         """
         if query is None:
             query = {}
@@ -88,7 +91,7 @@ class Annotation(es.Model):
                     'filter': f
                 }
             }
-            # Instert original query (if present)
+            # Insert original query (if present)
             if 'query' in query:
                 filtered_query['filtered']['query'] = query['query']
             # Use the filtered query instead of the original
