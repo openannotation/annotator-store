@@ -41,7 +41,7 @@ class TestAnnotation(TestCase):
     def test_fetch(self):
         a = Annotation(foo='bar')
         a.save()
-        b = Annotation.fetch(a.id)
+        b = Annotation.fetch(a['id'])
         assert_equal(b['foo'], 'bar')
 
     def test_delete(self):
@@ -58,8 +58,8 @@ class TestAnnotation(TestCase):
         user = "alice"
         ann = Annotation(text="Hello there", user=user)
         ann['ranges'] = []
-        ann['ranges'].append({})
-        ann['ranges'].append({})
+        ann['ranges'].append({'startOffset': 3})
+        ann['ranges'].append({'startOffset': 5})
         ann['document'] = {
             'title': 'Annotation for Dummies',
             'link': [
@@ -68,7 +68,7 @@ class TestAnnotation(TestCase):
         }
         ann.save()
 
-        ann = Annotation.fetch(ann.id)
+        ann = Annotation.fetch(ann['id'])
         assert_equal(ann['text'], "Hello there")
         assert_equal(ann['user'], "alice")
         assert_equal(len(ann['ranges']), 2)
@@ -106,17 +106,17 @@ class TestAnnotation(TestCase):
         res = Annotation.search(query={'uri':uri1})
         assert_equal(len(res), 2)
         assert_equal(res[0]['uri'], uri1)
-        assert_equal(res[0]['id'], anno2.id)
+        assert_equal(res[0]['id'], anno2['id'])
 
         res = Annotation.search(query={'user':user1})
         assert_equal(len(res), 2)
         assert_equal(res[0]['user'], user1)
-        assert_equal(res[0]['id'], anno3.id)
+        assert_equal(res[0]['id'], anno3['id'])
 
         res = Annotation.search(query={'user':user1, 'uri':uri2})
         assert_equal(len(res), 1)
         assert_equal(res[0]['user'], user1)
-        assert_equal(res[0]['id'], anno3.id)
+        assert_equal(res[0]['id'], anno3['id'])
 
         res = Annotation.count(query={'user':user1, 'uri':uri2})
         assert_equal(res, 1)

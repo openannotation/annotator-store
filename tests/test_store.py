@@ -294,7 +294,7 @@ class TestStore(TestCase):
         assert_equal(res['total'], 2)
         assert_equal(len(res['rows']), 2)
         assert_equal(res['rows'][0]['uri'], uri1)
-        assert_true(res['rows'][0]['id'] in [anno.id, anno2.id])
+        assert_true(res['rows'][0]['id'] in [anno['id'], anno2['id']])
 
     def test_search_limit(self):
         for i in xrange(250):
@@ -497,7 +497,7 @@ class TestStoreAuthz(TestCase):
         # Logged in as Bob: 1 result
         results = self._get_search_raw_results(headers=self.bob_headers)
         assert results['hits']['total'] == 1
-        assert results['hits']['hits'][0]['_source']['id'] == self.anno_id
+        assert results['hits']['hits'][0]['_id'] == self.anno_id
 
         # Logged in as Charlie: 0 results
         results = self._get_search_raw_results(headers=self.charlie_headers)
