@@ -65,6 +65,44 @@ class Annotation(es.Model):
         super(Annotation, self).save(*args, **kwargs)
 
     @classmethod
+    def search_raw(cls, query=None, params=None, user=None,
+                   authorization_enabled=None, **kwargs):
+        """Perform a raw Elasticsearch query
+
+        Any ElasticsearchExceptions are to be caught by the caller.
+
+        Keyword arguments:
+        query -- Query to send to Elasticsearch
+        params -- Extra keyword arguments to pass to Elasticsearch.search
+        user -- The user to filter the results for according to permissions
+        authorization_enabled -- Overrides Annotation.es.authorization_enabled
+        raw_result -- Return Elasticsearch's response as is
+        """
+        if query is None:
+            query = {}
+        if authorization_enabled is None:
+            authorization_enabled = es.authorization_enabled
+        if authorization_enabled:
+            f = authz.permissions_filter(user)
+            if not f:
+                raise RunTimeError("Authorization filter creation failed")
+            filtered_query = {
+                'filtered': {
+                    'filter': f
+                }
+            }
+            # Insert original query (if present)
+            if 'query' in query:
+                filtered_query['filtered']['query'] = query['query']
+            # Use the filtered query instead of the original
+            query['query'] = filtered_query
+
+        res = super(Annotation, cls).search_raw(query=query,
+                                                params=params,
+                                                **kwargs)
+        return res
+
+    @classmethod
     def _build_query(cls, query=None, offset=None, limit=None,
                      user=None, **kwargs):
         if query is None:
@@ -96,18 +134,6 @@ class Annotation(es.Model):
             q['query'] = {'filtered': {'query': q['query'], 'filter': f}}
 
         return q
-
-    @classmethod
-    def _build_query_raw(cls, request, user=None, **kwargs):
-        q, p = super(Annotation, cls)._build_query_raw(request, **kwargs)
-
-        if es.authorization_enabled:
-            f = authz.permissions_filter(user)
-            if not f:
-                return {'error': 'Authorization error!', 'status': 400}, None
-            q['query'] = {'filtered': {'query': q['query'], 'filter': f}}
-
-        return q, p
 
 
 def _add_default_permissions(ann):
