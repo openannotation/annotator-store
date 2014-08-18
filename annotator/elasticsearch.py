@@ -144,10 +144,6 @@ class _Model(dict):
         return _build_query(query, offset, limit)
 
     @classmethod
-    def _build_query_raw(cls, request, **kwargs):
-        return _build_query_raw(request)
-
-    @classmethod
     def search(cls, query=None, offset=0, limit=RESULTS_DEFAULT_SIZE, **kwargs):
         q = cls._build_query(query=query, offset=offset, limit=limit, **kwargs)
         if not q:
