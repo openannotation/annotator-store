@@ -49,10 +49,6 @@ def main():
     if app.config.get('AUTHZ_ON') is not None:
         es.authorization_enabled = app.config['AUTHZ_ON']
 
-    if app.config.get('ELASTICSEARCH_COMPATIBILITY_MODE') is not None:
-        es.compatibility_mode = \
-            app.config['ELASTICSEARCH_COMPATIBILITY_MODE']
-
     with app.test_request_context():
         annotation.Annotation.create_all()
         document.Document.create_all()

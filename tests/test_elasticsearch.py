@@ -25,12 +25,10 @@ class TestElasticSearch(object):
                      host='http://127.0.1.1:9202',
                      index='foobar',
                      authorization_enabled=True,
-                     compatibility_mode='pre-1.0.0',
         )
         assert_equal(es.host, 'http://127.0.1.1:9202')
         assert_equal(es.index, 'foobar')
         assert_equal(es.authorization_enabled, True)
-        assert_equal(es.compatibility_mode, 'pre-1.0.0')
 
 class TestModel(object):
     def setup(self):
