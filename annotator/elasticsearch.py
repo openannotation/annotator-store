@@ -89,17 +89,32 @@ class _Model(dict):
 
     @classmethod
     def create_all(cls):
-        log.info("creating index " + cls.es.index)
+        log.info("Creating index '%s'." % cls.es.index)
+        conn = cls.es.conn
         try:
-            cls.es.conn.indices.create(cls.es.index)
+            conn.indices.create(cls.es.index)
         except elasticsearch.exceptions.RequestError as e:
             # Reraise anything that isn't just a notification that the index
-            # already exists
-            if not e.error.startswith('IndexAlreadyExistsException'):
+            # already exists (either as index or as an alias).
+            if not (e.error.startswith('IndexAlreadyExistsException')
+                    or e.error.startswith('InvalidIndexNameException')):
+                log.fatal('Failed to create an Elasticsearch index')
                 raise
-            log.warn('Index creation failed. If you are running against '
-                     'Bonsai Elasticsearch, this is expected and ignorable.')
-        mapping = {
+            log.warn('Index creation failed as index appears to already exist.')
+        mapping = cls.get_mapping()
+        try:
+            conn.indices.put_mapping(index=cls.es.index,
+                                     doc_type=cls.__type__,
+                                     body=mapping)
+        except elasticsearch.exceptions.RequestError as e:
+            if e.error.startswith('MergeMappingException'):
+                log.fatal('Elasticsearch index mapping is wrong (outdated?). '
+                         'Please reindex it.') # TODO add precise instructions
+                raise
+
+    @classmethod
+    def _get_mapping(cls):
+        return {
             cls.__type__: {
                 '_id': {
                     'path': 'id',
@@ -111,9 +126,6 @@ class _Model(dict):
                 'properties': cls.__mapping__,
             }
         }
-        cls.es.conn.indices.put_mapping(index=cls.es.index,
-                                        doc_type=cls.__type__,
-                                        body=mapping)
 
     @classmethod
     def drop_all(cls):
