@@ -176,19 +176,12 @@ class _Model(dict):
 
     @classmethod
     def count(cls, **kwargs):
-        q = cls._build_query(**kwargs)
-        if not q:
-            return 0
-
-        # Extract the query, and wrap it in the expected object. This has the
-        # effect of removing sort or paging parameters that aren't allowed by
-        # the count API.
-        q = {'query': q['query']}
-
-        res = cls.es.conn.count(index=cls.es.index,
-                                doc_type=cls.__type__,
-                                body=q)
-        return res['count']
+        """Like search, but only count the number of matches."""
+        kwargs.setdefault('params', {})
+        kwargs['params'].update({'search_type':'count'})
+        res = cls.search(raw_result=True,
+                         **kwargs)
+        return res['hits']['total']
 
     def save(self, refresh=True):
         _add_created(self)
