@@ -8,7 +8,7 @@ Getting going
 
 You'll need a recent version of `Python <http://python.org>`__ (Python 2 >=2.6
 or Python 3 >=3.3) and `ElasticSearch <http://elasticsearch.org>`__ (>=1.0.0)
-installed (see "ElasticSearch compatibility" below).
+installed.
 
 The quickest way to get going requires the ``pip`` and ``virtualenv``
 tools (``easy_install virtualenv`` will get them both). Run the
@@ -60,21 +60,3 @@ installed).
 Please `open an issue <annotator-store/issues>`__ if you find that the
 tests don't all pass on your machine, making sure to include the output
 of ``pip freeze``.
-
-Elasticsearch compatibility
----------------------------
-
-The store should ideally be run against Elasticsearch version 1.0.0 or
-greater, but can also be run against the legacy 0.90.x series (and
-possibly even earlier) if desired. In order to do this, set the
-following configuration option::
-
-    ELASTICSEARCH_COMPATIBILITY_MODE = 'pre-1.0.0'
-
-and ensure that you have installed a version of the ``elasticsearch``
-library from the 0.4.x series::
-
-    pip install 'elasticsearch>0.4,<0.5'
-
-**NB:** This mode of operation is deprecated. Support will be dropped
-for Elasticsearch 0.90.x in the future.

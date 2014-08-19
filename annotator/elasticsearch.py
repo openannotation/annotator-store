@@ -29,12 +29,10 @@ class ElasticSearch(object):
     def __init__(self,
                  host = 'http://127.0.0.1:9200',
                  index = 'annotator',
-                 authorization_enabled = False,
-                 compatibility_mode = None):
+                 authorization_enabled = False):
         self.host = host
         self.index = index
         self.authorization_enabled = authorization_enabled
-        self.compatibility_mode = compatibility_mode
 
         self.Model = make_model(self)
 
@@ -195,11 +193,6 @@ class _Model(dict):
         # effect of removing sort or paging parameters that aren't allowed by
         # the count API.
         q = {'query': q['query']}
-
-        # In elasticsearch prior to 1.0.0, the payload to `count` was a bare
-        # query.
-        if cls.es.compatibility_mode == 'pre-1.0.0':
-            q = q['query']
 
         res = cls.es.conn.count(index=cls.es.index,
                                 doc_type=cls.__type__,
