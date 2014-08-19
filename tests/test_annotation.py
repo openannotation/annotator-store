@@ -232,8 +232,8 @@ class TestAnnotation(TestCase):
 
         # Any user whose username starts with "group:" must be refused any results
         user = h.MockUser('group:anyone', 'testconsumer')
-        res = Annotation.search(user=user)
-        assert_equal(len(res), 0)
+        search_action = lambda: Annotation.search(user=user)
+        assert_raises(RuntimeError, search_action)
 
     def test_search_permissions_admin(self):
         anno = Annotation(text='Foobar',

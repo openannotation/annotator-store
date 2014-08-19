@@ -85,7 +85,7 @@ class Annotation(es.Model):
         if authorization_enabled:
             f = authz.permissions_filter(user)
             if not f:
-                raise RunTimeError("Authorization filter creation failed")
+                raise RuntimeError("Authorization filter creation failed")
             filtered_query = {
                 'filtered': {
                     'filter': f
