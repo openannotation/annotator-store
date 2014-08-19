@@ -128,13 +128,6 @@ class Annotation(es.Model):
                             'minimum_should_match': 1
                         }
 
-        if es.authorization_enabled:
-            # Apply a filter to the results.
-            f = authz.permissions_filter(user)
-            if not f:
-                return False  # Refuse to perform the query
-            q['query'] = {'filtered': {'query': q['query'], 'filter': f}}
-
         return q
 
 

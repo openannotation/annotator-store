@@ -148,12 +148,7 @@ class _Model(dict):
         q = cls._build_query(query=query, offset=offset, limit=limit, **kwargs)
         if not q:
             return []
-        log.debug("doing search: %s", q)
-        res = cls.es.conn.search(index=cls.es.index,
-                                 doc_type=cls.__type__,
-                                 body=q)
-        docs = res['hits']['hits']
-        return [cls(d['_source'], id=d['_id']) for d in docs]
+        return cls.search_raw(q, **kwargs)
 
     @classmethod
     def search_raw(cls, query=None, params=None, raw_result=False, **kwargs):
