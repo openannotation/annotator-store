@@ -98,9 +98,9 @@ class _Model(dict):
             # already exists (either as index or as an alias).
             if not (e.error.startswith('IndexAlreadyExistsException')
                     or e.error.startswith('InvalidIndexNameException')):
-                log.fatal('Failed to create an Elasticsearch index')
+                log.fatal("Failed to create an Elasticsearch index")
                 raise
-            log.warn('Index creation failed as index appears to already exist.')
+            log.warn("Index creation failed as index appears to already exist.")
         mapping = cls.get_mapping()
         try:
             conn.indices.put_mapping(index=cls.es.index,
@@ -108,12 +108,18 @@ class _Model(dict):
                                      body=mapping)
         except elasticsearch.exceptions.RequestError as e:
             if e.error.startswith('MergeMappingException'):
-                log.fatal('Elasticsearch index mapping is wrong (outdated?). '
-                         'Please reindex it.') # TODO add precise instructions
-                raise
+                # Uncomment this for automatic reindexing:
+                #from reindexer import Reindexer
+                #Reindexer(conn).reindex_in_place(cls.es.index)
+                raise RuntimeError(
+                    "Elasticsearch index mapping is incorrect! "
+                    "Please reindex it. E.g. use annotator-store's reindex.py: "
+                    "$ python reindex.py {0} {1} {1}".format(cls.es.host,
+                                                             cls.es.index),
+                    e)
 
     @classmethod
-    def _get_mapping(cls):
+    def get_mapping(cls):
         return {
             cls.__type__: {
                 '_id': {
