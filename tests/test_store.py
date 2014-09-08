@@ -72,9 +72,13 @@ class TestStore(TestCase):
                                  content_type='application/json',
                                  headers=self.headers)
 
-        assert response.status_code == 200, "response should be 200 OK"
+        assert response.status_code == 201, "response should be 201 CREATED"
         data = json.loads(response.data)
         assert 'id' in data, "annotation id should be returned in response"
+        expected_location = '/api/annotations/{0}'.format(data['id'])
+        assert response.location.endswith(expected_location), (
+            "The response should have a Location header with the URL to read "
+            "the annotation that was created")
         assert data['user'] == self.user.id
         assert data['consumer'] == self.user.consumer.key
 

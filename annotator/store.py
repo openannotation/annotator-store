@@ -173,7 +173,9 @@ def create_annotation():
         refresh = request.args.get('refresh') != 'false'
         annotation.save(refresh=refresh)
 
-        return jsonify(annotation)
+        location = url_for('.read_annotation', id=annotation['id'])
+
+        return jsonify(annotation), 201, {'Location': location}
     else:
         return jsonify('No JSON payload sent. Annotation not created.',
                        status=400)
