@@ -72,9 +72,13 @@ class TestStore(TestCase):
                                  content_type='application/json',
                                  headers=self.headers)
 
-        assert response.status_code == 200, "response should be 200 OK"
+        assert response.status_code == 201, "response should be 201 CREATED"
         data = json.loads(response.data)
         assert 'id' in data, "annotation id should be returned in response"
+        expected_location = '/api/annotations/{0}'.format(data['id'])
+        assert response.location.endswith(expected_location), (
+            "The response should have a Location header with the URL to read "
+            "the annotation that was created")
         assert data['user'] == self.user.id
         assert data['consumer'] == self.user.consumer.key
 
@@ -401,7 +405,7 @@ class TestStoreAuthz(TestCase):
         assert response.status_code == 401, "response should be 401 NOT AUTHORIZED"
 
         response = self.cli.get('/api/annotations/123', headers=self.charlie_headers)
-        assert response.status_code == 401, "response should be 401 NOT AUTHORIZED"
+        assert response.status_code == 403, "response should be 403 FORBIDDEN"
 
         response = self.cli.get('/api/annotations/123', headers=self.alice_headers)
         assert response.status_code == 200, "response should be 200 OK"
@@ -418,7 +422,7 @@ class TestStoreAuthz(TestCase):
                                 data=payload,
                                 content_type='application/json',
                                 headers=self.bob_headers)
-        assert response.status_code == 401, "response should be 401 NOT AUTHORIZED"
+        assert response.status_code == 403, "response should be 403 FORBIDDEN"
 
         response = self.cli.put('/api/annotations/123',
                                 data=payload,
@@ -443,7 +447,7 @@ class TestStoreAuthz(TestCase):
                                 data=payload,
                                 content_type='application/json',
                                 headers=self.charlie_headers)
-        assert response.status_code == 401, "response should be 401 NOT AUTHORIZED"
+        assert response.status_code == 403, "response should be 403 FORBIDDEN"
         assert b'permissions update' in response.data
 
         response = self.cli.put('/api/annotations/123',
