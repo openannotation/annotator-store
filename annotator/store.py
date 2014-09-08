@@ -342,14 +342,25 @@ def _check_action(annotation, action, message=''):
 def _failed_authz_response(msg=''):
     user = g.user.id if g.user else None
     consumer = g.user.consumer.key if g.user else None
-    return jsonify("Cannot authorize request{0}. Perhaps you're not logged in "
-                   "as a user with appropriate permissions on this "
-                   "annotation? "
-                   "(user={user}, consumer={consumer})".format(
-                       ' (' + msg + ')' if msg else '',
-                       user=user,
-                       consumer=consumer),
-                   status=401)
+
+    if user:
+        # If the user is authenticated but not authorized we send a 403.
+        message = (
+            "Cannot authorize request{0}. You aren't authorized to make this "
+            "request. (user={user}, consumer={consumer})".format(
+                ' (' + msg + ')' if msg else '', user=user, consumer=consumer))
+        return jsonify(message), 403
+
+    else:
+        # If the user is not authenticated at all we send a 401.
+        return jsonify("Cannot authorize request{0}. Perhaps you're not logged in "
+                    "as a user with appropriate permissions on this "
+                    "annotation? "
+                    "(user={user}, consumer={consumer})".format(
+                        ' (' + msg + ')' if msg else '',
+                        user=user,
+                        consumer=consumer),
+                    status=401)
 
 
 def _build_query_raw(request):

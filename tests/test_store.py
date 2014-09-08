@@ -405,7 +405,7 @@ class TestStoreAuthz(TestCase):
         assert response.status_code == 401, "response should be 401 NOT AUTHORIZED"
 
         response = self.cli.get('/api/annotations/123', headers=self.charlie_headers)
-        assert response.status_code == 401, "response should be 401 NOT AUTHORIZED"
+        assert response.status_code == 403, "response should be 403 FORBIDDEN"
 
         response = self.cli.get('/api/annotations/123', headers=self.alice_headers)
         assert response.status_code == 200, "response should be 200 OK"
@@ -422,7 +422,7 @@ class TestStoreAuthz(TestCase):
                                 data=payload,
                                 content_type='application/json',
                                 headers=self.bob_headers)
-        assert response.status_code == 401, "response should be 401 NOT AUTHORIZED"
+        assert response.status_code == 403, "response should be 403 FORBIDDEN"
 
         response = self.cli.put('/api/annotations/123',
                                 data=payload,
@@ -447,7 +447,7 @@ class TestStoreAuthz(TestCase):
                                 data=payload,
                                 content_type='application/json',
                                 headers=self.charlie_headers)
-        assert response.status_code == 401, "response should be 401 NOT AUTHORIZED"
+        assert response.status_code == 403, "response should be 403 FORBIDDEN"
         assert b'permissions update' in response.data
 
         response = self.cli.put('/api/annotations/123',
