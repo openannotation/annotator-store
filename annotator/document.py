@@ -45,7 +45,16 @@ class Document(es.Model):
         """
         q = {'query': {'nested': {'path': 'link',
                                   'query': {'terms': {'link.href': uris}}}},
-             'sort': [{'updated': {'order': 'asc'}}]}
+             'sort': [{'updated': {'order': 'asc',
+                                   # While we do always provide a mapping for
+                                   # 'updated', elasticsearch will bomb if
+                                   # there are no documents in the index.
+                                   # Although this is an edge case, we don't
+                                   # want the API to return a 500 with an empty
+                                   # index, so ignore this sort instruction if
+                                   # 'updated' appears unmapped due to an empty
+                                   # index.
+                                   'ignore_unmapped': True,}}]}
 
         res = cls.es.conn.search(index=cls.es.index,
                                  doc_type=cls.__type__,

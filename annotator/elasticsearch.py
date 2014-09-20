@@ -243,7 +243,16 @@ def _build_query(query, offset, limit):
         q['filtered']['filter']['and'].append({'term': {k: v}})
 
     return {
-        'sort': [{'updated': {'order': 'desc'}}],  # Sort most recent first
+        'sort': [{'updated': {
+            # Sort most recent first
+            'order': 'desc',
+            # While we do always provide a mapping for 'updated', elasticsearch
+            # will bomb if there are no documents in the index. Although this
+            # is an edge case, we don't want the API to return a 500 with an
+            # empty index, so ignore this sort instruction if 'updated' appears
+            # unmapped due to an empty index.
+            'ignore_unmapped': True,
+        }}],
         'from': max(0, offset),
         'size': min(RESULTS_MAX_SIZE, max(0, limit)),
         'query': q
