@@ -3,6 +3,15 @@ Annotator Store
 
 This is a backend store for `Annotator <http://annotatorjs.org>`__.
 
+The functionality can roughly be separated in two parts:
+
+1. An abstraction layer wrapping Elasticsearch, to easily manage annotation
+   storage. It features authorization to filter search results according to
+   their permission settings.
+2. A Flask blueprint for a web server that exposes an HTTP API to the annotation
+   storage. To use this functionality, build this package with the ``[flask]``
+   option.
+
 Getting going
 -------------
 
@@ -16,7 +25,7 @@ following in the repository root::
 
     virtualenv pyenv
     source pyenv/bin/activate
-    pip install -e .
+    pip install -e .[flask]
     cp annotator.cfg.example annotator.cfg
     python run.py
 
@@ -49,9 +58,9 @@ We use ``nosetests`` to run tests. You can just
 then::
 
     $ nosetests
-    ....................................................
+    ......................................................................................
     ----------------------------------------------------------------------
-    Ran 52 tests in 3.233s
+    Ran 86 tests in 19.171s
 
     OK
 
