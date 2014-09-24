@@ -28,6 +28,9 @@ You should see something like::
 If you wish to customize the configuration of the Annotator Store, make
 your changes to ``annotator.cfg`` or dive into ``run.py``.
 
+Additionally, the ``HOST`` and ``PORT`` environment variables override
+the default socket binding of address ``127.0.0.1`` and port ``5000``.
+
 Store API
 ---------
 
