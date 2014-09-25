@@ -113,18 +113,20 @@ class Annotation(es.Model):
         # attempt to expand query to include uris for other representations
         # using information we may have on hand about the Document
         if 'uri' in query:
-            term_filter = q['query']['filtered']['filter']
+            clauses = q['query']['bool']
             doc = document.Document.get_by_uri(query['uri'])
             if doc:
-                new_terms = []
-                for term in term_filter['and']:
-                    if 'uri' in term['term']:
-                        term = {'or': []}
+                for clause in clauses['must']:
+                    # Rewrite the 'uri' clause to match any of the document URIs
+                    if 'match' in clause and 'uri' in clause['match']:
+                        uri_matchers = []
                         for uri in doc.uris():
-                            term['or'].append({'term': {'uri': uri}})
-                    new_terms.append(term)
-
-                term_filter['and'] = new_terms
+                            uri_matchers.append({'match': {'uri': uri}})
+                        del clause['match']
+                        clause['bool'] = {
+                            'should': uri_matchers,
+                            'minimum_should_match': 1
+                        }
 
         if es.authorization_enabled:
             # Apply a filter to the results.

@@ -231,16 +231,12 @@ def _csv_split(s, delimiter=','):
 
 
 def _build_query(query, offset, limit):
-    # Base query is a filtered match_all
-    q = {'match_all': {}}
+    # Create a match query for each keyword
+    match_clauses = [{'match': {k: v}} for k, v in iteritems(query)]
 
-    if query:
-        f = {'and': []}
-        q = {'filtered': {'query': q, 'filter': f}}
-
-    # Add a term query for each keyword
-    for k, v in iteritems(query):
-        q['filtered']['filter']['and'].append({'term': {k: v}})
+    if len(match_clauses) == 0:
+        # Elasticsearch considers an empty conjunction to be false..
+        match_clauses.append({'match_all': {}})
 
     return {
         'sort': [{'updated': {
@@ -255,7 +251,7 @@ def _build_query(query, offset, limit):
         }}],
         'from': max(0, offset),
         'size': min(RESULTS_MAX_SIZE, max(0, limit)),
-        'query': q
+        'query': {'bool': {'must': match_clauses}}
     }
 
 
