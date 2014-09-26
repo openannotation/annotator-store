@@ -72,7 +72,7 @@ class TestDocument(TestCase):
             ],
         })
         d.save()
-        res = Document.search(title='document')
+        res = Document.search(query={'title': 'document'})
         assert_equal(len(res), 1)
 
     def test_get_by_uri(self):
