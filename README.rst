@@ -54,7 +54,7 @@ Running tests
 -------------
 
 We use ``nosetests`` to run tests. You can just
-``pip install nose mock``, ensure ElasticSearch is running, and
+``pip install -e .[testing]``, ensure ElasticSearch is running, and
 then::
 
     $ nosetests
