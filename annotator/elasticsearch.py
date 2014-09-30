@@ -151,22 +151,24 @@ class _Model(dict):
         return cls.search_raw(q, **kwargs)
 
     @classmethod
-    def search_raw(cls, query=None, raw_result=False, **kwargs):
+    def search_raw(cls, query=None, params=None, raw_result=False):
         """Perform a raw Elasticsearch query
 
         Any ElasticsearchExceptions are to be caught by the caller.
 
         Keyword arguments:
         query -- Query to send to Elasticsearch
+        params -- Extra keyword arguments to pass to Elasticsearch.search
         raw_result -- Return Elasticsearch's response as is
-        Extra keyword arguments are passed to Elasticsearch.search
         """
         if query is None:
             query = {}
+        if params is None:
+            params = {}
         res = cls.es.conn.search(index=cls.es.index,
                                  doc_type=cls.__type__,
                                  body=query,
-                                 **kwargs)
+                                 **params)
         if not raw_result:
             docs = res['hits']['hits']
             res = [cls(d['_source'], id=d['_id']) for d in docs]
@@ -175,7 +177,8 @@ class _Model(dict):
     @classmethod
     def count(cls, **kwargs):
         """Like search, but only count the number of matches."""
-        kwargs['search_type'] = 'count'
+        kwargs.setdefault('params', {})
+        kwargs['params'].update({'search_type':'count'})
         res = cls.search(raw_result=True, **kwargs)
         return res['hits']['total']
 
