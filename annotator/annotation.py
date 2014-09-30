@@ -65,18 +65,18 @@ class Annotation(es.Model):
         super(Annotation, self).save(*args, **kwargs)
 
     @classmethod
-    def search_raw(cls, query=None, params=None, user=None,
-                   authorization_enabled=None, **kwargs):
+    def search_raw(cls, query=None, user=None, authorization_enabled=None,
+                   **kwargs):
         """Perform a raw Elasticsearch query
 
         Any ElasticsearchExceptions are to be caught by the caller.
 
         Keyword arguments:
         query -- Query to send to Elasticsearch
-        params -- Extra keyword arguments to pass to Elasticsearch.search
         user -- The user to filter the results for according to permissions
         authorization_enabled -- Overrides Annotation.es.authorization_enabled
         raw_result -- Return Elasticsearch's response as is
+        Extra keyword arguments are passed to Elasticsearch.search
         """
         if query is None:
             query = {}
@@ -85,7 +85,7 @@ class Annotation(es.Model):
         if authorization_enabled:
             f = authz.permissions_filter(user)
             if not f:
-                raise RunTimeError("Authorization filter creation failed")
+                raise RuntimeError("Authorization filter creation failed")
             filtered_query = {
                 'filtered': {
                     'filter': f
@@ -97,18 +97,15 @@ class Annotation(es.Model):
             # Use the filtered query instead of the original
             query['query'] = filtered_query
 
-        res = super(Annotation, cls).search_raw(query=query,
-                                                params=params,
-                                                **kwargs)
+        res = super(Annotation, cls).search_raw(query=query, **kwargs)
         return res
 
     @classmethod
-    def _build_query(cls, query=None, offset=None, limit=None,
-                     user=None, **kwargs):
+    def _build_query(cls, query=None, offset=None, limit=None):
         if query is None:
             query = {}
 
-        q = super(Annotation, cls)._build_query(query, offset, limit, **kwargs)
+        q = super(Annotation, cls)._build_query(query, offset, limit)
 
         # attempt to expand query to include uris for other representations
         # using information we may have on hand about the Document
@@ -127,13 +124,6 @@ class Annotation(es.Model):
                             'should': uri_matchers,
                             'minimum_should_match': 1
                         }
-
-        if es.authorization_enabled:
-            # Apply a filter to the results.
-            f = authz.permissions_filter(user)
-            if not f:
-                return False  # Refuse to perform the query
-            q['query'] = {'filtered': {'query': q['query'], 'filter': f}}
 
         return q
 

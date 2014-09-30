@@ -134,7 +134,7 @@ class _Model(dict):
         return cls(doc['_source'], id=id)
 
     @classmethod
-    def _build_query(cls, query=None, offset=None, limit=None, **kwargs):
+    def _build_query(cls, query=None, offset=None, limit=None):
         if offset is None:
             offset = 0
         if limit is None:
@@ -144,40 +144,29 @@ class _Model(dict):
         return _build_query(query, offset, limit)
 
     @classmethod
-    def _build_query_raw(cls, request, **kwargs):
-        return _build_query_raw(request)
-
-    @classmethod
     def search(cls, query=None, offset=0, limit=RESULTS_DEFAULT_SIZE, **kwargs):
-        q = cls._build_query(query=query, offset=offset, limit=limit, **kwargs)
+        q = cls._build_query(query=query, offset=offset, limit=limit)
         if not q:
             return []
-        log.debug("doing search: %s", q)
-        res = cls.es.conn.search(index=cls.es.index,
-                                 doc_type=cls.__type__,
-                                 body=q)
-        docs = res['hits']['hits']
-        return [cls(d['_source'], id=d['_id']) for d in docs]
+        return cls.search_raw(q, **kwargs)
 
     @classmethod
-    def search_raw(cls, query=None, params=None, raw_result=False, **kwargs):
+    def search_raw(cls, query=None, raw_result=False, **kwargs):
         """Perform a raw Elasticsearch query
 
         Any ElasticsearchExceptions are to be caught by the caller.
 
         Keyword arguments:
         query -- Query to send to Elasticsearch
-        params -- Extra keyword arguments to pass to Elasticsearch.search
         raw_result -- Return Elasticsearch's response as is
+        Extra keyword arguments are passed to Elasticsearch.search
         """
         if query is None:
             query = {}
-        if params is None:
-            params = {}
         res = cls.es.conn.search(index=cls.es.index,
                                  doc_type=cls.__type__,
                                  body=query,
-                                 **params)
+                                 **kwargs)
         if not raw_result:
             docs = res['hits']['hits']
             res = [cls(d['_source'], id=d['_id']) for d in docs]
@@ -185,19 +174,10 @@ class _Model(dict):
 
     @classmethod
     def count(cls, **kwargs):
-        q = cls._build_query(**kwargs)
-        if not q:
-            return 0
-
-        # Extract the query, and wrap it in the expected object. This has the
-        # effect of removing sort or paging parameters that aren't allowed by
-        # the count API.
-        q = {'query': q['query']}
-
-        res = cls.es.conn.count(index=cls.es.index,
-                                doc_type=cls.__type__,
-                                body=q)
-        return res['count']
+        """Like search, but only count the number of matches."""
+        kwargs['search_type'] = 'count'
+        res = cls.search(raw_result=True, **kwargs)
+        return res['hits']['total']
 
     def save(self, refresh=True):
         _add_created(self)

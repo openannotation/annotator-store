@@ -292,18 +292,16 @@ def search_annotations():
 def search_annotations_raw():
 
     try:
-        query, params = _build_query_raw(request)
+        query, kwargs = _build_query_raw(request)
     except ValueError:
         return jsonify('Could not parse request payload!',
                        status=400)
 
-    kwargs = dict()
     if current_app.config.get('AUTHZ_ON'):
         kwargs['user'] = g.user
 
     try:
-        res = g.annotation_class.search_raw(query, params, raw_result=True,
-                                            **kwargs)
+        res = g.annotation_class.search_raw(query, raw_result=True, **kwargs)
     except TransportError as err:
         if err.status_code is not 'N/A':
             status_code = err.status_code
