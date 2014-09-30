@@ -20,6 +20,8 @@ class Reindexer(object):
     def _ask(self, s):
         if self.interactive:
             return raw_input(s + " (y/N) ").strip().lower().startswith('y')
+        else:
+            return True
 
 
     def reindex(self, old_index, new_index):
@@ -66,7 +68,7 @@ class Reindexer(object):
         index_is_alias = conn.indices.exists_alias(index)
         if index_is_alias:
             real_index = ','.join(conn.indices.get_alias(index).keys())
-            step2 = "Delete the alias {index} for "
+            step2 = "Delete the alias {index} for " + real_index
         else:
             step2 = "Delete index {index}"
         message = ("Performing an in-place reindex in three steps:\n"
@@ -85,13 +87,13 @@ class Reindexer(object):
         # Delete the old index and create an alias for the new index instead.
         if index_is_alias:
             # Remove the alias.
-            self._print("Deleting alias {index}.".format(index=index))
+            self._print("Deleting alias {index}..".format(index=index))
             conn.indices.delete_alias(name=index, index='_all')
         else:
             # Delete the index.
-            self._print("Deleting old index {index}.".format(index=index))
+            self._print("Deleting old index {index}..".format(index=index))
             conn.indices.delete(index)
-        self._print("Creating alias {index} to point to {new_index}.".format(index=index, new_index=new_index))
+        self._print("Creating alias {index} to point to {new_index}..".format(index=index, new_index=new_index))
         conn.indices.put_alias(name=index, index=new_index)
 
 
@@ -100,7 +102,6 @@ class Reindexer(object):
         for model in self.es_models:
             mapping = model.get_mapping()
             # Apply mapping
-            if hasattr(model, '__model__'):
-                conn.indices.put_mapping(index=index,
-                                         doc_type=model.__type__,
-                                         body=mapping)
+            conn.indices.put_mapping(index=index,
+                                     doc_type=model.__type__,
+                                     body=mapping)

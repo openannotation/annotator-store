@@ -19,9 +19,9 @@ WARNING: Documents that are created while reindexing may be lost!
 
 def main(argv):
     argparser = argparse.ArgumentParser(description=description)
-    argparser.add_argument('host', help = "Elasticsearch server, host[:port]")
-    argparser.add_argument('old_index', help = "Index to read from")
-    argparser.add_argument('new_index', help = "Index to write to")
+    argparser.add_argument('host', help="Elasticsearch server, host[:port]")
+    argparser.add_argument('old_index', help="Index to read from")
+    argparser.add_argument('new_index', help="Index to write to")
     args = argparser.parse_args()
 
     host = args.host

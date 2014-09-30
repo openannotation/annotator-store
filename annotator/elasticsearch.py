@@ -108,9 +108,6 @@ class _Model(dict):
                                      body=mapping)
         except elasticsearch.exceptions.RequestError as e:
             if e.error.startswith('MergeMappingException'):
-                # Uncomment this for automatic reindexing:
-                #from reindexer import Reindexer
-                #Reindexer(conn).reindex_in_place(cls.es.index)
                 raise RuntimeError(
                     "Elasticsearch index mapping is incorrect! "
                     "Please reindex it. E.g. use annotator-store's reindex.py: "
