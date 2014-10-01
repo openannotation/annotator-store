@@ -25,13 +25,17 @@ class Reindexer(object):
 
 
     def reindex(self, old_index, new_index):
+        """Reindex documents using the current mappings."""
         conn = self.conn
 
         if not conn.indices.exists(old_index):
             raise ValueError("Index {0} does not exist!".format(old_index))
 
         if conn.indices.exists(new_index):
-            raise ValueError("Index {0} already exists!".format(new_index))
+            message = "Index {0} already exists!".format(new_index)
+            if new_index == old_index:
+                message += " Use --magic to pretend in-place reindexing."
+            raise ValueError(message)
 
         # Create the new index
         conn.indices.create(new_index)
@@ -57,7 +61,8 @@ class Reindexer(object):
             suffix_number += 1
             if suffix_number >= 10:
                 # Something's probably wrong (we may be in an infinite loop?)
-                raise RuntimeError("Desired index names are occupied, please clean up your old indices!")
+                raise RuntimeError("Desired index names are occupied, please "
+                                   "clean up your old indices!")
             new_index = '%s_real%d' % (index, suffix_number)
 
         # Look if current index is a real index or an alias
@@ -89,7 +94,8 @@ class Reindexer(object):
             # Delete the index.
             self._print("Deleting old index {index}..".format(index=index))
             conn.indices.delete(index)
-        self._print("Creating alias {index} to point to {new_index}..".format(index=index, new_index=new_index))
+        self._print("Creating alias {index} to point to {new_index}.."
+                        .format(index=index, new_index=new_index))
         conn.indices.put_alias(name=index, index=new_index)
 
 

@@ -111,8 +111,8 @@ class _Model(dict):
                 raise RuntimeError(
                     "Elasticsearch index mapping is incorrect! "
                     "Please reindex it. E.g. use annotator-store's reindex.py: "
-                    "$ python reindex.py {0} {1} {1}".format(cls.es.host,
-                                                             cls.es.index),
+                    "$ python reindex.py {0} {1} {1}_new".format(cls.es.host,
+                                                                 cls.es.index),
                     e)
 
     @classmethod
