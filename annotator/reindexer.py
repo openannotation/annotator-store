@@ -27,10 +27,6 @@ class Reindexer(object):
     def reindex(self, old_index, new_index):
         conn = self.conn
 
-        if old_index == new_index:
-            self.reindex_in_place(old_index)
-            return
-
         if not conn.indices.exists(old_index):
             raise ValueError("Index {0} does not exist!".format(old_index))
 
