@@ -109,10 +109,10 @@ class _Model(dict):
         except elasticsearch.exceptions.RequestError as e:
             if e.error.startswith('MergeMappingException'):
                 raise RuntimeError(
-                    "Elasticsearch index mapping is incorrect! "
-                    "Please reindex it. E.g. use annotator-store's reindex.py: "
-                    "$ python reindex.py {0} {1} {1}_new".format(cls.es.host,
-                                                                 cls.es.index),
+                    "Elasticsearch index mapping is incorrect! Please reindex "
+                    "it. E.g. use annotator-store's reindex.py: "
+                    "$ python reindex.py {0} --reindex {1} {1}_new --alias "
+                    "{1}_new {1}".format(cls.es.host, cls.es.index),
                     e)
 
     @classmethod

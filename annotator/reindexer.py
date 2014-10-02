@@ -17,13 +17,6 @@ class Reindexer(object):
         if self.interactive:
             print(s)
 
-    def _ask(self, s):
-        if self.interactive:
-            return raw_input(s + " (y/N) ").strip().lower().startswith('y')
-        else:
-            return True
-
-
     def reindex(self, old_index, new_index):
         """Reindex documents using the current mappings."""
         conn = self.conn
