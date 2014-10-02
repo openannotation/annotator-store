@@ -46,26 +46,25 @@ class Reindexer(object):
         self._print("Reindexing done.")
 
     def alias(self, index, alias):
-        self._print("Creating alias {alias} to point to {index}.."
-                    .format(alias=alias, index=index))
-        self.conn.indices.put_alias(name=alias, index=index)
-
-    def delete(self, index_or_alias):
-        """Delete an index or alias"""
         conn = self.conn
-        # Look if it is a real index or an alias
-        is_alias = conn.indices.exists_alias(index_or_alias)
-        if is_alias:
-            # Remove the alias.
-            real_index = ','.join(conn.indices.get_alias(index_or_alias).keys())
-            self._print("Deleting alias {index_or_alias}.. (was an alias for {real_index})"
-                        .format(index_or_alias=index_or_alias, real_index=real_index))
-            conn.indices.delete_alias(name=index_or_alias, index='_all')
-        else:
-            # Delete the index.
-            self._print("Deleting index {index}..".format(index=index_or_alias))
-            conn.indices.delete(index_or_alias)
+        self._print("Making alias {alias} point to {index}.."
+                    .format(alias=alias, index=index))
 
+        # Remove the alias's current targets.
+        is_alias = conn.indices.exists_alias(alias)
+        if is_alias:
+            real_index = ','.join(conn.indices.get_alias(alias).keys())
+            self._print("Deleting alias {alias}.. (was an alias for {real_index})"
+                        .format(alias=alias, real_index=real_index))
+            conn.indices.delete_alias(name=alias, index='_all')
+
+        if conn.indices.exists(alias):
+            raise RuntimeError("Cannot create alias {alias}, name is used by "
+                "an index. Please delete the index and rerun the --alias "
+                "command.".format(alias=alias))
+
+        # Create new alias
+        conn.indices.put_alias(name=alias, index=index)
 
     def put_mappings(self, index):
         conn = self.conn
