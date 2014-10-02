@@ -32,15 +32,12 @@ class Reindexer(object):
             raise ValueError("Index {0} does not exist!".format(old_index))
 
         if conn.indices.exists(new_index):
-            message = "Index {0} already exists!".format(new_index)
-            if new_index == old_index:
-                message += " Use --magic to pretend in-place reindexing."
-            raise ValueError(message)
+            raise ValueError("Index {0} already exists!".format(new_index))
 
         # Create the new index
         conn.indices.create(new_index)
 
-        # Apply the new settings and mappings
+        # Apply the new mappings
         self.put_mappings(new_index)
 
         # Do the actual reindexing.
@@ -48,55 +45,26 @@ class Reindexer(object):
         helpers.reindex(conn, old_index, new_index)
         self._print("Reindexing done.")
 
+    def alias(self, index, alias):
+        self._print("Creating alias {alias} to point to {index}.."
+                    .format(alias=alias, index=index))
+        self.conn.indices.put_alias(name=alias, index=index)
 
-    def reindex_in_place(self, index):
-        """Fiddle with aliases to pretend an in-place reindexing."""
+    def delete(self, index_or_alias):
+        """Delete an index or alias"""
         conn = self.conn
-
-        # Pick an arbitrary unused name for the real new index
-        new_index = index + '_real'
-        # If it already exists, append a number to it.
-        suffix_number = 0
-        while conn.indices.exists(new_index) is True:
-            suffix_number += 1
-            if suffix_number >= 10:
-                # Something's probably wrong (we may be in an infinite loop?)
-                raise RuntimeError("Desired index names are occupied, please "
-                                   "clean up your old indices!")
-            new_index = '%s_real%d' % (index, suffix_number)
-
-        # Look if current index is a real index or an alias
-        index_is_alias = conn.indices.exists_alias(index)
-        if index_is_alias:
-            real_index = ','.join(conn.indices.get_alias(index).keys())
-            step2 = "Delete the alias {index} for " + real_index
-        else:
-            step2 = "Delete index {index}"
-        message = ("Performing an in-place reindex in three steps:\n"
-                   "1. Reindex {index} to {new_index}\n"
-                   "2. " + step2 + "\n"
-                   "3. Alias {new_index} as {index}")
-        self._print(message.format(index=index, new_index=new_index))
-
-        if not self._ask("Proceed?"):
-            self._print("Aborting.")
-            return
-
-        # Do a normal reindex to the chosen new index
-        self.reindex(index, new_index)
-
-        # Delete the old index and create an alias for the new index instead.
-        if index_is_alias:
+        # Look if it is a real index or an alias
+        is_alias = conn.indices.exists_alias(index_or_alias)
+        if is_alias:
             # Remove the alias.
-            self._print("Deleting alias {index}..".format(index=index))
-            conn.indices.delete_alias(name=index, index='_all')
+            real_index = ','.join(conn.indices.get_alias(index_or_alias).keys())
+            self._print("Deleting alias {index_or_alias}.. (was an alias for {real_index})"
+                        .format(index_or_alias=index_or_alias, real_index=real_index))
+            conn.indices.delete_alias(name=index_or_alias, index='_all')
         else:
             # Delete the index.
-            self._print("Deleting old index {index}..".format(index=index))
-            conn.indices.delete(index)
-        self._print("Creating alias {index} to point to {new_index}.."
-                        .format(index=index, new_index=new_index))
-        conn.indices.put_alias(name=index, index=new_index)
+            self._print("Deleting index {index}..".format(index=index_or_alias))
+            conn.indices.delete(index_or_alias)
 
 
     def put_mappings(self, index):
