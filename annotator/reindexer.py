@@ -53,8 +53,7 @@ class Reindexer(object):
 
         if conn.indices.exists(alias):
             raise RuntimeError("Cannot create alias {alias}, name is used by "
-                "an index. Please delete the index and rerun the --alias "
-                "command.".format(alias=alias))
+                "an index.".format(alias=alias))
 
         # Create new alias
         conn.indices.put_alias(name=alias, index=index)
