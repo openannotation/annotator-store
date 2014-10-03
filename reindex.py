@@ -24,7 +24,11 @@ def main(argv):
     new_index = args.new_index
     alias = args.alias
 
-    conn = Elasticsearch([host])
+    if host:
+        conn = Elasticsearch([host])
+    else:
+        conn = Elasticsearch()
+
 
     reindexer = Reindexer(conn, interactive=True)
 
