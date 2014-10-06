@@ -15,7 +15,7 @@ def read(*paths):
 
 setup(
     name = 'annotator',
-    version = '0.12dev',
+    version = '0.12',
     packages = find_packages(exclude=['test*']),
 
     install_requires = requires,
