@@ -14,12 +14,21 @@ INTENDED FOR PRODUCTION USE.
 from __future__ import print_function
 
 import os
+import logging
 import sys
 
 from flask import Flask, g, current_app
 from annotator import es, annotation, auth, authz, document, store
 from tests.helpers import MockUser, MockConsumer, MockAuthenticator
 from tests.helpers import mock_authorizer
+
+logging.basicConfig(format='%(asctime)s %(process)d %(name)s [%(levelname)s] '
+                           '%(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S',
+                    level=logging.INFO)
+logging.getLogger('elasticsearch').setLevel(logging.WARN)
+logging.getLogger('urllib3').setLevel(logging.WARN)
+log = logging.getLogger('annotator')
 
 here = os.path.dirname(__file__)
 
