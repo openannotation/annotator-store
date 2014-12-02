@@ -27,11 +27,8 @@ class Reindexer(object):
         if conn.indices.exists(new_index):
             raise ValueError("Index {0} already exists!".format(new_index))
 
-        # Create the new index
-        conn.indices.create(new_index)
-
-        # Apply the new mappings
-        self.put_mappings(new_index)
+        # Create the new index with (presumably) new mapping config
+        conn.indices.create(new_index, body=self.get_index_config())
 
         # Do the actual reindexing.
         self._print("Reindexing {0} to {1}..".format(old_index, new_index))
@@ -57,11 +54,9 @@ class Reindexer(object):
                     .format(alias=alias, index=index))
         conn.indices.put_alias(name=alias, index=index)
 
-    def put_mappings(self, index):
-        conn = self.conn
+    def get_index_config(self):
+        # Configure index mappings
+        index_config = {'mappings': {}}
         for model in self.es_models:
-            mapping = model.get_mapping()
-            # Apply mapping
-            conn.indices.put_mapping(index=index,
-                                     doc_type=model.__type__,
-                                     body=mapping)
+            index_config['mappings'].update(model.get_mapping())
+        return index_config
