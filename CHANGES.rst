@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+- Slight changes to reindex.py to ease subclassing it
+
 0.12
 ----
 
