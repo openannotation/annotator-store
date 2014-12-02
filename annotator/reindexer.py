@@ -40,9 +40,6 @@ class Reindexer(object):
 
     def alias(self, index, alias):
         conn = self.conn
-        self._print("Making alias {alias} point to {index}.."
-                    .format(alias=alias, index=index))
-
         # Remove the alias's current targets.
         is_alias = conn.indices.exists_alias(alias)
         if is_alias:
@@ -56,6 +53,8 @@ class Reindexer(object):
                 "an index.".format(alias=alias))
 
         # Create new alias
+        self._print("Making alias {alias} point to {index}.."
+                    .format(alias=alias, index=index))
         conn.indices.put_alias(name=alias, index=index)
 
     def put_mappings(self, index):
