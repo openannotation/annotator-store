@@ -1,6 +1,12 @@
 Next release
 ============
 
+0.13.2
+======
+
+- Avoid a confusing error about reindexing when annotator is used as a
+  library and not a standalone application (#107).
+
 0.13.1
 ======
 
