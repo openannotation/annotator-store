@@ -1,10 +1,15 @@
 Changelog
 =========
 
+0.13.1
+------
+
+- Reindexer can run even when target exists.
+
 0.13
 ----
 
-- Slight changes to reindex.py to ease subclassing it
+- Slight changes to reindex.py to ease subclassing it.
 
 0.12
 ----
