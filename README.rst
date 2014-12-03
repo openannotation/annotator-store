@@ -69,6 +69,6 @@ Alternatively (and preferably), you should install
 the tests against multiple versions of Python (if you have them
 installed).
 
-Please `open an issue <annotator-store/issues>`__ if you find that the
-tests don't all pass on your machine, making sure to include the output
-of ``pip freeze``.
+Please `open an issue <http://github.com/openannotation/annotator-store/issues>`__
+if you find that the tests don't all pass on your machine, making sure to include
+the output of ``pip freeze``.
