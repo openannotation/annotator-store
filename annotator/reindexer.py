@@ -5,6 +5,7 @@ from elasticsearch import helpers
 from .annotation import Annotation
 from .document import Document
 
+
 class Reindexer(object):
 
     es_models = Annotation, Document
@@ -32,7 +33,7 @@ class Reindexer(object):
             conn.indices.create(new_index, body=self.get_index_config())
 
         # Do the actual reindexing.
-        self._print("Reindexing {0} to {1}..".format(old_index, new_index))
+        self._print("Reindexing {0} to {1}...".format(old_index, new_index))
         helpers.reindex(conn, old_index, new_index)
         self._print("Reindexing done.")
 
@@ -42,16 +43,18 @@ class Reindexer(object):
         is_alias = conn.indices.exists_alias(alias)
         if is_alias:
             real_index = ','.join(conn.indices.get_alias(alias).keys())
-            self._print("Deleting alias {alias}.. (was an alias for {real_index})"
+            self._print("Deleting alias {alias}... "
+                        "(was an alias for {real_index})"
                         .format(alias=alias, real_index=real_index))
             conn.indices.delete_alias(name=alias, index='_all')
 
         if conn.indices.exists(alias):
-            raise RuntimeError("Cannot create alias {alias}, name is used by "
-                "an index.".format(alias=alias))
+            raise RuntimeError("Cannot create alias {alias}, "
+                               "name is used by an index."
+                               .format(alias=alias))
 
         # Create new alias
-        self._print("Making alias {alias} point to {index}.."
+        self._print("Making alias {alias} point to {index}..."
                     .format(alias=alias, index=index))
         conn.indices.put_alias(name=alias, index=index)
 
