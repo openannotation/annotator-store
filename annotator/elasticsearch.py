@@ -4,7 +4,6 @@ import csv
 import json
 import logging
 import datetime
-import time
 
 import iso8601
 
@@ -103,20 +102,9 @@ class _Model(dict):
                 raise
             log.warn("Index creation failed as index appears to already exist.")
         mapping = cls.get_mapping()
-        try:
-            conn.indices.put_mapping(index=cls.es.index,
-                                     doc_type=cls.__type__,
-                                     body=mapping)
-        except elasticsearch.exceptions.RequestError as e:
-            if e.error.startswith('MergeMappingException'):
-                date = time.strftime('%Y-%m-%d')
-                log.fatal("Elasticsearch index mapping is incorrect! Please "
-                          "reindex it. You can use reindex.py for this, e.g. "
-                          "python reindex.py --host {0} {1} {1}-{2}".format(
-                              cls.es.host,
-                              cls.es.index,
-                              date))
-            raise
+        conn.indices.put_mapping(index=cls.es.index,
+                                 doc_type=cls.__type__,
+                                 body=mapping)
 
     @classmethod
     def get_mapping(cls):
