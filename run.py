@@ -16,8 +16,10 @@ from __future__ import print_function
 import os
 import logging
 import sys
+import time
 
 from flask import Flask, g, current_app
+import elasticsearch
 from annotator import es, annotation, auth, authz, document, store
 from tests.helpers import MockUser, MockConsumer, MockAuthenticator
 from tests.helpers import mock_authorizer
@@ -59,8 +61,19 @@ def main():
         es.authorization_enabled = app.config['AUTHZ_ON']
 
     with app.test_request_context():
-        annotation.Annotation.create_all()
-        document.Document.create_all()
+        try:
+            annotation.Annotation.create_all()
+            document.Document.create_all()
+        except elasticsearch.exceptions.RequestError as e:
+            if e.error.startswith('MergeMappingException'):
+                date = time.strftime('%Y-%m-%d')
+                log.fatal("Elasticsearch index mapping is incorrect! Please "
+                          "reindex it. You can use reindex.py for this, e.g. "
+                          "python reindex.py --host {0} {1} {1}-{2}".format(
+                              es.host,
+                              es.index,
+                              date))
+            raise
 
     @app.before_request
     def before_request():
