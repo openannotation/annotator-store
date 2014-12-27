@@ -66,6 +66,12 @@ class ElasticSearch(object):
             self._connection = self._connect()
         return self._connection
 
+    def drop_all(self):
+        """Delete the index and its contents"""
+        if self.conn.indices.exists(self.index):
+            self.conn.indices.close(self.index)
+            self.conn.indices.delete(self.index)
+
     def create_models(self, models):
         mappings = _compile_mappings(models)
         analysis = _compile_analysis(models)
@@ -164,12 +170,6 @@ class _Model(dict):
     @classmethod
     def get_analysis(cls):
         return getattr(cls, '__analysis__', {})
-
-    @classmethod
-    def drop_all(cls):
-        if cls.es.conn.indices.exists(cls.es.index):
-            cls.es.conn.indices.close(cls.es.index)
-            cls.es.conn.indices.delete(cls.es.index)
 
     # It would be lovely if this were called 'get', but the dict semantics
     # already define that method name.

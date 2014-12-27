@@ -30,8 +30,7 @@ class TestCase(object):
     @classmethod
     def setup_class(cls):
         cls.app = create_app()
-        annotation.Annotation.drop_all()
-        document.Document.drop_all()
+        es.drop_all()
 
     def setup(self):
         es.create_models([annotation.Annotation, document.Document])
@@ -39,5 +38,4 @@ class TestCase(object):
         self.cli = self.app.test_client()
 
     def teardown(self):
-        annotation.Annotation.drop_all()
-        document.Document.drop_all()
+        es.drop_all()
