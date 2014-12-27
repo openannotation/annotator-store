@@ -60,20 +60,19 @@ def main():
     if app.config.get('AUTHZ_ON') is not None:
         es.authorization_enabled = app.config['AUTHZ_ON']
 
-    with app.test_request_context():
-        try:
-            annotation.Annotation.create_all()
-            document.Document.create_all()
-        except elasticsearch.exceptions.RequestError as e:
-            if e.error.startswith('MergeMappingException'):
-                date = time.strftime('%Y-%m-%d')
-                log.fatal("Elasticsearch index mapping is incorrect! Please "
-                          "reindex it. You can use reindex.py for this, e.g. "
-                          "python reindex.py --host {0} {1} {1}-{2}".format(
-                              es.host,
-                              es.index,
-                              date))
-            raise
+    try:
+        annotation.Annotation.create_all()
+        document.Document.create_all()
+    except elasticsearch.exceptions.RequestError as e:
+        if e.error.startswith('MergeMappingException'):
+            date = time.strftime('%Y-%m-%d')
+            log.fatal("Elasticsearch index mapping is incorrect! Please "
+                        "reindex it. You can use reindex.py for this, e.g. "
+                        "python reindex.py --host {0} {1} {1}-{2}".format(
+                            es.host,
+                            es.index,
+                            date))
+        raise
 
     @app.before_request
     def before_request():
