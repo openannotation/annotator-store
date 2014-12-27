@@ -34,8 +34,7 @@ class TestCase(object):
         document.Document.drop_all()
 
     def setup(self):
-        annotation.Annotation.create_all()
-        document.Document.create_all()
+        es.create_models([annotation.Annotation, document.Document])
         es.conn.cluster.health(wait_for_status='yellow')
         self.cli = self.app.test_client()
 

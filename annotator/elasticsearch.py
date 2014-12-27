@@ -66,6 +66,65 @@ class ElasticSearch(object):
             self._connection = self._connect()
         return self._connection
 
+    def create_models(self, models):
+        mappings = _compile_mappings(models)
+        analysis = _compile_analysis(models)
+
+        # If it does not yet exist, simply create the index
+        try:
+            response = self.conn.indices.create(self.index, ignore=400, body={
+                'mappings': mappings,
+                'settings': {'analysis': analysis},
+            })
+            return
+        except elasticsearch.exceptions.ConnectionError as e:
+            msg = ('Can not access ElasticSearch at {0}! '
+                   'Check to ensure it is running.').format(self.host)
+            raise elasticsearch.exceptions.ConnectionError('N/A', msg, e)
+
+        # Bad request (400) is ignored above, to prevent warnings in the log
+        # when the index already exists, but the failure could be for other
+        # reasons. If so, raise the error here.
+        if 'error' in response and 'IndexAlreadyExists' not in response['error']:
+            raise elasticsearch.exceptions.RequestError(400, response['error'])
+
+        # Update the mappings of the existing index
+        self._update_analysis(analysis)
+        self._update_mappings(mappings)
+
+    def _update_analysis(self, analysis):
+        """Update analyzers and filters"""
+        settings = self.conn.indices.get_settings(index=self.index)
+        existing = settings[self.index]['settings']['index']['analysis']
+        # Only bother if new settings would differ from existing settings
+        if not self._analysis_up_to_date(existing, analysis):
+            try:
+                self.conn.indices.close(index=self.index)
+                self.conn.indices.put_settings(index=self.index,
+                                               body={'analysis': analysis})
+            finally:
+                self.conn.indices.open(index=self.index)
+
+    def _update_mappings(self, mappings):
+        """Update mappings.
+
+        Warning: can explode because of a MergeMappingError when mappings are
+        incompatible"""
+        for doc_type, body in mappings.items():
+            self.conn.indices.put_mapping(
+                index=self.index,
+                doc_type=doc_type,
+                body=body
+            )
+
+    @staticmethod
+    def _analysis_up_to_date(existing, analysis):
+        """Tell whether existing settings are up to date"""
+        new_analysis = existing.copy()
+        for section, items in analysis.items():
+            new_analysis.setdefault(section,{}).update(items)
+        return new_analysis == existing
+
 
 class _Model(dict):
     """Base class that represents a document type in an ElasticSearch index.
@@ -74,7 +133,7 @@ class _Model(dict):
        __type__ -- The name of the document type
        __mapping__ -- A mapping of the document's fields
 
-       Mapping: Calling create_all() will create the mapping in the index.
+       Mapping:
        One field, 'id', is treated specially. Its value will not be stored,
        but be used as the _id identifier of the document in Elasticsearch. If
        an item is indexed without providing an id, the _id is automatically
@@ -86,25 +145,6 @@ class _Model(dict):
        To make a field full-text searchable, its mapping should configure it
        with 'analyzer':'standard'.
     """
-
-    @classmethod
-    def create_all(cls):
-        log.info("Creating index '%s'." % cls.es.index)
-        conn = cls.es.conn
-        try:
-            conn.indices.create(cls.es.index)
-        except elasticsearch.exceptions.RequestError as e:
-            # Reraise anything that isn't just a notification that the index
-            # already exists (either as index or as an alias).
-            if not (e.error.startswith('IndexAlreadyExistsException')
-                    or e.error.startswith('InvalidIndexNameException')):
-                log.fatal("Failed to create an Elasticsearch index")
-                raise
-            log.warn("Index creation failed as index appears to already exist.")
-        mapping = cls.get_mapping()
-        conn.indices.put_mapping(index=cls.es.index,
-                                 doc_type=cls.__type__,
-                                 body=mapping)
 
     @classmethod
     def get_mapping(cls):
@@ -120,6 +160,10 @@ class _Model(dict):
                 'properties': cls.__mapping__,
             }
         }
+
+    @classmethod
+    def get_analysis(cls):
+        return getattr(cls, '__analysis__', {})
 
     @classmethod
     def drop_all(cls):
@@ -213,6 +257,33 @@ class _Model(dict):
 
 def make_model(es):
     return type('Model', (_Model,), {'es': es})
+
+
+def _compile_mappings(models):
+    """Collect the mappings from the models"""
+    mappings = {}
+    for model in models:
+        mappings.update(model.get_mapping())
+    return mappings
+
+
+def _compile_analysis(models):
+    """Merge the custom analyzers and such from the models"""
+    analysis = {}
+    for model in models:
+        for section, items in model.get_analysis().items():
+            existing_items = analysis.setdefault(section, {})
+            for name in items:
+                if name in existing_items:
+                    fmt = "Duplicate definition of 'index.analysis.{}.{}'."
+                    msg = fmt.format(section, name)
+                    raise RuntimeError(msg)
+            existing_items.update(items)
+    return analysis
+
+
+def _csv_split(s, delimiter=','):
+    return [r for r in csv.reader([s], delimiter=delimiter)][0]
 
 
 def _build_query(query, offset, limit):

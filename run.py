@@ -61,8 +61,7 @@ def main():
         es.authorization_enabled = app.config['AUTHZ_ON']
 
     try:
-        annotation.Annotation.create_all()
-        document.Document.create_all()
+        es.create_models([annotation.Annotation, document.Document])
     except elasticsearch.exceptions.RequestError as e:
         if e.error.startswith('MergeMappingException'):
             date = time.strftime('%Y-%m-%d')
