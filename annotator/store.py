@@ -432,3 +432,7 @@ def _update_query_raw(qo, params, k, v):
 
     elif k == 'search_type':
         params[k] = v
+
+
+def _csv_split(s, delimiter=','):
+    return [r for r in csv.reader([s], delimiter=delimiter)][0]

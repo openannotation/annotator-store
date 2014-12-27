@@ -215,10 +215,6 @@ def make_model(es):
     return type('Model', (_Model,), {'es': es})
 
 
-def _csv_split(s, delimiter=','):
-    return [r for r in csv.reader([s], delimiter=delimiter)][0]
-
-
 def _build_query(query, offset, limit):
     # Create a match query for each keyword
     match_clauses = [{'match': {k: v}} for k, v in iteritems(query)]
