@@ -72,9 +72,8 @@ class ElasticSearch(object):
             self.conn.indices.close(self.index)
             self.conn.indices.delete(self.index)
 
-    def create_models(self, models):
+    def create_models(self, models, analysis_settings):
         mappings = _compile_mappings(models)
-        analysis = _compile_analysis(models)
 
         # Test for index existence while also checking if connection works
         try:
@@ -88,17 +87,17 @@ class ElasticSearch(object):
             # If index does not yet exist, simply create the index
             self.conn.indices.create(self.index, body={
                 'mappings': mappings,
-                'settings': {'analysis': analysis},
+                'settings': {'analysis': analysis_settings},
             })
         else:
             # Otherwise, update its settings and mappings
-            self._update_analysis(analysis)
+            self._update_analysis(analysis_settings)
             self._update_mappings(mappings)
 
     def _update_analysis(self, analysis):
         """Update analyzers and filters"""
-        settings = self.conn.indices.get_settings(index=self.index)
-        existing = settings[self.index]['settings']['index']['analysis']
+        settings = self.conn.indices.get_settings(index=self.index).values()[0]
+        existing = settings['settings']['index'].get('analysis', {})
         # Only bother if new settings would differ from existing settings
         if not self._analysis_up_to_date(existing, analysis):
             try:
@@ -122,7 +121,7 @@ class ElasticSearch(object):
 
     @staticmethod
     def _analysis_up_to_date(existing, analysis):
-        """Tell whether existing settings are up to date"""
+        """Tell whether existing analysis settings are up to date"""
         new_analysis = existing.copy()
         for section, items in analysis.items():
             new_analysis.setdefault(section,{}).update(items)
@@ -262,21 +261,6 @@ def _compile_mappings(models):
     for model in models:
         mappings.update(model.get_mapping())
     return mappings
-
-
-def _compile_analysis(models):
-    """Merge the custom analyzers and such from the models"""
-    analysis = {}
-    for model in models:
-        for section, items in model.get_analysis().items():
-            existing_items = analysis.setdefault(section, {})
-            for name in items:
-                if name in existing_items:
-                    fmt = "Duplicate definition of 'index.analysis.{}.{}'."
-                    msg = fmt.format(section, name)
-                    raise RuntimeError(msg)
-            existing_items.update(items)
-    return analysis
 
 
 def _csv_split(s, delimiter=','):

@@ -20,7 +20,8 @@ import time
 
 from flask import Flask, g, current_app
 import elasticsearch
-from annotator import es, annotation, auth, authz, document, store
+from annotator import es, annotation, auth, authz, document, \
+                      elasticsearch_analyzers, store
 from tests.helpers import MockUser, MockConsumer, MockAuthenticator
 from tests.helpers import mock_authorizer
 
@@ -61,7 +62,8 @@ def main():
         es.authorization_enabled = app.config['AUTHZ_ON']
 
     try:
-        es.create_models([annotation.Annotation, document.Document])
+        es.create_models(models=[annotation.Annotation, document.Document],
+                         analysis_settings=elasticsearch_analyzers.ANALYSIS)
     except elasticsearch.exceptions.RequestError as e:
         if e.error.startswith('MergeMappingException'):
             date = time.strftime('%Y-%m-%d')

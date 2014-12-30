@@ -4,11 +4,13 @@ from elasticsearch import helpers
 
 from .annotation import Annotation
 from .document import Document
+from .elasticsearch_analyzers import ANALYSIS
 
 
 class Reindexer(object):
 
     es_models = Annotation, Document
+    analysis_settings = ANALYSIS
 
     def __init__(self, conn, interactive=False):
         self.conn = conn
@@ -60,7 +62,9 @@ class Reindexer(object):
 
     def get_index_config(self):
         # Configure index mappings
-        index_config = {'mappings': {}}
+        index_config = {'mappings': {},
+                        'settings': {'analysis': self.analysis_settings},
+                        }
         for model in self.es_models:
             index_config['mappings'].update(model.get_mapping())
         return index_config

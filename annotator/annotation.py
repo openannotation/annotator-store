@@ -35,13 +35,10 @@ MAPPING = {
     }
 }
 
-ANALYSIS = {}
-
 class Annotation(es.Model):
 
     __type__ = TYPE
     __mapping__ = MAPPING
-    __analysis__ = ANALYSIS
 
     def save(self, *args, **kwargs):
         _add_default_permissions(self)
