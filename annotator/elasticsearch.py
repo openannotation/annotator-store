@@ -76,27 +76,24 @@ class ElasticSearch(object):
         mappings = _compile_mappings(models)
         analysis = _compile_analysis(models)
 
-        # If it does not yet exist, simply create the index
+        # Test for index existence while also checking if connection works
         try:
-            response = self.conn.indices.create(self.index, ignore=400, body={
-                'mappings': mappings,
-                'settings': {'analysis': analysis},
-            })
-            return
+            index_exists = self.conn.indices.exists(self.index)
         except elasticsearch.exceptions.ConnectionError as e:
             msg = ('Can not access ElasticSearch at {0}! '
                    'Check to ensure it is running.').format(self.host)
             raise elasticsearch.exceptions.ConnectionError('N/A', msg, e)
 
-        # Bad request (400) is ignored above, to prevent warnings in the log
-        # when the index already exists, but the failure could be for other
-        # reasons. If so, raise the error here.
-        if 'error' in response and 'IndexAlreadyExists' not in response['error']:
-            raise elasticsearch.exceptions.RequestError(400, response['error'])
-
-        # Update the mappings of the existing index
-        self._update_analysis(analysis)
-        self._update_mappings(mappings)
+        if not index_exists:
+            # If index does not yet exist, simply create the index
+            self.conn.indices.create(self.index, body={
+                'mappings': mappings,
+                'settings': {'analysis': analysis},
+            })
+        else:
+            # Otherwise, update its settings and mappings
+            self._update_analysis(analysis)
+            self._update_mappings(mappings)
 
     def _update_analysis(self, analysis):
         """Update analyzers and filters"""
