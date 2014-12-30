@@ -72,7 +72,7 @@ class ElasticSearch(object):
             self.conn.indices.close(self.index)
             self.conn.indices.delete(self.index)
 
-    def create_models(self, models, analysis_settings):
+    def create_all(self, models, analysis_settings):
         mappings = _compile_mappings(models)
 
         # Test for index existence while also checking if connection works

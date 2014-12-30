@@ -62,7 +62,7 @@ def main():
         es.authorization_enabled = app.config['AUTHZ_ON']
 
     try:
-        es.create_models(models=[annotation.Annotation, document.Document],
+        es.create_all(models=[annotation.Annotation, document.Document],
                          analysis_settings=elasticsearch_analyzers.ANALYSIS)
     except elasticsearch.exceptions.RequestError as e:
         if e.error.startswith('MergeMappingException'):

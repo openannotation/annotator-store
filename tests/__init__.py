@@ -34,7 +34,7 @@ class TestCase(object):
         es.drop_all()
 
     def setup(self):
-        es.create_models(models=[annotation.Annotation, document.Document],
+        es.create_all(models=[annotation.Annotation, document.Document],
                          analysis_settings=elasticsearch_analyzers.ANALYSIS)
         es.conn.cluster.health(wait_for_status='yellow')
         self.cli = self.app.test_client()
