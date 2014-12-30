@@ -1,6 +1,7 @@
 Next release
 ============
 
+- Support custom analyzers in Elasticsearch
 - Fix bug '_csv_split not found'
 
 0.13.2
