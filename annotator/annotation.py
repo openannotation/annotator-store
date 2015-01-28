@@ -50,17 +50,7 @@ class Annotation(es.Model):
 
         if 'document' in self:
             d = self['document']
-            uris = [link['href'] for link in d['link']]
-            docs = document.Document.get_all_by_uris(uris)
-
-            if len(docs) == 0:
-                doc = document.Document(d)
-                doc.save()
-            else:
-                doc = docs[0]
-                links = d.get('link', [])
-                doc.merge_links(links)
-                doc.save()
+            document.Document.save_document_data(d)
 
         super(Annotation, self).save(*args, **kwargs)
 

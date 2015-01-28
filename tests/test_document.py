@@ -5,8 +5,27 @@ from . import TestCase
 from annotator.document import Document
 
 
-class TestDocument(TestCase):
+peerj = {
+    "html": {
+        "href": "https://peerj.com/articles/53/",
+        "type": "text/html"
+    },
+    "pdf": {
+        "href": "https://peerj.com/articles/53.pdf",
+        "type": "application/pdf"
+    },
+    "doc": {
+        "href": "http://peerj.com/articles/53.doc",
+        "type": "application/vnd.ms-word.document"
+    },
+    "docx": {
+        "href": "https://peerj.com/articles/53.docx",
+        "type": "application/vnd.ms-word.document"
+    }
+}
 
+
+class TestDocument(TestCase):
     def setup(self):
         super(TestDocument, self).setup()
         self.ctx = self.app.test_request_context(path='/api')
@@ -27,16 +46,7 @@ class TestDocument(TestCase):
         d = Document({
             "id": "1",
             "title": "Annotations: The Missing Manual",
-            "link": [
-                {
-                    "href": "https://peerj.com/articles/53/",
-                    "type": "text/html"
-                },
-                {
-                    "href": "https://peerj.com/articles/53.pdf",
-                    "type": "application/pdf"
-                }
-            ],
+            "link": [peerj["html"], peerj["pdf"]]
         })
         d.save()
         d = Document.fetch("1")
@@ -65,16 +75,7 @@ class TestDocument(TestCase):
         d = Document({
             "id": "1",
             "title": "document",
-            "link": [
-                {
-                    "href": "https://peerj.com/articles/53/",
-                    "type": "text/html"
-                },
-                {
-                    "href": "https://peerj.com/articles/53.pdf",
-                    "type": "application/pdf"
-                }
-            ],
+            "link": [peerj["html"], peerj["pdf"]]
         })
         d.save()
         res = Document.search(query={'title': 'document'})
@@ -88,32 +89,14 @@ class TestDocument(TestCase):
         d = Document({
             "id": "1",
             "title": "document1",
-            "link": [
-                {
-                    "href": "https://peerj.com/articles/53/",
-                    "type": "text/html"
-                },
-                {
-                    "href": "https://peerj.com/articles/53.pdf",
-                    "type": "application/pdf"
-                },
-            ],
+            "link": [peerj["html"], peerj["pdf"]]
         })
         d.save()
 
         d = Document({
             "id": "2",
             "title": "document2",
-            "link": [
-                {
-                    "href": "https://peerj.com/articles/53/",
-                    "type": "text/html"
-                },
-                {
-                    "href": "https://peerj.com/articles/53.pdf",
-                    "type": "application/pdf"
-                },
-            ],
+            "link": [peerj["html"], peerj["pdf"]]
         })
         d.save()
 
@@ -140,24 +123,14 @@ class TestDocument(TestCase):
         d = Document({
             "id": "1",
             "title": "document1",
-            "link": [
-                {
-                    "href": "https://peerj.com/articles/53/",
-                    "type": "text/html"
-                },
-            ]
+            "link": [peerj["html"]]
         })
         d.save()
 
         d = Document({
             "id": "2",
             "title": "document2",
-            "link": [
-                {
-                    "href": "https://peerj.com/articles/53.pdf",
-                    "type": "application/pdf"
-                }
-            ]
+            "link": [peerj["pdf"]]
         })
         d.save()
 
@@ -169,16 +142,7 @@ class TestDocument(TestCase):
         d = Document({
             "id": "1",
             "title": "document",
-            "link": [
-                {
-                    "href": "https://peerj.com/articles/53/",
-                    "type": "text/html"
-                },
-                {
-                    "href": "https://peerj.com/articles/53.pdf",
-                    "type": "application/pdf"
-                }
-            ],
+            "link": [peerj["html"], peerj["pdf"]]
         })
         assert_equal(d.uris(), [
             "https://peerj.com/articles/53/",
@@ -190,16 +154,7 @@ class TestDocument(TestCase):
         d = Document({
             "id": "1",
             "title": "document",
-            "link": [
-                {
-                    "href": "https://peerj.com/articles/53/",
-                    "type": "text/html"
-                },
-                {
-                    "href": "https://peerj.com/articles/53.pdf",
-                    "type": "application/pdf"
-                }
-            ],
+            "link": [peerj["html"], peerj["pdf"]]
         })
         d.save()
 
@@ -207,16 +162,7 @@ class TestDocument(TestCase):
         assert d
         assert_equal(len(d['link']), 2)
 
-        d.merge_links([
-            {
-                "href": "https://peerj.com/articles/53/",
-                "type": "text/html"
-            },
-            {
-                "href": "http://peerj.com/articles/53.doc",
-                "type": "application/vnd.ms-word.document"
-            }
-        ])
+        d.merge_links([peerj["html"], peerj["doc"]])
         d.save()
 
         assert_equal(len(d['link']), 3)
@@ -228,4 +174,89 @@ class TestDocument(TestCase):
         assert doc
         assert_equal(len(doc['link']), 3)
 
+    @staticmethod
+    def test_get_all_recursive_for_uris():
+        d1 = Document({
+            "id": "1",
+            "title": "document1",
+            "link": [peerj["html"], peerj["pdf"]]
+        })
+        d1.save()
 
+        d2 = Document({
+            "id": "2",
+            "title": "document2",
+            "link": [peerj["pdf"], peerj["doc"]]
+        })
+        d2.save()
+
+        d3 = Document({
+            "id": "3",
+            "title": "document3",
+            "link": [peerj["doc"], peerj["docx"]]
+        })
+        d3.save()
+
+        d4 = Document({
+            "id": "4",
+            "title": "document4",
+            "link": [peerj["docx"]]
+        })
+        d4.save()
+
+        uris = ["https://peerj.com/articles/53/"]
+        docs = Document.get_all_recursive_for_uris(uris)
+        assert len(docs) == 4
+
+    @staticmethod
+    def test_merge_documents():
+        d1 = Document({
+            "id": "1",
+            "title": "document1",
+            "link": [peerj["html"], peerj["pdf"]]
+        })
+        d1.save()
+
+        d2 = Document({
+            "id": "2",
+            "title": "document2",
+            "link": [peerj["doc"], peerj["docx"]]
+        })
+        d2.save()
+
+        d3 = Document({
+            "id": "3",
+            "title": "document3",
+            "link": [peerj["doc"], peerj["docx"]]
+        })
+        d3.save()
+
+        document = {
+            "link": [
+                {
+                    "href": "https://totallydifferenturl.com",
+                    "type": "text/html"
+                }
+            ]
+        }
+
+        # A new document is created for this
+        Document.save_document_data(document)
+        count = Document.count()
+        assert count == 4
+
+        document = {
+            "link": [peerj["pdf"], peerj["doc"]]
+        }
+
+        Document.save_document_data(document)
+        # The unnecessary documents have been deleted
+        d1 = Document.fetch(1)
+        d2 = Document.fetch(2)
+        d3 = Document.fetch(3)
+        assert d1 is None
+        assert d2 is None
+        assert d3
+
+        uris = d3.uris()
+        assert len(uris) == 4

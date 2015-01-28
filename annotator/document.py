@@ -71,8 +71,75 @@ class Document(es.Model):
             if 'href' in l and 'type' in l and l['href'] not in current_uris:
                 self['link'].append(l)
 
-    def _uris_from_links(self, links):
+    @staticmethod
+    def _uris_from_links(links):
         uris = []
         for link in links:
             uris.append(link.get('href'))
         return uris
+
+    @classmethod
+    def get_all_recursive_for_uris(cls, uris):
+        """
+        Builds an equivalence class (Kleene-star of documents) based on
+        the supplied URIs as seed uris. It loads every document for
+        which at least one supplied URI matches and recursively checks
+        the uris of the retrieved documents and use the new URIs as
+        seed URIs for the next iteration.
+
+        Finally returns a list of documents that have any of the
+        collected URIs
+        """
+        documents = []
+        docs_ids = set()
+        all_uris = set(uris)
+        new_uris = list(uris)
+
+        while len(new_uris):
+            docs = cls.get_all_by_uris(new_uris)
+            new_uris = []
+            for doc in docs:
+                if doc['id'] not in docs_ids:
+                    documents.append(doc)
+                    docs_ids.add(doc['id'])
+
+                for uri in doc.uris():
+                    if uri not in all_uris:
+                        new_uris.append(uri)
+                        all_uris.add(uri)
+
+        return documents
+
+    @classmethod
+    def save_document_data(cls, document):
+        """Saves document metadata, looks for existing documents and
+        merges them to maintain equivalence classes"""
+        uris = [link['href'] for link in document['link']]
+
+        # Get existing documents
+        docs = cls.get_all_recursive_for_uris(uris)
+
+        # Create a new document if none existed for these uris
+        if len(docs) == 0:
+            doc = cls(document)
+            doc.save()
+        # Merge links to the single document
+        elif len(docs) == 1:
+            doc = docs[0]
+            links = document.get('link', [])
+            doc.merge_links(links)
+            doc.save()
+        # Merge the links into all
+        else:
+            doc = docs.pop()
+            links = document.get('link', [])
+            doc.merge_links(links)
+            for d in docs:
+                links = d.get('link', [])
+                doc.merge_links(links)
+
+            doc.save()
+
+            # Merge links to all docs
+            for d in docs:
+                d.delete()
