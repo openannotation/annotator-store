@@ -4,6 +4,7 @@ from nose.tools import *
 from . import TestCase
 from annotator.document import Document
 
+
 class TestDocument(TestCase):
 
     def setup(self):
@@ -16,11 +17,13 @@ class TestDocument(TestCase):
         self.ctx.pop()
         super(TestDocument, self).teardown()
 
-    def test_new(self):
+    @staticmethod
+    def test_new():
         d = Document()
         assert_equal('{}', repr(d))
 
-    def test_basics(self):
+    @staticmethod
+    def test_basics():
         d = Document({
             "id": "1",
             "title": "Annotations: The Missing Manual",
@@ -46,7 +49,8 @@ class TestDocument(TestCase):
         assert d['created']
         assert d['updated']
 
-    def test_delete(self):
+    @staticmethod
+    def test_delete():
         ann = Document(id=1)
         ann.save()
 
@@ -54,9 +58,10 @@ class TestDocument(TestCase):
         newdoc.delete()
 
         nodoc = Document.fetch(1)
-        assert nodoc == None
+        assert nodoc is None
 
-    def test_search(self):
+    @staticmethod
+    def test_search():
         d = Document({
             "id": "1",
             "title": "document",
@@ -75,7 +80,8 @@ class TestDocument(TestCase):
         res = Document.search(query={'title': 'document'})
         assert_equal(len(res), 1)
 
-    def test_get_by_uri(self):
+    @staticmethod
+    def test_get_by_uri():
 
         # create 3 documents and make sure get_by_uri works properly
 
@@ -127,7 +133,8 @@ class TestDocument(TestCase):
         assert doc
         assert_equal(doc['title'], "document1") 
 
-    def test_get_all_by_uri(self):
+    @staticmethod
+    def test_get_all_by_uri():
         # add two documents and make sure we can search for both
 
         d = Document({
@@ -157,7 +164,8 @@ class TestDocument(TestCase):
         docs = Document.get_all_by_uris(["https://peerj.com/articles/53/", "https://peerj.com/articles/53.pdf"])
         assert_equal(len(docs), 2)
 
-    def test_uris(self):
+    @staticmethod
+    def test_uris():
         d = Document({
             "id": "1",
             "title": "document",
@@ -177,7 +185,8 @@ class TestDocument(TestCase):
             "https://peerj.com/articles/53.pdf"
         ])
 
-    def test_merge_links(self):
+    @staticmethod
+    def test_merge_links():
         d = Document({
             "id": "1",
             "title": "document",
