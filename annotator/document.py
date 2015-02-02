@@ -79,7 +79,7 @@ class Document(es.Model):
         return uris
 
     @classmethod
-    def get_all_recursive_for_uris(cls, uris):
+    def _get_all_iterative_for_uris(cls, uris):
         """
         Builds an equivalence class (Kleene-star of documents) based on
         the supplied URIs as seed uris. It loads every document for
@@ -110,35 +110,33 @@ class Document(es.Model):
 
         return documents
 
-    @classmethod
-    def save_document_data(cls, document):
+    def save(self):
         """Saves document metadata, looks for existing documents and
         merges them to maintain equivalence classes"""
-        uris = [link['href'] for link in document['link']]
+        uris = self.uris()
 
         # Get existing documents
-        docs = cls.get_all_recursive_for_uris(uris)
+        docs = self._get_all_iterative_for_uris(uris)
 
         # Create a new document if none existed for these uris
         if len(docs) == 0:
-            doc = cls(document)
-            doc.save()
-        # Merge links to the single document
+            super(Document, self).save()
+        # Merge links to a single document
         elif len(docs) == 1:
             doc = docs[0]
-            links = document.get('link', [])
+            links = self.get('link', [])
             doc.merge_links(links)
-            doc.save()
+            super(Document, doc).save()
         # Merge the links into all
         else:
             doc = docs.pop()
-            links = document.get('link', [])
+            links = self.get('link', [])
             doc.merge_links(links)
             for d in docs:
                 links = d.get('link', [])
                 doc.merge_links(links)
 
-            doc.save()
+            super(Document, doc).save()
 
             # Merge links to all docs
             for d in docs:

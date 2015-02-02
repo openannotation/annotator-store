@@ -175,7 +175,7 @@ class TestDocument(TestCase):
         assert_equal(len(doc['link']), 3)
 
     @staticmethod
-    def test_get_all_recursive_for_uris():
+    def test_save():
         d1 = Document({
             "id": "1",
             "title": "document1",
@@ -205,11 +205,21 @@ class TestDocument(TestCase):
         d4.save()
 
         uris = ["https://peerj.com/articles/53/"]
-        docs = Document.get_all_recursive_for_uris(uris)
-        assert len(docs) == 4
+        docs = Document._get_all_iterative_for_uris(uris)
+        assert len(docs) == 1
+
+        d1 = Document.fetch(1)
+        d2 = Document.fetch(2)
+        d3 = Document.fetch(3)
+        d4 = Document.fetch(4)
+        assert d1
+        assert d2 is None
+        assert d3 is None
+        assert d4 is None
+
 
     @staticmethod
-    def test_merge_documents():
+    def test_save_merge_documents():
         d1 = Document({
             "id": "1",
             "title": "document1",
@@ -224,6 +234,12 @@ class TestDocument(TestCase):
         })
         d2.save()
 
+        # They are not merged yes
+        d1 = Document.fetch(1)
+        d2 = Document.fetch(2)
+        assert d1
+        assert d2
+
         d3 = Document({
             "id": "3",
             "title": "document3",
@@ -231,32 +247,42 @@ class TestDocument(TestCase):
         })
         d3.save()
 
-        document = {
+        d3 = Document.fetch(3)
+        assert d3 is None
+
+
+        d4 = Document({
+            "id": "4",
+            "title": "document4",
             "link": [
                 {
                     "href": "https://totallydifferenturl.com",
                     "type": "text/html"
                 }
             ]
-        }
+        })
 
-        # A new document is created for this
-        Document.save_document_data(document)
+        # # A new document is created for this
+        d4.save()
         count = Document.count()
-        assert count == 4
+        assert count == 3
 
-        document = {
+        d5 = Document({
+            "id": "5",
+            "title": "document5",
             "link": [peerj["pdf"], peerj["doc"]]
-        }
+        })
 
-        Document.save_document_data(document)
-        # The unnecessary documents have been deleted
+        d5.save()
+        # The documents have been merged
         d1 = Document.fetch(1)
         d2 = Document.fetch(2)
         d3 = Document.fetch(3)
-        assert d1 is None
-        assert d2 is None
-        assert d3
+        d4 = Document.fetch(4)
+        d5 = Document.fetch(5)
 
-        uris = d3.uris()
-        assert len(uris) == 4
+        assert d1 is None
+        assert d2
+        assert d3 is None
+        assert d4
+        assert d5 is None

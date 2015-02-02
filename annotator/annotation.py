@@ -49,8 +49,8 @@ class Annotation(es.Model):
         # If we do then we'll merge the supplied links into it.
 
         if 'document' in self:
-            d = self['document']
-            document.Document.save_document_data(d)
+            d = document.Document(self['document'])
+            d.save()
 
         super(Annotation, self).save(*args, **kwargs)
 
