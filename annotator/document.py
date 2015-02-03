@@ -114,6 +114,38 @@ class Document(es.Model):
         filtered_list = [l for l in links if 'type' in l and 'href' in l]
         self['link'] = filtered_list
 
+    @classmethod
+    def _bulk_delete_and_update(cls, to_delete, to_update):
+        bulk_list = []
+
+        for doc_to_delete in to_delete:
+            bulk_item = {
+                'delete': {
+                    '_index': cls.es.index,
+                    '_type': cls.__type__,
+                    '_id': doc_to_delete['id']
+                }
+            }
+            bulk_list.append(bulk_item)
+
+        for doc_to_update in to_update:
+            bulk_item = {
+                'update': {
+                    '_index': cls.es.index,
+                    '_type': cls.__type__,
+                    '_id': doc_to_update['id'],
+                }
+            }
+
+            update_item = {
+                'doc': doc_to_update
+            }
+
+            bulk_list.append(bulk_item)
+            bulk_list.append(update_item)
+
+        cls.es.conn.bulk(body=bulk_list, refresh=True)
+
     def save(self):
         """Saves document metadata, looks for existing documents and
         merges them to maintain equivalence classes"""
@@ -141,8 +173,4 @@ class Document(es.Model):
                 links = d.get('link', [])
                 super_doc.merge_links(links)
 
-            super(Document, super_doc).save()
-
-            # Remove assimilated docs
-            for d in existing_docs:
-                d.delete()
+            self._bulk_delete_and_update(existing_docs, [super_doc])

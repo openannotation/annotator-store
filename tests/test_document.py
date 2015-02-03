@@ -272,7 +272,6 @@ class TestDocument(TestCase):
         d3 = Document.fetch(3)
         assert d3 is None
 
-
         d4 = Document({
             "id": "4",
             "title": "document4",
@@ -296,6 +295,7 @@ class TestDocument(TestCase):
         })
 
         d5.save()
+
         # The documents have been merged
         d1 = Document.fetch(1)
         d2 = Document.fetch(2)
