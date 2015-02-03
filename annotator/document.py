@@ -33,11 +33,11 @@ class Document(es.Model):
     @classmethod
     def get_by_uri(cls, uri):
         """Returns the first document match for a given URI."""
-        results = cls.get_all_by_uris([uri])
+        results = cls._get_all_by_uris([uri])
         return results[0] if len(results) > 0 else []
 
     @classmethod
-    def get_all_by_uris(cls, uris):
+    def _get_all_by_uris(cls, uris):
         """
         Returns a list of documents that have any of the supplied URIs.
 
@@ -95,7 +95,7 @@ class Document(es.Model):
         new_uris = list(uris)
 
         while len(new_uris):
-            docs = cls.get_all_by_uris(new_uris)
+            docs = cls._get_all_by_uris(new_uris)
             new_uris = []
             for doc in docs:
                 if doc['id'] not in documents:

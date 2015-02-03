@@ -156,7 +156,7 @@ class TestDocument(TestCase):
         })
         d.save()
 
-        docs = Document.get_all_by_uris(["https://peerj.com/articles/53/", "https://peerj.com/articles/53.pdf"])
+        docs = Document._get_all_by_uris(["https://peerj.com/articles/53/", "https://peerj.com/articles/53.pdf"])
         assert_equal(len(docs), 2)
 
     @staticmethod
