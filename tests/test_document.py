@@ -60,6 +60,28 @@ class TestDocument(TestCase):
         assert d['updated']
 
     @staticmethod
+    def test_deficient_links():
+        d = Document({
+            "id": "1",
+            "title": "Chaos monkey: The messed up links",
+            "link": [{
+                "href": "http://cuckoo.baboon/"
+            }, {
+                # I'm an empty link entry
+            }, {
+                "type": "text/html"
+            }, {
+                "href": "http://cuckoo.baboon/",
+                "type": "text/html"
+            }]
+        })
+        d.save()
+        d = Document.fetch("1")
+        assert_equal(len(d['link']), 1)
+        assert_equal(d['link'][0]['href'], "http://cuckoo.baboon/")
+        assert_equal(d['link'][0]['type'], "text/html")
+
+    @staticmethod
     def test_delete():
         ann = Document(id=1)
         ann.save()

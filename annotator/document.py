@@ -110,9 +110,17 @@ class Document(es.Model):
 
         return documents
 
+    def _remove_deficient_links(self):
+        # Remove links without a type or href
+        links = self.get('link', [])
+        filtered_list = [l for l in links if 'type' in l and 'href' in l]
+        self['link'] = filtered_list
+
     def save(self):
         """Saves document metadata, looks for existing documents and
         merges them to maintain equivalence classes"""
+        self._remove_deficient_links()
+
         uris = self.uris()
 
         # Get existing documents
