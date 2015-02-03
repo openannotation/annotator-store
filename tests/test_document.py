@@ -43,6 +43,7 @@ class TestDocument(TestCase):
 
     @staticmethod
     def test_basics():
+        # Creating a single document and verifies the saved attributes
         d = Document({
             "id": "1",
             "title": "Annotations: The Missing Manual",
@@ -61,6 +62,7 @@ class TestDocument(TestCase):
 
     @staticmethod
     def test_deficient_links():
+        # Test that bad links are not saved
         d = Document({
             "id": "1",
             "title": "Chaos monkey: The messed up links",
@@ -83,6 +85,7 @@ class TestDocument(TestCase):
 
     @staticmethod
     def test_delete():
+        # Test deleting a document
         ann = Document(id=1)
         ann.save()
 
@@ -94,6 +97,7 @@ class TestDocument(TestCase):
 
     @staticmethod
     def test_search():
+        # Test search retrieve
         d = Document({
             "id": "1",
             "title": "document",
@@ -105,8 +109,7 @@ class TestDocument(TestCase):
 
     @staticmethod
     def test_get_by_uri():
-
-        # create 3 documents and make sure get_by_uri works properly
+        # Make sure that only the document with the given uri is retrieved
 
         d = Document({
             "id": "1",
@@ -118,13 +121,6 @@ class TestDocument(TestCase):
         d = Document({
             "id": "2",
             "title": "document2",
-            "link": [peerj["html"], peerj["pdf"]]
-        })
-        d.save()
-
-        d = Document({
-            "id": "3",
-            "title": "document3",
             "link": [
                 {
                     "href": "http://nature.com/123/",
@@ -134,30 +130,16 @@ class TestDocument(TestCase):
         })
         d.save()
 
+        d = Document({
+            "id": "3",
+            "title": "document3",
+            "link": [peerj["doc"]]
+        })
+        d.save()
+
         doc = Document.get_by_uri("https://peerj.com/articles/53/")
         assert doc
         assert_equal(doc['title'], "document1") 
-
-    @staticmethod
-    def test_get_all_by_uri():
-        # add two documents and make sure we can search for both
-
-        d = Document({
-            "id": "1",
-            "title": "document1",
-            "link": [peerj["html"]]
-        })
-        d.save()
-
-        d = Document({
-            "id": "2",
-            "title": "document2",
-            "link": [peerj["pdf"]]
-        })
-        d.save()
-
-        docs = Document._get_all_by_uris(["https://peerj.com/articles/53/", "https://peerj.com/articles/53.pdf"])
-        assert_equal(len(docs), 2)
 
     @staticmethod
     def test_uris():
@@ -226,10 +208,6 @@ class TestDocument(TestCase):
         })
         d4.save()
 
-        uris = ["https://peerj.com/articles/53/"]
-        docs = Document._get_all_iterative_for_uris(uris)
-        assert len(docs) == 1
-
         d1 = Document.fetch(1)
         d2 = Document.fetch(2)
         d3 = Document.fetch(3)
@@ -238,7 +216,6 @@ class TestDocument(TestCase):
         assert d2 is None
         assert d3 is None
         assert d4 is None
-
 
     @staticmethod
     def test_save_merge_documents():
@@ -283,7 +260,8 @@ class TestDocument(TestCase):
             ]
         })
 
-        # # A new document is created for this
+        # A new document is created for d4
+        # It is not merged
         d4.save()
         count = Document.count()
         assert count == 3
@@ -296,7 +274,7 @@ class TestDocument(TestCase):
 
         d5.save()
 
-        # The documents have been merged
+        # The documents have been merged into d2
         d1 = Document.fetch(1)
         d2 = Document.fetch(2)
         d3 = Document.fetch(3)
