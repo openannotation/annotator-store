@@ -90,8 +90,7 @@ class Document(es.Model):
         Finally returns a list of documents that have any of the
         collected URIs
         """
-        documents = []
-        docs_ids = set()
+        documents = {}
         all_uris = set(uris)
         new_uris = list(uris)
 
@@ -99,16 +98,15 @@ class Document(es.Model):
             docs = cls.get_all_by_uris(new_uris)
             new_uris = []
             for doc in docs:
-                if doc['id'] not in docs_ids:
-                    documents.append(doc)
-                    docs_ids.add(doc['id'])
+                if doc['id'] not in documents:
+                    documents[doc['id']] = doc
 
-                for uri in doc.uris():
-                    if uri not in all_uris:
-                        new_uris.append(uri)
-                        all_uris.add(uri)
+                    for uri in doc.uris():
+                        if uri not in all_uris:
+                            new_uris.append(uri)
+                            all_uris.add(uri)
 
-        return documents
+        return list(documents.values())
 
     def _remove_deficient_links(self):
         # Remove links without a type or href
@@ -120,32 +118,31 @@ class Document(es.Model):
         """Saves document metadata, looks for existing documents and
         merges them to maintain equivalence classes"""
         self._remove_deficient_links()
-
         uris = self.uris()
 
         # Get existing documents
-        docs = self._get_all_iterative_for_uris(uris)
+        existing_docs = self._get_all_iterative_for_uris(uris)
 
         # Create a new document if none existed for these uris
-        if len(docs) == 0:
+        if len(existing_docs) == 0:
             super(Document, self).save()
         # Merge links to a single document
-        elif len(docs) == 1:
-            doc = docs[0]
+        elif len(existing_docs) == 1:
+            super_doc = existing_docs[0]
             links = self.get('link', [])
-            doc.merge_links(links)
-            super(Document, doc).save()
-        # Merge the links into all
+            super_doc.merge_links(links)
+            super(Document, super_doc).save()
+        # Merge links from all docs into one
         else:
-            doc = docs.pop()
+            super_doc = existing_docs.pop()
             links = self.get('link', [])
-            doc.merge_links(links)
-            for d in docs:
+            super_doc.merge_links(links)
+            for d in existing_docs:
                 links = d.get('link', [])
-                doc.merge_links(links)
+                super_doc.merge_links(links)
 
-            super(Document, doc).save()
+            super(Document, super_doc).save()
 
-            # Merge links to all docs
-            for d in docs:
+            # Remove assimilated docs
+            for d in existing_docs:
                 d.delete()
