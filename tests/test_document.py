@@ -212,10 +212,10 @@ class TestDocument(TestCase):
         d2 = Document.fetch(2)
         d3 = Document.fetch(3)
         d4 = Document.fetch(4)
-        assert d1
+        assert d1 is None
         assert d2 is None
         assert d3 is None
-        assert d4 is None
+        assert d4
 
     @staticmethod
     def test_save_merge_documents():
@@ -233,7 +233,7 @@ class TestDocument(TestCase):
         })
         d2.save()
 
-        # They are not merged yes
+        # They are not merged yet
         d1 = Document.fetch(1)
         d2 = Document.fetch(2)
         assert d1
@@ -246,8 +246,11 @@ class TestDocument(TestCase):
         })
         d3.save()
 
+        # d2 is merged into d3
+        d2 = Document.fetch(2)
         d3 = Document.fetch(3)
-        assert d3 is None
+        assert d2 is None
+        assert d3
 
         d4 = Document({
             "id": "4",
@@ -263,8 +266,8 @@ class TestDocument(TestCase):
         # A new document is created for d4
         # It is not merged
         d4.save()
-        count = Document.count()
-        assert count == 3
+        d4 = Document.fetch(4)
+        assert d4
 
         d5 = Document({
             "id": "5",
@@ -274,7 +277,7 @@ class TestDocument(TestCase):
 
         d5.save()
 
-        # The documents have been merged into d2
+        # The documents have been merged into d5
         d1 = Document.fetch(1)
         d2 = Document.fetch(2)
         d3 = Document.fetch(3)
@@ -282,7 +285,7 @@ class TestDocument(TestCase):
         d5 = Document.fetch(5)
 
         assert d1 is None
-        assert d2
+        assert d2 is None
         assert d3 is None
         assert d4
-        assert d5 is None
+        assert d5

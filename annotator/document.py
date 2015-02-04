@@ -115,34 +115,27 @@ class Document(es.Model):
         self['link'] = filtered_list
 
     @classmethod
-    def _bulk_delete_and_update(cls, to_delete, to_update):
+    def _fill_bulk_header(cls, document):
+        return {
+            '_index': cls.es.index,
+            '_type': cls.__type__,
+            '_id': document['id']
+        }
+
+    @classmethod
+    def _bulk_operation(cls, to_delete, to_index):
         bulk_list = []
 
         for doc_to_delete in to_delete:
-            bulk_item = {
-                'delete': {
-                    '_index': cls.es.index,
-                    '_type': cls.__type__,
-                    '_id': doc_to_delete['id']
-                }
-            }
+            bulk_item = {'delete': cls._fill_bulk_header(doc_to_delete)}
             bulk_list.append(bulk_item)
 
-        for doc_to_update in to_update:
-            bulk_item = {
-                'update': {
-                    '_index': cls.es.index,
-                    '_type': cls.__type__,
-                    '_id': doc_to_update['id'],
-                }
-            }
-
-            update_item = {
-                'doc': doc_to_update
-            }
+        for doc_to_index in to_index:
+            bulk_item = {'index': cls._fill_bulk_header(doc_to_index)}
+            index_item = doc_to_index
 
             bulk_list.append(bulk_item)
-            bulk_list.append(update_item)
+            bulk_list.append(index_item)
 
         cls.es.conn.bulk(body=bulk_list, refresh=True)
 
@@ -158,19 +151,13 @@ class Document(es.Model):
         # Create a new document if none existed for these uris
         if len(existing_docs) == 0:
             super(Document, self).save()
-        # Merge links to a single document
-        elif len(existing_docs) == 1:
-            super_doc = existing_docs[0]
-            links = self.get('link', [])
-            super_doc.merge_links(links)
-            super(Document, super_doc).save()
-        # Merge links from all docs into one
+        # Merge links from all docs into this
         else:
-            super_doc = existing_docs.pop()
-            links = self.get('link', [])
-            super_doc.merge_links(links)
             for d in existing_docs:
                 links = d.get('link', [])
-                super_doc.merge_links(links)
+                self.merge_links(links)
 
-            self._bulk_delete_and_update(existing_docs, [super_doc])
+            self._bulk_operation(existing_docs, [])
+            # A separate operation because we want to save
+            # the document id if it didn't have any before
+            super(Document, self).save()
