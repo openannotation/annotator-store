@@ -36,13 +36,11 @@ class TestDocument(TestCase):
         self.ctx.pop()
         super(TestDocument, self).teardown()
 
-    @staticmethod
-    def test_new():
+    def test_new(self):
         d = Document()
         assert_equal('{}', repr(d))
 
-    @staticmethod
-    def test_basics():
+    def test_basics(self):
         # Creating a single document and verifies the saved attributes
         d = Document({
             "id": "1",
@@ -60,8 +58,7 @@ class TestDocument(TestCase):
         assert d['created']
         assert d['updated']
 
-    @staticmethod
-    def test_deficient_links():
+    def test_deficient_links(self):
         # Test that bad links are not saved
         d = Document({
             "id": "1",
@@ -83,8 +80,7 @@ class TestDocument(TestCase):
         assert_equal(d['link'][0]['href'], "http://cuckoo.baboon/")
         assert_equal(d['link'][0]['type'], "text/html")
 
-    @staticmethod
-    def test_delete():
+    def test_delete(self):
         # Test deleting a document
         ann = Document(id=1)
         ann.save()
@@ -95,8 +91,7 @@ class TestDocument(TestCase):
         nodoc = Document.fetch(1)
         assert nodoc is None
 
-    @staticmethod
-    def test_search():
+    def test_search(self):
         # Test search retrieve
         d = Document({
             "id": "1",
@@ -107,8 +102,7 @@ class TestDocument(TestCase):
         res = Document.search(query={'title': 'document'})
         assert_equal(len(res), 1)
 
-    @staticmethod
-    def test_get_by_uri():
+    def test_get_by_uri(self):
         # Make sure that only the document with the given uri is retrieved
 
         d = Document({
@@ -141,8 +135,7 @@ class TestDocument(TestCase):
         assert doc
         assert_equal(doc['title'], "document1") 
 
-    @staticmethod
-    def test_uris():
+    def test_uris(self):
         d = Document({
             "id": "1",
             "title": "document",
@@ -153,8 +146,7 @@ class TestDocument(TestCase):
             "https://peerj.com/articles/53.pdf"
         ])
 
-    @staticmethod
-    def test_merge_links():
+    def test_merge_links(self):
         d = Document({
             "id": "1",
             "title": "document",
@@ -178,8 +170,7 @@ class TestDocument(TestCase):
         assert doc
         assert_equal(len(doc['link']), 3)
 
-    @staticmethod
-    def test_save():
+    def test_save(self):
         d1 = Document({
             "id": "1",
             "title": "document1",
@@ -217,8 +208,7 @@ class TestDocument(TestCase):
         assert d3 is None
         assert d4
 
-    @staticmethod
-    def test_save_merge_documents():
+    def test_save_merge_documents(self):
         d1 = Document({
             "id": "1",
             "title": "document1",
