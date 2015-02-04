@@ -24,6 +24,7 @@ MAPPING = {
         }
     }
 }
+MAX_ITERATIONS = 5
 
 
 class Document(es.Model):
@@ -93,8 +94,9 @@ class Document(es.Model):
         documents = {}
         all_uris = set(uris)
         new_uris = list(uris)
+        iterations = 0
 
-        while len(new_uris):
+        while len(new_uris) and iterations < MAX_ITERATIONS:
             docs = cls._get_all_by_uris(new_uris)
             new_uris = []
             for doc in docs:
@@ -105,6 +107,7 @@ class Document(es.Model):
                         if uri not in all_uris:
                             new_uris.append(uri)
                             all_uris.add(uri)
+            iterations += 1
 
         return list(documents.values())
 
