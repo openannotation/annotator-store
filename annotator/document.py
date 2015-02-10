@@ -24,6 +24,7 @@ MAPPING = {
         }
     }
 }
+MAX_ITERATIONS = 5
 
 
 class Document(es.Model):
@@ -33,11 +34,11 @@ class Document(es.Model):
     @classmethod
     def get_by_uri(cls, uri):
         """Returns the first document match for a given URI."""
-        results = cls.get_all_by_uris([uri])
+        results = cls._get_all_by_uris([uri])
         return results[0] if len(results) > 0 else []
 
     @classmethod
-    def get_all_by_uris(cls, uris):
+    def _get_all_by_uris(cls, uris):
         """
         Returns a list of documents that have any of the supplied URIs.
 
@@ -71,8 +72,95 @@ class Document(es.Model):
             if 'href' in l and 'type' in l and l['href'] not in current_uris:
                 self['link'].append(l)
 
-    def _uris_from_links(self, links):
+    @staticmethod
+    def _uris_from_links(links):
         uris = []
         for link in links:
             uris.append(link.get('href'))
         return uris
+
+    @classmethod
+    def _get_all_iterative_for_uris(cls, uris):
+        """
+        Builds an equivalence class (Kleene-star of documents) based on
+        the supplied URIs as seed uris. It loads every document for
+        which at least one supplied URI matches and recursively checks
+        the uris of the retrieved documents and use the new URIs as
+        seed URIs for the next iteration.
+
+        Finally returns a list of documents that have any of the
+        collected URIs
+        """
+        documents = {}
+        all_uris = set(uris)
+        new_uris = list(uris)
+        iterations = 0
+
+        while len(new_uris) and iterations < MAX_ITERATIONS:
+            docs = cls._get_all_by_uris(new_uris)
+            new_uris = []
+            for doc in docs:
+                if doc['id'] not in documents:
+                    documents[doc['id']] = doc
+
+                    for uri in doc.uris():
+                        if uri not in all_uris:
+                            new_uris.append(uri)
+                            all_uris.add(uri)
+            iterations += 1
+
+        return list(documents.values())
+
+    def _remove_deficient_links(self):
+        # Remove links without a type or href
+        links = self.get('link', [])
+        filtered_list = [l for l in links if 'type' in l and 'href' in l]
+        self['link'] = filtered_list
+
+    @classmethod
+    def _fill_bulk_header(cls, document):
+        return {
+            '_index': cls.es.index,
+            '_type': cls.__type__,
+            '_id': document['id']
+        }
+
+    @classmethod
+    def _bulk_operation(cls, to_delete, to_index):
+        bulk_list = []
+
+        for doc_to_delete in to_delete:
+            bulk_item = {'delete': cls._fill_bulk_header(doc_to_delete)}
+            bulk_list.append(bulk_item)
+
+        for doc_to_index in to_index:
+            bulk_item = {'index': cls._fill_bulk_header(doc_to_index)}
+            index_item = doc_to_index
+
+            bulk_list.append(bulk_item)
+            bulk_list.append(index_item)
+
+        cls.es.conn.bulk(body=bulk_list, refresh=True)
+
+    def save(self):
+        """Saves document metadata, looks for existing documents and
+        merges them to maintain equivalence classes"""
+        self._remove_deficient_links()
+        uris = self.uris()
+
+        # Get existing documents
+        existing_docs = self._get_all_iterative_for_uris(uris)
+
+        # Create a new document if none existed for these uris
+        if len(existing_docs) == 0:
+            super(Document, self).save()
+        # Merge links from all docs into this
+        else:
+            for d in existing_docs:
+                links = d.get('link', [])
+                self.merge_links(links)
+
+            self._bulk_operation(existing_docs, [])
+            # A separate operation because we want to save
+            # the document id if it didn't have any before
+            super(Document, self).save()
