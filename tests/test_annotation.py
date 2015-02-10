@@ -92,11 +92,20 @@ class TestAnnotation(TestCase):
         res = Annotation.search()
         assert_equal(len(res), 3)
 
-        # ordering (most recent first)
+        # ordering (default: most recent first)
         assert_equal(res[0]['text'], uri2)
 
         res = Annotation.count()
         assert_equal(res, 3)
+
+        res = Annotation.search(order='asc')
+        assert_equal(res[0]['text'], uri1)
+
+        res = Annotation.search(sort='user')
+        assert_equal(res[0]['user'], user1)
+
+        res = Annotation.search(sort='user', order='asc')
+        assert_equal(res[0]['user'], user2)
 
         res = Annotation.search(limit=1)
         assert_equal(len(res), 1)

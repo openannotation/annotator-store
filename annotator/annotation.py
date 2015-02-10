@@ -102,11 +102,11 @@ class Annotation(es.Model):
         return res
 
     @classmethod
-    def _build_query(cls, query=None, offset=None, limit=None):
+    def _build_query(cls, query=None, offset=None, limit=None, sort=None, order=None):
         if query is None:
             query = {}
 
-        q = super(Annotation, cls)._build_query(query, offset, limit)
+        q = super(Annotation, cls)._build_query(query, offset, limit, sort, order)
 
         # attempt to expand query to include uris for other representations
         # using information we may have on hand about the Document

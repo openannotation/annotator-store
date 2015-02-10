@@ -300,6 +300,30 @@ class TestStore(TestCase):
         assert_equal(res['rows'][0]['uri'], uri1)
         assert_true(res['rows'][0]['id'] in [anno['id'], anno2['id']])
 
+    def test_search_sort_and_order(self):
+        uri1 = u'http://xyz.com'
+        uri2 = u'urn:uuid:xxxxx'
+        user = u'levin'
+        user2 = u'anna'
+        anno = self._create_annotation(uri=uri1, text=uri1, user=user)
+        anno2 = self._create_annotation(uri=uri1, text=uri1 + uri1, user=user2)
+        anno3 = self._create_annotation(uri=uri2, text=uri2, user=user)
+
+        res = self._get_search_results('limit=1&sort=user&order=asc')
+        assert_equal(res['total'], 3)
+        assert_equal(len(res['rows']), 1)
+        assert_equal(res['rows'][0]['user'], user2)
+
+        res = self._get_search_results('limit=1&sort=user&order=desc')
+        assert_equal(res['total'], 3)
+        assert_equal(len(res['rows']), 1)
+        assert_equal(res['rows'][0]['user'], user)
+
+        res = self._get_search_results('limit=1&sort=text&user=' + user)
+        assert_equal(res['total'], 2)
+        assert_equal(len(res['rows']), 1)
+        assert_equal(res['rows'][0]['text'], anno['text'])
+
     def test_search_limit(self):
         for i in xrange(250):
             self._create_annotation(refresh=False)

@@ -272,6 +272,10 @@ def search_annotations():
         kwargs['offset'] = atoi(params.pop('offset'), default=None)
     if 'limit' in params:
         kwargs['limit'] = atoi(params.pop('limit'), default=None)
+    if 'sort' in params:
+        kwargs['sort'] = params.pop('sort')
+    if 'order' in params:
+        kwargs['order'] = params.pop('order')
 
     # All remaining parameters are considered searched fields.
     kwargs['query'] = params
