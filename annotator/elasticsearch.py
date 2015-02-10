@@ -140,18 +140,24 @@ class _Model(dict):
         return cls(doc['_source'], id=id)
 
     @classmethod
-    def _build_query(cls, query=None, offset=None, limit=None):
+    def _build_query(cls, query=None, offset=None, limit=None, sort=None, order=None):
         if offset is None:
             offset = 0
         if limit is None:
             limit = RESULTS_DEFAULT_SIZE
         if query is None:
             query = {}
-        return _build_query(query, offset, limit)
+        if sort is None:
+            sort = 'updated'
+        if order is None:
+            order = 'desc'
+        return _build_query(query, offset, limit, sort, order)
 
     @classmethod
-    def search(cls, query=None, offset=0, limit=RESULTS_DEFAULT_SIZE, **kwargs):
-        q = cls._build_query(query=query, offset=offset, limit=limit)
+    def search(cls, query=None, offset=0, limit=RESULTS_DEFAULT_SIZE,
+               sort='updated', order='desc', **kwargs):
+        q = cls._build_query(query=query, offset=offset, limit=limit,
+                             sort=sort, order=order)
         if not q:
             return []
         return cls.search_raw(q, **kwargs)
@@ -215,7 +221,7 @@ def make_model(es):
     return type('Model', (_Model,), {'es': es})
 
 
-def _build_query(query, offset, limit):
+def _build_query(query, offset, limit, sort, order):
     # Create a match query for each keyword
     match_clauses = [{'match': {k: v}} for k, v in iteritems(query)]
 
@@ -224,13 +230,13 @@ def _build_query(query, offset, limit):
         match_clauses.append({'match_all': {}})
 
     return {
-        'sort': [{'updated': {
+        'sort': [{sort: {
             # Sort most recent first
-            'order': 'desc',
-            # While we do always provide a mapping for 'updated', elasticsearch
+            'order': order,
+            # While we do always provide a mapping for the field, elasticsearch
             # will bomb if there are no documents in the index. Although this
             # is an edge case, we don't want the API to return a 500 with an
-            # empty index, so ignore this sort instruction if 'updated' appears
+            # empty index, so ignore this sort instruction if the field appears
             # unmapped due to an empty index.
             'ignore_unmapped': True,
         }}],
