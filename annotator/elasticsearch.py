@@ -131,13 +131,12 @@ class _Model(dict):
     # already define that method name.
     @classmethod
     def fetch(cls, id):
-        try:
-            doc = cls.es.conn.get(index=cls.es.index,
-                                  doc_type=cls.__type__,
-                                  id=id)
-        except elasticsearch.exceptions.NotFoundError:
-            return None
-        return cls(doc['_source'], id=id)
+        doc = cls.es.conn.get(index=cls.es.index,
+                              doc_type=cls.__type__,
+                              ignore=404,
+                              id=id)
+        if doc.get('found', True):
+            return cls(doc['_source'], id=id)
 
     @classmethod
     def _build_query(cls, query=None, offset=None, limit=None, sort=None, order=None):
