@@ -57,9 +57,7 @@ class TestModel(object):
     @patch('annotator.elasticsearch.elasticsearch.Elasticsearch')
     def test_fetch_not_found(self, es_mock):
         conn = es_mock.return_value
-        def raise_exc(*args, **kwargs):
-            raise elasticsearch.exceptions.NotFoundError('foo')
-        conn.get.side_effect = raise_exc
+        conn.get.return_value = {'found': False}
         o = self.Model.fetch(123)
         assert_equal(o, None)
 
