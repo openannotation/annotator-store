@@ -1,6 +1,13 @@
 Next release
 ============
 
+- Enhanced search queries: Sorting and ordering can be set providing the 'sort'
+  and 'order' parameters for the query (#113)
+- Fix bug inside document plugin: Only one document was returned when looking
+  for equivalent documents. Now document equivalence discovery is enhanced and
+  discovered equivalent documents are merged into one.
+  INTERFACE CHANGE: get_all_by_uris() is no longer part of the Document
+  interface it is just a private function now.(#110)
 - Fix bug '_csv_split not found'
 
 0.13.2
