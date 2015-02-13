@@ -1,14 +1,20 @@
 Next release
 ============
 
-- Enhanced search queries: Sorting and ordering can be set providing the 'sort'
-  and 'order' parameters for the query (#113)
-- Fix bug inside document plugin: Only one document was returned when looking
-  for equivalent documents. Now document equivalence discovery is enhanced and
-  discovered equivalent documents are merged into one.
-  INTERFACE CHANGE: get_all_by_uris() is no longer part of the Document
-  interface it is just a private function now.(#110)
-- Fix bug '_csv_split not found'
+- ADDED: the search endpoint now supports 'sort' and 'order' query parameters,
+  which can be used to control the sort order of the returned results.
+
+- FIXED: previously only one document was returned when looking for equivalent
+  documents (#110). Now the Document model tracks all discovered equivalent
+  documents and keeps each document object up-to-date with them all.
+
+  BREAKING CHANGE: Document.get_all_by_uris() no longer exists. Use
+  Document.get_by_uri() which should return a single document containing all
+  equivalent URIs. (You may wish to update your index by fetching all documents
+  and resaving them.)
+
+- FIXED: the search_raw endpoint no longer throws an exception when the 'fields'
+  parameter is provided.
 
 0.13.2
 ======
