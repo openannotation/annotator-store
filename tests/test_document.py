@@ -76,9 +76,10 @@ class TestDocument(TestCase):
         })
         d.save()
         d = Document.fetch("1")
-        assert_equal(len(d['link']), 1)
+        assert_equal(len(d['link']), 2)
         assert_equal(d['link'][0]['href'], "http://cuckoo.baboon/")
-        assert_equal(d['link'][0]['type'], "text/html")
+        assert_equal(d['link'][1]['href'], "http://cuckoo.baboon/")
+        assert_equal(d['link'][1]['type'], "text/html")
 
     def test_delete(self):
         # Test deleting a document

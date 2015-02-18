@@ -69,7 +69,7 @@ class Document(es.Model):
     def merge_links(self, links):
         current_uris = self.uris()
         for l in links:
-            if 'href' in l and 'type' in l and l['href'] not in current_uris:
+            if 'href' in l and l['href'] not in current_uris:
                 self['link'].append(l)
 
     @staticmethod
@@ -114,7 +114,7 @@ class Document(es.Model):
     def _remove_deficient_links(self):
         # Remove links without a type or href
         links = self.get('link', [])
-        filtered_list = [l for l in links if 'type' in l and 'href' in l]
+        filtered_list = [l for l in links if 'href' in l]
         self['link'] = filtered_list
 
     @classmethod
