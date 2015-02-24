@@ -82,9 +82,15 @@ class TestAnnotation(TestCase):
         uri2 = u'urn:uuid:xxxxx'
         user1 = u'levin'
         user2 = u'anna'
-        anno1 = Annotation(uri=uri1, text=uri1, user=user1, permissions=perms)
-        anno2 = Annotation(uri=uri1, text=uri1 + uri1, user=user2, permissions=perms)
-        anno3 = Annotation(uri=uri2, text=uri2, user=user1, permissions=perms)
+        date1 = '2015-02-02T15:00'
+        date2 = '2015-02-04T16:12'
+        date3 = '2015-01-20T14:43'
+        anno1 = Annotation(uri=uri1, text=uri1, user=user1, permissions=perms,
+                           created=date1)
+        anno2 = Annotation(uri=uri1, text=uri1 + uri1, user=user2, permissions=perms,
+                           created=date2)
+        anno3 = Annotation(uri=uri2, text=uri2, user=user1, permissions=perms,
+                           created=date3)
         anno1.save()
         anno2.save()
         anno3.save()
@@ -112,23 +118,39 @@ class TestAnnotation(TestCase):
         res = Annotation.count(limit=1)
         assert_equal(res, 3)
 
-        res = Annotation.search(query={'uri':uri1})
+        res = Annotation.search(query={'uri': uri1})
         assert_equal(len(res), 2)
         assert_equal(res[0]['uri'], uri1)
         assert_equal(res[0]['id'], anno2['id'])
 
-        res = Annotation.search(query={'user':user1})
+        res = Annotation.search(query={'user': user1})
         assert_equal(len(res), 2)
         assert_equal(res[0]['user'], user1)
         assert_equal(res[0]['id'], anno3['id'])
 
-        res = Annotation.search(query={'user':user1, 'uri':uri2})
+        res = Annotation.search(query={'user': user1, 'uri':uri2})
         assert_equal(len(res), 1)
         assert_equal(res[0]['user'], user1)
         assert_equal(res[0]['id'], anno3['id'])
 
-        res = Annotation.count(query={'user':user1, 'uri':uri2})
+        res = Annotation.count(query={'user': user1, 'uri':uri2})
         assert_equal(res, 1)
+
+        res = Annotation.search(query={'after': '2015-02-02'})
+        assert_equal(len(res), 2)
+        assert_equal(res[0]['created'], date2)
+        assert_equal(res[1]['created'], date1)
+
+        res = Annotation.count(query={'after': '2015-02-02', 'uri': uri1})
+        assert_equal(res, 2)
+
+        res = Annotation.search(query={'after': '2015-01-23', 'before': '2015-02-03'})
+        assert_equal(len(res), 1)
+        assert_equal(res[0]['created'], date1)
+
+        res = Annotation.search(query={'before': '2015-02-02'})
+        assert_equal(len(res), 1)
+        assert_equal(res[0]['created'], date3)
 
     def test_search_permissions_null(self):
         anno = Annotation(text='Foobar')
