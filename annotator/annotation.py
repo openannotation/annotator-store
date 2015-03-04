@@ -96,7 +96,27 @@ class Annotation(es.Model):
         if query is None:
             query = {}
 
+        # Pop 'before' and 'after' parameters out of the query
+        after = query.pop('after', None)
+        before = query.pop('before', None)
+
         q = super(Annotation, cls)._build_query(query, offset, limit, sort, order)
+
+        # Create range query from before and/or after
+        if before is not None or after is not None:
+            clauses = q['query']['bool']['must']
+
+            # Remove match_all conjunction, because
+            # a range clause is added
+            if clauses[0] == {'match_all': {}}:
+                clauses.pop(0)
+
+            created_range = {'range': {'created': {}}}
+            if after is not None:
+                created_range['range']['created']['gte'] = after
+            if before is not None:
+                created_range['range']['created']['lt'] = before
+            clauses.append(created_range)
 
         # attempt to expand query to include uris for other representations
         # using information we may have on hand about the Document
