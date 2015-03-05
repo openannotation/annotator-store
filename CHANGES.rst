@@ -9,7 +9,7 @@ project endeavours to adhere to `Semantic Versioning`_.
 Unreleased
 ----------
 
-0.14.1
+0.14.1 2015-03-05
 -----------------
 - FIXED: Document plugin doesn't drop links without a type. The annotator
   client generates a typeless link from the document href. (#116)
