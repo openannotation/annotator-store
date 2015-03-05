@@ -9,6 +9,15 @@ project endeavours to adhere to `Semantic Versioning`_.
 Unreleased
 ----------
 
+0.14.1
+-----------------
+- FIXED: Document plugin doesn't drop links without a type. The annotator
+  client generates a typeless link from the document href. (#116)
+
+- ADDED: the search endpoint now supports 'before' and 'after query parameters,
+  which can be used to return annotations created between a specific time
+  period.
+
 0.14 - 2015-02-13
 -----------------
 
