@@ -13,6 +13,7 @@ except ImportError:
 
 from annotator.annotation import Annotation
 
+
 class OAAnnotation(Annotation):
     jsonld_baseurl = None
 
@@ -67,7 +68,7 @@ class OAAnnotation(Annotation):
     @property
     def tags(self):
         """A list of oa:Tag items"""
-        if not 'tags' in self:
+        if 'tags' not in self:
             return []
         return [
             {
@@ -146,7 +147,7 @@ class OAAnnotation(Annotation):
             '@type': 'prov:Software-agent',
             'foaf:name': 'annotator-store',
             'foaf:homepage': {'@id': 'http://annotatorjs.org'},
-        } # todo: add version number
+        }  # todo: add version number
 
     @property
     def serialized_at(self):
