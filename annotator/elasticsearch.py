@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 
-import csv
-import json
 import logging
 import datetime
 
@@ -10,26 +8,26 @@ import iso8601
 import elasticsearch
 from six import iteritems
 from six.moves.urllib.parse import urlparse
-from annotator.atoi import atoi
 
 log = logging.getLogger(__name__)
 
 RESULTS_MAX_SIZE = 200
 RESULTS_DEFAULT_SIZE = 20
 
+
 class ElasticSearch(object):
     """
     Thin wrapper around an ElasticSearch connection to make connection handling
     more convenient.
 
-    Settings for the ES host and index name etcetera can still be changed in the
-    corresponding attributes before the connection (self.conn) is used.
+    Settings for the ES host and index name etcetera can still be changed in
+    the corresponding attributes before the connection (self.conn) is used.
     """
 
     def __init__(self,
-                 host = 'http://127.0.0.1:9200',
-                 index = 'annotator',
-                 authorization_enabled = False):
+                 host='http://127.0.0.1:9200',
+                 index='annotator',
+                 authorization_enabled=False):
         self.host = host
         self.index = index
         self.authorization_enabled = authorization_enabled
@@ -41,7 +39,7 @@ class ElasticSearch(object):
         parsed = urlparse(host)
 
         connargs = {
-          'host': parsed.hostname,
+            'host': parsed.hostname,
         }
 
         username = parsed.username
@@ -89,7 +87,7 @@ class _Model(dict):
 
     @classmethod
     def create_all(cls):
-        log.info("Creating index '%s'." % cls.es.index)
+        log.info("Creating index '%s'.", cls.es.index)
         conn = cls.es.conn
         try:
             conn.indices.create(cls.es.index)
@@ -100,7 +98,7 @@ class _Model(dict):
                     or e.error.startswith('InvalidIndexNameException')):
                 log.fatal("Failed to create an Elasticsearch index")
                 raise
-            log.warn("Index creation failed as index appears to already exist.")
+            log.warn("Index creation failed: index appears to already exist.")
         mapping = cls.get_mapping()
         conn.indices.put_mapping(index=cls.es.index,
                                  doc_type=cls.__type__,
@@ -130,13 +128,13 @@ class _Model(dict):
     # It would be lovely if this were called 'get', but the dict semantics
     # already define that method name.
     @classmethod
-    def fetch(cls, id):
+    def fetch(cls, docid):
         doc = cls.es.conn.get(index=cls.es.index,
                               doc_type=cls.__type__,
                               ignore=404,
-                              id=id)
+                              id=docid)
         if doc.get('found', True):
-            return cls(doc['_source'], id=id)
+            return cls(doc['_source'], id=docid)
 
     @classmethod
     def _build_query(cls, query=None, offset=None, limit=None, sort=None, order=None):
@@ -189,7 +187,7 @@ class _Model(dict):
     def count(cls, **kwargs):
         """Like search, but only count the number of matches."""
         kwargs.setdefault('params', {})
-        kwargs['params'].update({'search_type':'count'})
+        kwargs['params'].update({'search_type': 'count'})
         res = cls.search(raw_result=True, **kwargs)
         return res['hits']['total']
 

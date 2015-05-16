@@ -34,12 +34,13 @@ log = logging.getLogger('annotator')
 
 here = os.path.dirname(__file__)
 
-def main():
+
+def main(argv):
     app = Flask(__name__)
 
     cfg_file = 'annotator.cfg'
-    if len(sys.argv) == 2:
-        cfg_file = sys.argv[1]
+    if len(argv) == 2:
+        cfg_file = argv[1]
 
     cfg_path = os.path.join(here, cfg_file)
 
@@ -47,7 +48,8 @@ def main():
         app.config.from_pyfile(cfg_path)
     except IOError:
         print("Could not find config file %s" % cfg_path, file=sys.stderr)
-        print("Perhaps you need to copy annotator.cfg.example to annotator.cfg", file=sys.stderr)
+        print("Perhaps copy annotator.cfg.example to annotator.cfg",
+              file=sys.stderr)
         sys.exit(1)
 
     if app.config.get('ELASTICSEARCH_HOST') is not None:
@@ -69,10 +71,11 @@ def main():
                 date = time.strftime('%Y-%m-%d')
                 log.fatal("Elasticsearch index mapping is incorrect! Please "
                           "reindex it. You can use reindex.py for this, e.g. "
-                          "python reindex.py --host {0} {1} {1}-{2}".format(
-                              es.host,
-                              es.index,
-                              date))
+                          "python reindex.py --host %s %s %s-%s",
+                          es.host,
+                          es.index,
+                          es.index,
+                          date)
             raise
 
     @app.before_request
@@ -108,4 +111,4 @@ def main():
     app.run(host=host, port=port)
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv)

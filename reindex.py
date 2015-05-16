@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import sys
 import argparse
 
 from elasticsearch import Elasticsearch
@@ -12,7 +11,8 @@ Reindex an elasticsearch index.
 WARNING: Documents that are created while reindexing may be lost!
 """
 
-def main(argv):
+
+def main():
     argparser = argparse.ArgumentParser(description=description)
     argparser.add_argument('old_index', help="Index to read from")
     argparser.add_argument('new_index', help="Index to write to")
@@ -39,4 +39,4 @@ def main(argv):
         reindexer.alias(new_index, alias)
 
 if __name__ == '__main__':
-    main(sys.argv)
+    main()

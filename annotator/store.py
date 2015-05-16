@@ -14,6 +14,7 @@ See their descriptions in `root`'s definition for more detail.
 """
 from __future__ import absolute_import
 
+import csv
 import json
 
 from elasticsearch.exceptions import TransportError
@@ -25,6 +26,7 @@ from six import iteritems
 
 from annotator.atoi import atoi
 from annotator.annotation import Annotation
+from annotator.elasticsearch import RESULTS_MAX_SIZE
 
 store = Blueprint('store', __name__)
 
@@ -90,7 +92,7 @@ def root():
                 'read': {
                     'method': 'GET',
                     'url': url_for('.read_annotation',
-                                   id=':id',
+                                   docid=':id',
                                    _external=True),
                     'desc': "Get an existing annotation"
                 },
@@ -99,7 +101,7 @@ def root():
                     'url':
                     url_for(
                         '.update_annotation',
-                        id=':id',
+                        docid=':id',
                         _external=True),
                     'query': {
                         'refresh': {
@@ -113,7 +115,7 @@ def root():
                 'delete': {
                     'method': 'DELETE',
                     'url': url_for('.delete_annotation',
-                                   id=':id',
+                                   docid=':id',
                                    _external=True),
                     'desc': "Delete an annotation"
                 }
@@ -173,7 +175,7 @@ def create_annotation():
         refresh = request.args.get('refresh') != 'false'
         annotation.save(refresh=refresh)
 
-        location = url_for('.read_annotation', id=annotation['id'])
+        location = url_for('.read_annotation', docid=annotation['id'])
 
         return jsonify(annotation), 201, {'Location': location}
     else:
@@ -182,9 +184,9 @@ def create_annotation():
 
 
 # READ
-@store.route('/annotations/<id>')
-def read_annotation(id):
-    annotation = g.annotation_class.fetch(id)
+@store.route('/annotations/<docid>')
+def read_annotation(docid):
+    annotation = g.annotation_class.fetch(docid)
     if not annotation:
         return jsonify('Annotation not found!', status=404)
 
@@ -196,9 +198,9 @@ def read_annotation(id):
 
 
 # UPDATE
-@store.route('/annotations/<id>', methods=['POST', 'PUT'])
-def update_annotation(id):
-    annotation = g.annotation_class.fetch(id)
+@store.route('/annotations/<docid>', methods=['POST', 'PUT'])
+def update_annotation(docid):
+    annotation = g.annotation_class.fetch(docid)
     if not annotation:
         return jsonify('Annotation not found! No update performed.',
                        status=404)
@@ -209,7 +211,7 @@ def update_annotation(id):
 
     if request.json is not None:
         updated = _filter_input(request.json, UPDATE_FILTER_FIELDS)
-        updated['id'] = id  # use id from URL, regardless of what arrives in
+        updated['id'] = docid  # use id from URL, regardless of what arrives in
                             # JSON payload
 
         changing_permissions = (
@@ -238,9 +240,9 @@ def update_annotation(id):
 
 
 # DELETE
-@store.route('/annotations/<id>', methods=['DELETE'])
-def delete_annotation(id):
-    annotation = g.annotation_class.fetch(id)
+@store.route('/annotations/<docid>', methods=['DELETE'])
+def delete_annotation(docid):
+    annotation = g.annotation_class.fetch(docid)
 
     if not annotation:
         return jsonify('Annotation not found. No delete performed.',

@@ -55,7 +55,7 @@ class Document(es.Model):
                                    # index, so ignore this sort instruction if
                                    # 'updated' appears unmapped due to an empty
                                    # index.
-                                   'ignore_unmapped': True,}}]}
+                                   'ignore_unmapped': True}}]}
 
         res = cls.es.conn.search(index=cls.es.index,
                                  doc_type=cls.__type__,

@@ -5,8 +5,8 @@ class MockConsumer(object):
         self.ttl = 86400
 
 class MockUser(object):
-    def __init__(self, id='alice', consumer=None):
-        self.id = id
+    def __init__(self, userid='alice', consumer=None):
+        self.id = userid
         self.consumer = MockConsumer(consumer if consumer is not None else 'mockconsumer')
         self.is_admin = False
 

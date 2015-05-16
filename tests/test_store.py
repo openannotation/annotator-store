@@ -264,7 +264,6 @@ class TestStore(TestCase):
         assert_equal(upd['user'], self.user.id, "annotation 'user' field should not be futzable by API")
         assert_equal(upd['consumer'], self.user.consumer.key, "annotation 'consumer' field should not be futzable by API")
 
-
     def test_delete(self):
         kwargs = dict(text=u"Bar", id='456')
         ann = self._create_annotation(**kwargs)

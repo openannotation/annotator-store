@@ -13,8 +13,8 @@ class Consumer(object):
 
 
 class User(object):
-    def __init__(self, id, consumer, is_admin):
-        self.id = id
+    def __init__(self, userid, consumer, is_admin):
+        self.id = userid
         self.consumer = consumer
         self.is_admin = is_admin
 
@@ -108,7 +108,7 @@ def encode_token(token, secret):
 
 def decode_token(token, secret='', ttl=DEFAULT_TTL, verify=True):
     try:
-        if not type(token) is bytes:
+        if not isinstance(token, bytes):
             if six.PY3:
                 token = bytes(token, 'utf-8')
             else:
