@@ -95,13 +95,14 @@ class Annotation(es.Model):
     def _build_query(cls, query=None, offset=None, limit=None, sort=None, order=None):
         if query is None:
             query = {}
+        else:
+            query = dict(query)  # shallow copy
 
         # Pop 'before' and 'after' parameters out of the query
-        copied_query = dict(query)
-        after = copied_query.pop('after', None)
-        before = copied_query.pop('before', None)
+        after = query.pop('after', None)
+        before = query.pop('before', None)
 
-        q = super(Annotation, cls)._build_query(copied_query, offset, limit, sort, order)
+        q = super(Annotation, cls)._build_query(query, offset, limit, sort, order)
 
         # Create range query from before and/or after
         if before is not None or after is not None:
