@@ -134,7 +134,10 @@ class TestDocument(TestCase):
 
         doc = Document.get_by_uri("https://peerj.com/articles/53/")
         assert doc
-        assert_equal(doc['title'], "document1") 
+        assert_equal(doc['title'], "document1")
+
+    def test_get_by_uri_not_found(self):
+        assert Document.get_by_uri("bogus") is None
 
     def test_uris(self):
         d = Document({

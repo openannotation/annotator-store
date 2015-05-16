@@ -35,7 +35,7 @@ class Document(es.Model):
     def get_by_uri(cls, uri):
         """Returns the first document match for a given URI."""
         results = cls._get_all_by_uris([uri])
-        return results[0] if len(results) > 0 else []
+        return results[0] if len(results) > 0 else None
 
     @classmethod
     def _get_all_by_uris(cls, uris):
