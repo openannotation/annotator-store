@@ -197,7 +197,7 @@ class _Model(dict):
         _add_created(self)
         _add_updated(self)
 
-        if not 'id' in self:
+        if 'id' not in self:
             op_type = 'create'
         else:
             op_type = 'index'
