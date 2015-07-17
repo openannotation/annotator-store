@@ -6,17 +6,22 @@ project endeavours to adhere to `Semantic Versioning`_.
 
 .. _Semantic Versioning: http://semver.org/
 
-Unreleased
-----------
+0.14.2 2015-07-17
+-----------------
+
+-  FIXED: `Annotation.search` no longer mutates the passed query.
+
+-  FIXED/BREAKING CHANGE: `Document.get_by_uri()` no longer returns a list for
+   empty resultsets, instead returning `None`.
 
 0.14.1 2015-03-05
 -----------------
-- FIXED: Document plugin doesn't drop links without a type. The annotator
-  client generates a typeless link from the document href. (#116)
+-  FIXED: Document plugin doesn't drop links without a type. The annotator
+   client generates a typeless link from the document href. (#116)
 
-- ADDED: the search endpoint now supports 'before' and 'after query parameters,
-  which can be used to return annotations created between a specific time
-  period.
+-  ADDED: the search endpoint now supports 'before' and 'after query parameters,
+   which can be used to return annotations created between a specific time
+   period.
 
 0.14 - 2015-02-13
 -----------------
@@ -28,7 +33,7 @@ Unreleased
    documents (#110). Now the Document model tracks all discovered equivalent
    documents and keeps each document object up-to-date with them all.
 
-   BREAKING CHANGE: Document.get_all_by_uris() no longer exists. Use
+-  BREAKING CHANGE: Document.get_all_by_uris() no longer exists. Use
    Document.get_by_uri() which should return a single document containing all
    equivalent URIs. (You may wish to update your index by fetching all documents
    and resaving them.)
