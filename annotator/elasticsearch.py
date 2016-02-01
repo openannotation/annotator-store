@@ -89,16 +89,7 @@ class _Model(dict):
     def create_all(cls):
         log.info("Creating index '%s'.", cls.es.index)
         conn = cls.es.conn
-        try:
-            conn.indices.create(cls.es.index)
-        except elasticsearch.exceptions.RequestError as e:
-            # Reraise anything that isn't just a notification that the index
-            # already exists (either as index or as an alias).
-            if not (e.error.startswith('IndexAlreadyExistsException')
-                    or e.error.startswith('InvalidIndexNameException')):
-                log.fatal("Failed to create an Elasticsearch index")
-                raise
-            log.warn("Index creation failed: index appears to already exist.")
+        conn.indices.create(cls.es.index, ignore=400)
         mapping = cls.get_mapping()
         conn.indices.put_mapping(index=cls.es.index,
                                  doc_type=cls.__type__,
