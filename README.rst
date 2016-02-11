@@ -47,7 +47,7 @@ The Store API is designed to be compatible with the
 `Annotator <http://okfnlabs.org/annotator>`__. The annotation store, a
 JSON-speaking REST API, will be mounted at ``/api`` by default. See the
 `Annotator
-documentation <https://github.com/okfn/annotator/wiki/Storage>`__ for
+documentation <http://docs.annotatorjs.org/en/v1.2.x/storage.html>`__ for
 details.
 
 Running tests
